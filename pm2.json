@@ -1,0 +1,25 @@
+{
+  "apps": [
+    {
+      "name": "laravel-reverb",
+      "script": "/usr/bin/php",
+      "args": "artisan reverb:start",
+      "cwd": "/var/www/html/product/registration_nba",
+      "instances": 1,
+      "exec_mode": "fork",
+      "autorestart": true,
+      "watch": false,
+      "max_memory_restart": "500M",
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "error_file": "/var/www/html/product/registration_nba/storage/logs/reverb-error.log",
+      "out_file": "/var/www/html/product/registration_nba/storage/logs/reverb-out.log",
+      "log_date_format": "YYYY-MM-DD HH:mm:ss Z",
+      "merge_logs": true,
+      "min_uptime": "10s",
+      "max_restarts": 10,
+      "restart_delay": 4000
+    }
+  ]
+}

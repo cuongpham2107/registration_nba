@@ -33,38 +33,36 @@ class GiveCardAction
                             ->preload(),
                         Forms\Components\DateTimePicker::make('start_date')
                             ->label('Giờ vào')
-                            ->default(fn(RegisterDirectly $record) => $record->start_date)
+                            ->default(now())
                             ->readOnly()
                             ->required(),
-                        Forms\Components\DateTimePicker::make('end_date')
-                            ->label('Giờ ra dự kiến')
-                            ->default(fn(RegisterDirectly $record) => $record->end_date)
-                            ->required()
-                            ->readOnly()
-                            ->rules([
-                                fn(Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
-                                    if ($record['status'] != 'sent') {
-                                        if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->isBefore(Carbon::parse($get('start_date'), 'Asia/Ho_Chi_Minh'))) {
-                                            $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ bắt đầu.');
-                                        }
-                                    }
-                                },
-                                fn(Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
-                                    if ($record['status'] != 'sent') {
-                                        if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->lessThanOrEqualTo(Carbon::now('Asia/Ho_Chi_Minh'))) {
-                                            $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ hiện tại.');
-                                        }
-                                    }
-                                }
-                            ]),
-                    ])->columns(3)
+                        // Forms\Components\DateTimePicker::make('end_date')
+                        //     ->label('Giờ ra dự kiến')
+                        //     ->default(fn(RegisterDirectly $record) => $record->end_date)
+                        //     ->required()
+                        //     ->readOnly()
+                        //     ->rules([
+                        //         fn(Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
+                        //             if ($record['status'] != 'sent') {
+                        //                 if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->isBefore(Carbon::parse($get('start_date'), 'Asia/Ho_Chi_Minh'))) {
+                        //                     $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ bắt đầu.');
+                        //                 }
+                        //             }
+                        //         },
+                        //         fn(Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
+                        //             if ($record['status'] != 'sent') {
+                        //                 if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->lessThanOrEqualTo(Carbon::now('Asia/Ho_Chi_Minh'))) {
+                        //                     $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ hiện tại.');
+                        //                 }
+                        //             }
+                        //         }
+                        //     ]),
+                    ])->columns(2)
             ])
             ->action(function (array $data, RegisterDirectly $record): void {
                 try {
                     $record->status = 'coming_in';
-                    $record->actual_date_in = Carbon::now('Asia/Ho_Chi_Minh');
-                    $record->start_date = $data['start_date'];
-                    $record->end_date = $data['end_date'];
+                    $record->actual_date_in =  $data['start_date'];
                     $card = Card::where('id', $data['id'])->first();
                     $card->status = 'active';
                     $card->save();

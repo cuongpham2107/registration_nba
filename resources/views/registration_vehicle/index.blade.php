@@ -27,16 +27,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 10px;
         }
 
         .container {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             max-width: 600px;
             width: 100%;
-            padding: 40px;
+            padding: 20px;
             animation: slideUp 0.5s ease-out;
         }
 
@@ -54,13 +54,13 @@
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
         }
 
         .icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 5px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -71,33 +71,33 @@
         }
 
         h1 {
-            font-size: 28px;
+            font-size: 22px;
             color: #2d3748;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             font-weight: 700;
         }
 
         .subtitle {
-            font-size: 14px;
+            font-size: 13px;
             color: #718096;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .form-row {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            grid-template-columns: 1fr;
+            /* gap: 12px; */
         }
 
         label {
             display: block;
             font-weight: 600;
             color: #4a5568;
-            font-size: 14px;
-            margin-bottom: 8px;
+            font-size: 13px;
+            margin-bottom: 6px;
         }
 
         label span.required {
@@ -108,9 +108,9 @@
         input[type="datetime-local"],
         textarea {
             width: 100%;
-            padding: 12px 16px;
+            padding: 10px 14px;
             border: 2px solid #e2e8f0;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 14px;
             font-family: inherit;
             transition: all 0.3s ease;
@@ -128,21 +128,21 @@
 
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 60px;
         }
 
         .btn-group {
             display: flex;
-            gap: 10px;
-            margin-top: 30px;
+            gap: 8px;
+            margin-top: 20px;
         }
 
         .btn {
             flex: 1;
-            padding: 14px 24px;
+            padding: 12px 20px;
             border: none;
-            border-radius: 10px;
-            font-size: 15px;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -186,19 +186,19 @@
         }
 
         .footer {
-            margin-top: 30px;
-            padding-top: 20px;
+            margin-top: 20px;
+            padding-top: 15px;
             border-top: 2px solid #e2e8f0;
             color: #a0aec0;
-            font-size: 13px;
+            font-size: 11px;
             text-align: center;
         }
 
         .alert {
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
         }
 
         .alert-success {
@@ -231,27 +231,88 @@
         }
 
         @media (max-width: 640px) {
+            body {
+                padding: 5px;
+            }
+
             .container {
-                padding: 30px 20px;
+                padding: 15px;
+                border-radius: 12px;
             }
 
             h1 {
-                font-size: 24px;
+                font-size: 20px;
             }
 
             .icon {
-                width: 60px;
-                height: 60px;
-                font-size: 30px;
+                width: 50px;
+                height: 50px;
+                font-size: 25px;
             }
 
-            .form-row {
-                grid-template-columns: 1fr;
-                gap: 0;
+            .subtitle {
+                font-size: 12px;
+            }
+
+            .form-group {
+                margin-bottom: 10px;
+            }
+
+            label {
+                font-size: 12px;
+                margin-bottom: 4px;
+            }
+
+            input[type="text"],
+            input[type="datetime-local"],
+            textarea {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+
+            textarea {
+                min-height: 50px;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                font-size: 13px;
             }
 
             .btn-group {
-                flex-direction: column;
+                gap: 6px;
+                margin-top: 15px;
+            }
+
+            .alert {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+
+            .footer {
+                font-size: 10px;
+                margin-top: 15px;
+                padding-top: 12px;
+            }
+        }
+
+        @media (min-width: 641px) {
+            .form-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+        }
+
+        /* Luôn hiển thị 2 cột cho row này, kể cả trên mobile */
+        .form-row-always-2 {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 8px !important;
+        }
+
+        @media (min-width: 641px) {
+            .form-row-always-2 {
+                gap: 15px !important;
             }
         }
     </style>
@@ -261,10 +322,10 @@
     <div class="container">
         <div class="header">
             <div class="icon">
-                <img style="width: 100px;" src="{{ asset('images/ASG.png') }}" alt="">
+                <img style="width: 70px;" src="{{ asset('images/ASG.png') }}" alt="">
             </div>
             <h1>Đăng ký xe khai thác</h1>
-            <p class="subtitle">Vui lòng điền đầy đủ thông tin bên dưới</p>
+            <p class="subtitle">Điền thông tin bên dưới</p>
         </div>
 
         @if(session('success'))
@@ -301,18 +362,17 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="driver_phone">Số điện thoại</label>
-                    <input type="text" id="driver_phone" name="driver_phone" x-model="driverPhone"
-                        value="{{ old('driver_phone') }}">
-                    @error('driver_phone')
+                    <label for="name">Tên đơn vị</label>
+                    <input type="text" id="name" name="name" x-model="unitName" value="{{ old('name') }}">
+                    @error('name')
                         <span style="color: #e53e3e; font-size: 12px;">{{ $message }}</span>
                     @enderror
                 </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-row form-row-always-2">
                 <div class="form-group">
-                    <label for="driver_id_card">Số CMND/CCCD <span class="required">*</span></label>
+                    <label for="driver_id_card">Số CCCD/CMND<span class="required">*</span></label>
                     <input type="text" id="driver_id_card" name="driver_id_card" required x-model="driverIdCard"
                         value="{{ old('driver_id_card') }}">
                     @error('driver_id_card')
@@ -321,9 +381,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="name">Tên đơn vị</label>
-                    <input type="text" id="name" name="name" x-model="unitName" value="{{ old('name') }}">
-                    @error('name')
+                    <label for="driver_phone">Số điện thoại</label>
+                    <input type="text" id="driver_phone" name="driver_phone" x-model="driverPhone"
+                        value="{{ old('driver_phone') }}">
+                    @error('driver_phone')
                         <span style="color: #e53e3e; font-size: 12px;">{{ $message }}</span>
                     @enderror
                 </div>
@@ -376,7 +437,7 @@
 
             <div class="form-group">
                 <label for="notes">Ghi chú</label>
-                <textarea id="notes" name="notes" rows="3" x-model="notes">{{ old('notes') }}</textarea>
+                <textarea id="notes" name="notes" rows="2" x-model="notes">{{ old('notes') }}</textarea>
                 @error('notes')
                     <span style="color: #e53e3e; font-size: 12px;">{{ $message }}</span>
                 @enderror

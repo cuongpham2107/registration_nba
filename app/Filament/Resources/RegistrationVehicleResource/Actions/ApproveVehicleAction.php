@@ -55,7 +55,7 @@ class ApproveVehicleAction
             )
             ->action(function (array $data, RegistrationVehicle $record) {
                 try {
-                    $id = (new \App\Http\Controllers\RegistrationController())->createRegistrationDirectlyFromVehicle($record, $data['areas']);
+                    $id = (new \App\Http\Controllers\RegistrationController())->createRegistrationDirectlyFromVehicle($record, $data['areas'], $data['is_priority'] ?? false);
                     
                     if (!$id) {
                         Notification::make()

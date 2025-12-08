@@ -88,12 +88,6 @@ class ListFilterRegisterDirectly extends Filter
                                     Carbon::parse($data['end_date'], 'Asia/Ho_Chi_Minh')->endOfDay()
                                 ]
                             )
-                    )
-                    ->when(
-                        isset($data['is_priority']) && $data['is_priority'] === true,
-                        fn (Builder $query) => 
-                            $query->orderByRaw('CASE WHEN is_priority = 1 THEN 0 ELSE 1 END')
-                                  ->orderBy('created_at', 'desc')
                     );
 
             })

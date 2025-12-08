@@ -6,7 +6,6 @@
         (function() {
             const userId = @js(auth()->id());
             
-            console.log('🔄 Vehicle table auto-reload initialized for user:', userId);
             
             const initEcho = () => {
                 if (typeof window.Echo !== 'undefined' && window.Echo && typeof window.Livewire !== 'undefined') {
@@ -14,16 +13,13 @@
                     
                     window.Echo.private('App.Models.User.' + userId)
                         .notification((notification) => {
-                            console.log('🔔 Vehicle notification received:', notification);
                             
                             if (notification.title && notification.title.includes('Đăng ký xe khai thác mới')) {
-                                console.log('✅ Refreshing vehicle table...');
                                 // Dispatch custom event to refresh the vehicle table
                                 window.Livewire.dispatch('refresh-vehicle-table');
                             }
                         });
                     
-                    console.log('✅ Vehicle listener ready');
                 } else {
                     setTimeout(initEcho, 500);
                 }

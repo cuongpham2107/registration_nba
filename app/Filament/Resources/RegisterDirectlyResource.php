@@ -72,7 +72,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     ->schema([
                         Forms\Components\Select::make('card_id')
                             ->label('Thẻ')
-                            ->required()
+                            // ->required()
                             ->columnSpanFull()
                             ->relationship(
                                 name: 'card',
@@ -118,7 +118,6 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->displayFormat('d/m/Y h:i')
                             ->seconds(false)
                             ->label('Giờ ra dự kiến')
-                            ->required()
                             ->rules([
                                 fn(Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
                                     if ($record['status'] != 'sent') {
@@ -167,6 +166,10 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
         return $table
 
             ->columns([
+                Tables\Columns\TextColumn::make('sort')
+                    ->label('Sort')
+                    ->numeric()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\IconColumn::make('type')
                     ->icon(fn (?string $state): string => match ($state) {
                         'passenger' => 'heroicon-o-user',
@@ -207,18 +210,18 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('card.card_name')
                     ->label('Thẻ')
                     ->numeric(),
-                Tables\Columns\ColumnGroup::make('Thời gian dự kiến', [
+                // Tables\Columns\ColumnGroup::make('Thời gian dự kiến', [
                     Tables\Columns\TextColumn::make('start_date')
-                        ->label('Giờ vào')
+                        ->label('Giờ vào dự kiến')
                         ->dateTime('d/m/Y H:i')
                         ->sortable()
                         ->alignment(Alignment::Center),
-                    Tables\Columns\TextColumn::make('end_date')
-                        ->label('Giờ ra dự kiến')
-                        ->dateTime('d/m/Y H:i')
-                        ->sortable()
-                        ->alignment(Alignment::Center),
-                ])->alignment(Alignment::Center)->wrapHeader(),
+                //     Tables\Columns\TextColumn::make('end_date')
+                //         ->label('Giờ ra dự kiến')
+                //         ->dateTime('d/m/Y H:i')
+                //         ->sortable()
+                //         ->alignment(Alignment::Center),
+                // ])->alignment(Alignment::Center)->wrapHeader(),
                 Tables\Columns\ColumnGroup::make('Thời gian thực tế', [
                     Tables\Columns\TextColumn::make('actual_date_in')
                         ->label('Giờ vào thực tế')
@@ -266,6 +269,18 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     ->toggleable(),
             ])
             ->defaultSort('sort', 'asc')
+            ->modifyQueryUsing(function (Builder $query) {
+                // Lấy filter data từ request
+                $tableFilters = request()->input('tableFilters', []);
+                $isPriorityEnabled = $tableFilters['date_range']['is_priority'] ?? false;
+                
+                // Nếu filter is_priority được bật, sắp xếp theo is_priority trước
+                if ($isPriorityEnabled === true) {
+                    return $query->orderByRaw('is_priority DESC, sort ASC, created_at DESC');
+                }
+                
+                return $query;
+            })
             ->filters([
                 ListFilterRegisterDirectly::make()
             ], layout: FiltersLayout::AboveContent)

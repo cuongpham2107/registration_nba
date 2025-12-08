@@ -13,24 +13,7 @@ class RegisterDirectly extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [
-        'name',
-        'papers',
-        'address',
-        'bks',
-        'contact_person',
-        'job',
-        'card_id',
-        'start_date',
-        'end_date',
-        'is_priority',
-        'actual_date_out',
-        'actual_date_in',
-        'status',
-        'areas',
-        'sort',
-        'type'
-    ];
+    protected $guarded = [];
 
     protected $attributes = [
         'status' => 'none',

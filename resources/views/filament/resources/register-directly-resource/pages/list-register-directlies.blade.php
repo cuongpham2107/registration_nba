@@ -14,16 +14,13 @@
                     
                     window.Echo.private('App.Models.User.' + userId)
                         .notification((notification) => {
-                            console.log('🔔 Received:', notification);
 
                             if (notification.title && (notification.title.includes('Đăng ký xe khai thác mới') || notification.title.includes('Đơn xét duyệt đăng ký khách mới') || notification.title.includes('Cập nhập thứ tự ra vào cho xe khai thác'))) {
-                                console.log('✅ Refreshing table...');
                                 // Dispatch custom event to refresh the table
                                 window.Livewire.dispatch('refresh-table');
                             }
                         });
                     
-                    // console.log('✅ Listener ready');
                 } else {
                     setTimeout(initEcho, 500);
                 }

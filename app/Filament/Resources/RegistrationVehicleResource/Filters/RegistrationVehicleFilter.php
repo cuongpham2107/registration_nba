@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\Indicator;
 use Illuminate\Database\Eloquent\Builder;
@@ -41,7 +42,12 @@ class RegistrationVehicleFilter extends Filter
                     ->label('Đến ngày')
                     ->placeholder('Chọn ngày kết thúc')
                     ->format('d-m-Y'),
-            ])->columns(4)
+                Toggle::make('is_priority')
+                    ->label('Ưu tiên')
+                    ->helperText('Sắp xếp các đăng ký ưu tiên lên đầu')
+                    ->inline(false)
+                    ->default(true),
+            ])->columns(5)
             ->query(function (Builder $query, array $data): Builder {
                 return $query
                     ->when(
@@ -103,6 +109,11 @@ class RegistrationVehicleFilter extends Filter
                 if ($data['end_date'] ?? null) {
                     $indicators[] = Indicator::make('Đến ngày: ' . Carbon::parse($data['end_date'], 'Asia/Ho_Chi_Minh')->format('d/m/Y'))
                         ->removeField('end_date');
+                }
+                
+                if (isset($data['is_priority']) && $data['is_priority'] === true) {
+                    $indicators[] = Indicator::make('Sắp xếp ưu tiên: Bật')
+                        ->removeField('is_priority');
                 }
                 
                 return $indicators;

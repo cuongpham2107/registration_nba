@@ -215,7 +215,7 @@ class RegistrationController extends Controller
         }
     }
 
-    public function createRegistrationDirectlyFromVehicle(RegistrationVehicle $registration, array $areas)
+    public function createRegistrationDirectlyFromVehicle(RegistrationVehicle $registration, array $areas, bool $is_priority = false)
     {
         $startDate = Carbon::parse($registration->expected_in_at, 'Asia/Ho_Chi_Minh');
 
@@ -229,7 +229,7 @@ class RegistrationController extends Controller
                 ($registration->notes ? ' | Ghi chú: ' . $registration->notes : ''),
             'start_date' => $startDate,
             'end_date' => null,
-            'is_priority' => $registration->is_priority,
+            'is_priority' => $is_priority,
             'type' => 'vehicle',
             'areas' => $areas,
             'status' => 'none',

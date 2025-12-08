@@ -10,21 +10,7 @@ class RegistrationVehicle extends Model
     use HasFactory;
 
 
-    protected $fillable = [
-        'name',
-        'driver_name',
-        'driver_id_card',
-        'vehicle_number',
-        'hawb_number',
-        'expected_in_at',
-        'status',
-        'approved_by',
-        'approved_at',
-        'id_registration_directly',
-        'is_priority',
-        'pcs',
-        'sort',
-    ];
+    protected $guarded = [];
 
     protected $casts = [
         'expected_in_at' => 'datetime',
