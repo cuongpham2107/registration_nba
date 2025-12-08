@@ -1,0 +1,74 @@
+table.fi-ta-table thead tr{
+    background-color: #5287ad !important;
+    border: 1px solid white !important;
+}
+table.fi-ta-table thead tr .fi-ta-header-cell-label{
+    color: #ffffff !important;
+}
+table.fi-ta-table thead tr .fi-table-header-group-cell span{
+    color: #ffffff !important;
+}
+.text-sm{
+    font-size: 0.75rem !important;
+    line-height: 1.25rem !important;
+}
+
+/* Container chính */
+.fi-ta-content {
+    position: relative;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    height: 800px;
+    overflow: auto;
+    cursor: grab;
+}
+
+.fi-ta-content:active {
+    cursor: grabbing;
+}
+
+/* Bảng chính */
+.fi-ta-content table.fi-ta-table {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+    background-color: white;
+}
+
+/* Header của bảng */
+.fi-ta-content table.fi-ta-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #f8fafc;
+}
+
+/* Các ô trong header */
+.fi-ta-content table.fi-ta-table thead .fi-ta-header-cell {
+    text-align: left;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+    color: #1a202c;
+}
+
+
+/* Tùy chỉnh thanh cuộn */
+.fi-ta-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.fi-ta-content::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.fi-ta-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.fi-ta-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

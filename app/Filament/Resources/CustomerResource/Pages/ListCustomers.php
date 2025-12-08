@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Filament\Resources\CustomerResource\Pages;
+
+use App\Filament\Resources\CustomerResource;
+use Filament\Actions;
+use Filament\Resources\Pages\ListRecords;
+
+class ListCustomers extends ListRecords
+{
+    protected static string $resource = CustomerResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            // Actions\CreateAction::make()
+            // ->icon('heroicon-o-plus')
+            // ->label('Tạo mới khách hàng'),
+        ];
+    }
+
+     public function getHeading(): string
+    {
+        return 'Danh sách khách';
+    }
+}
