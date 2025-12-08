@@ -88,6 +88,7 @@ class RegistrationVehicleResource extends Resource
     {
         return $table
             ->reorderable('sort')
+            ->header(view('filament.resources.tables.header'))
             ->description(function () {
                 $user = auth()->user();
                 if (! $user || ! $user->hasRole('approve_vehicle')) {

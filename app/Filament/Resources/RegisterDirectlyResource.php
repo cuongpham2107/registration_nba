@@ -164,7 +164,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
     public static function table(Table $table): Table
     {
         return $table
-
+            ->header(view('filament.resources.tables.header'))
             ->columns([
                 Tables\Columns\TextColumn::make('sort')
                     ->label('Sort')

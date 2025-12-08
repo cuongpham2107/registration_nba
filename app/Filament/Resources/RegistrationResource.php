@@ -205,6 +205,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
     public static function table(Table $table): Table
     {
         return $table
+            ->header(view('filament.resources.tables.header'))
             ->description(function () {
                 $user = auth()->user();
                 if (!$user || !$user->hasRole('approver')) {

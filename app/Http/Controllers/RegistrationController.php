@@ -275,33 +275,35 @@ class RegistrationController extends Controller
         if ($request->input('action') === 'save_and_send') {
             try {
                 // Tìm tất cả user có quyền approve_vehicle
-                $approver = \App\Models\User::whereHas('roles', function ($query) {
+                $approvers = \App\Models\User::whereHas('roles', function ($query) {
                     $query->where('name', 'approve_vehicle');
                 })->orWhereHas('permissions', function ($query) {
                     $query->where('name', 'approve_vehicle');
-                })->first();
-                if (!$approver) {
+                })->get();
+                
+                if ($approvers->isEmpty()) {
                     return redirect()->back()->with('error', 'Đăng ký xe đã được tạo nhưng không tìm thấy người phê duyệt.');
                 }
-                // dd($approver);
-                $record->update(['approved_by' => $approver->id]);
 
                 $mailSent = false;
-                if ($approver->email) {
-                    $mail = (new \App\Services\MailService())->sendMailWithTemplate(
-                        $approver->email,
-                        'Đăng ký xe khai thác: ' . $record->driver_name . ' | ' . $record->vehicle_number . ' | ' . date('Y-m-d H:i:s'),
-                        'template-mail.registration-vehicle',
-                        ['registration' => $record]
-                    );
+                foreach ($approvers as $user) {
+                    if ($user->email) {
+                        $mail = (new \App\Services\MailService())->sendMailWithTemplate(
+                            $user->email,
+                            'Đăng ký xe khai thác: ' . $record->driver_name . ' | ' . $record->vehicle_number . ' | ' . date('Y-m-d H:i:s'),
+                            'template-mail.registration-vehicle',
+                            ['registration' => $record]
+                        );
 
-                    if ($mail) {
-                        $mailSent = true;
+                        if ($mail) {
+                            $mailSent = true;
+                        }
                     }
                 }
 
                 if ($mailSent) {
                     $record->update(['status' => 'sent']);
+                    
                     try {
                         // Gửi thông báo đến người có role "approve_vehicle"
                         $approveVehicleUsers = \App\Models\User::role('approve_vehicle')->get();
@@ -316,7 +318,8 @@ class RegistrationController extends Controller
                     } catch (\Exception $e) {
                         \Illuminate\Support\Facades\Log::error('Notification sending failed: ' . $e->getMessage());
                     }
-                    return redirect()->back()->with('success', 'Đăng ký xe đã được tạo và gửi email thành công!' . $approveVehicleUsers->count() . '---');
+                    
+                    return redirect()->back()->with('success', 'Đăng ký xe đã được tạo và gửi email thành công!');
                 }
 
                 return redirect()->back()->with('error', 'Đăng ký xe đã được tạo nhưng không thể gửi email.');
