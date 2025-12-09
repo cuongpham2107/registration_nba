@@ -36,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Indigo,
             ])
-            ->font('Roboto', provider: LocalFontProvider::class)
+            // ->font('Roboto', provider: LocalFontProvider::class)
             ->brandName('ASGL')
             ->brandLogo(asset('images/ASG.png'))
             ->favicon(asset('images/ASG.png'))

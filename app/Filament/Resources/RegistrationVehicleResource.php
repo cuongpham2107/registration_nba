@@ -23,6 +23,8 @@ class RegistrationVehicleResource extends Resource
 {
     protected static ?string $model = RegistrationVehicle::class;
 
+    protected static ?string $modelLabel = 'Đăng ký xe khai thác';
+
     protected static ?string $navigationLabel = 'Đăng ký xe khai thác';
 
     protected static ?string $navigationIcon = 'heroicon-o-truck';
@@ -115,6 +117,9 @@ class RegistrationVehicleResource extends Resource
 
                 return '';
             })
+            ->emptyStateHeading('Không có đăng ký xe khai thác nào')
+            ->emptyStateIcon('heroicon-o-truck')
+            ->emptyStateDescription('Hiện tại chưa có đăng ký xe khai thác nào được tạo. Vui lòng nhấn nút "Thêm đăng ký xe" để tạo mới.')
             ->columns([
 
                 Tables\Columns\TextColumn::make('driver_name')

@@ -17,6 +17,8 @@ use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 class CardResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Card::class;
+     protected static ?string $modelLabel = 'Thẻ';
+    
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
     protected static ?string $navigationLabel = 'Danh sách thẻ';
     protected static ?string $navigationGroup = 'Quản lý danh mục';

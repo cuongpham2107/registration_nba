@@ -1,3 +1,4 @@
+/* Light Mode - Header */
 table.fi-ta-table thead tr{
     background-color: #5287ad !important;
     border: 1px solid white !important;
@@ -8,10 +9,41 @@ table.fi-ta-table thead tr .fi-ta-header-cell-label{
 table.fi-ta-table thead tr .fi-table-header-group-cell span{
     color: #ffffff !important;
 }
-.text-sm{
+
+table.fi-ta-table tbody {
+    border-bottom: 1px solid #e4e4e7 !important;
+}
+
+/* Dark Mode - Header */
+.dark table.fi-ta-table thead tr{
+    background-color: #1e3a5f !important;
+    border: 1px solid #374151 !important;
+}
+.dark table.fi-ta-table thead tr .fi-ta-header-cell-label{
+    color: #f3f4f6 !important;
+}
+.dark table.fi-ta-table thead tr .fi-table-header-group-cell span{
+    color: #f3f4f6 !important;
+}
+
+/* Dark Mode - Text trong bảng */
+.dark .fi-ta-text-item-label,
+.dark .fi-ta-text,
+.dark .fi-ta-cell {
+    color: #e5e7eb !important;
+}
+
+/* Dark Mode - Badge/Status */
+.dark .fi-badge,
+.dark .fi-badge-label {
+    background-color: #374151 !important;
+    color: #f3f4f6 !important;
+}
+
+/* .text-sm{
     font-size: 0.75rem !important;
     line-height: 1.25rem !important;
-}
+} */
 
 /* Container chính */
 .fi-ta-content {
@@ -23,6 +55,12 @@ table.fi-ta-table thead tr .fi-table-header-group-cell span{
     height: 800px;
     overflow: auto;
     cursor: grab;
+}
+
+/* Dark Mode - Container */
+.dark .fi-ta-content {
+    border: 1px solid #374151 !important;
+    background-color: #1f2937 !important;
 }
 
 .fi-ta-content:active {
@@ -37,12 +75,22 @@ table.fi-ta-table thead tr .fi-table-header-group-cell span{
     background-color: white;
 }
 
+/* Dark Mode - Bảng */
+.dark .fi-ta-content table.fi-ta-table {
+    background-color: #1f2937 !important;
+}
+
 /* Header của bảng */
 .fi-ta-content table.fi-ta-table thead {
     position: sticky;
     top: 0;
     z-index: 1;
     background-color: #f8fafc;
+}
+
+/* Dark Mode - Header Background */
+.dark .fi-ta-content table.fi-ta-table thead {
+    background-color: #111827 !important;
 }
 
 /* Các ô trong header */
@@ -53,8 +101,38 @@ table.fi-ta-table thead tr .fi-table-header-group-cell span{
     color: #1a202c;
 }
 
+/* Dark Mode - Header Cells */
+.dark .fi-ta-content table.fi-ta-table thead .fi-ta-header-cell {
+    border: 1px solid #374151 !important;
+    color: #f3f4f6 !important;
+}
 
-/* Tùy chỉnh thanh cuộn */
+/* Dark Mode - Table Body */
+.dark .fi-ta-content table.fi-ta-table tbody tr {
+    border-bottom: 1px solid #374151 !important;
+    background-color: #1f2937 !important;
+}
+
+.dark .fi-ta-content table.fi-ta-table tbody tr:hover {
+    background-color: #374151 !important;
+}
+
+.dark .fi-ta-content table.fi-ta-table tbody td {
+    color: #e5e7eb !important;
+    border: 1px solid #374151 !important;
+    background-color: #1f2937 !important;
+}
+
+/* Dark Mode - Table Record */
+.dark .fi-ta-record {
+    background-color: #1f2937 !important;
+}
+
+.dark .fi-ta-record:hover {
+    background-color: #374151 !important;
+}
+
+/* Tùy chỉnh thanh cuộn - Light Mode */
 .fi-ta-content::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -71,4 +149,18 @@ table.fi-ta-table thead tr .fi-table-header-group-cell span{
 
 .fi-ta-content::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* Dark Mode - Scrollbar */
+.dark .fi-ta-content::-webkit-scrollbar-track {
+    background: #1f2937 !important;
+}
+
+.dark .fi-ta-content::-webkit-scrollbar-thumb {
+    background: #4b5563 !important;
+    border-radius: 4px;
+}
+
+.dark .fi-ta-content::-webkit-scrollbar-thumb:hover {
+    background: #6b7280 !important;
 }

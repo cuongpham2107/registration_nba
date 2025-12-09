@@ -17,7 +17,7 @@ use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 class AreaResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Area::class;
-
+     protected static ?string $modelLabel = 'Khu vực';
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
     protected static ?string $navigationLabel = 'Khu vực';
     protected static ?string $navigationGroup = 'Quản lý danh mục';

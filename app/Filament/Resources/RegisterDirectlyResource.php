@@ -3,39 +3,53 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Exports\RegisterDirectlyExporter;
-use Filament\Tables\Enums\FiltersLayout;
-use App\Filament\Resources\RegisterDirectlyResource\Filters\ListFilterRegisterDirectly;
 use App\Filament\Resources\RegisterDirectlyResource\Actions\GiveCardAction;
 use App\Filament\Resources\RegisterDirectlyResource\Actions\ReturnCardAction;
+use App\Filament\Resources\RegisterDirectlyResource\Filters\ListFilterRegisterDirectly;
 use App\Filament\Resources\RegisterDirectlyResource\Pages;
-use App\Models\RegisterDirectly;
 use App\Models\Area;
+use App\Models\RegisterDirectly;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Carbon\Carbon;
+use Closure;
+use Filament\Actions\Exports\Models\Export;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\ActionSize;
 use Filament\Support\Enums\Alignment;
+use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Actions\ExportBulkAction;
+use Filament\Tables\Enums\ActionsPosition;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Filament\Forms\Get;
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
-use Closure;
-use Carbon\Carbon;
-use Filament\Support\Enums\FontWeight;
-use Filament\Actions\Exports\Models\Export;
-use Filament\Tables\Enums\ActionsPosition;
-use Filament\Support\Enums\ActionSize;
 
 class RegisterDirectlyResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = RegisterDirectly::class;
+
+    protected static ?string $modelLabel = 'Ra vào';
+
+    protected static ?string $recordTitleAttribute = 'name';
+
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+
     protected static ?string $navigationLabel = 'Danh sách ra vào';
+
+    protected static ?string $title = 'Danh sách ra vào';
+
+    protected ?string $heading = 'Danh sách ra vào';
+
     protected static ?int $navigationSort = 1;
+
+    protected static bool $hasTitleCaseModelLabel = false;
+
     public static function form(Form $form): Form
     {
         return $form
@@ -77,7 +91,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->relationship(
                                 name: 'card',
                                 titleAttribute: 'card_name',
-                                modifyQueryUsing: fn(Builder $query) => $query->where('status', 'inactive')
+                                modifyQueryUsing: fn (Builder $query) => $query->where('status', 'inactive')
                             )
                             ->searchable(['card_name', 'card_number'])
                             ->preload()
@@ -119,7 +133,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->seconds(false)
                             ->label('Giờ ra dự kiến')
                             ->rules([
-                                fn(Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
+                                fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
                                     if ($record['status'] != 'sent') {
                                         if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->isBefore(Carbon::parse($get('start_date'), 'Asia/Ho_Chi_Minh'))) {
                                             $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ bắt đầu.');
@@ -127,14 +141,14 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                                     }
 
                                 },
-                                fn(Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
+                                fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($record) {
                                     if ($record['status'] != 'sent') {
                                         if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->lessThanOrEqualTo(Carbon::now('Asia/Ho_Chi_Minh'))) {
                                             $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ hiện tại.');
                                         }
                                     }
 
-                                }
+                                },
                             ]),
                         Forms\Components\DateTimePicker::make('actual_date_in')
                             ->label('Giờ vào thực tế')
@@ -165,11 +179,9 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
     {
         return $table
             ->header(view('filament.resources.tables.header'))
+            ->emptyStateHeading('Không có khách hay xe khai thác nào')
+            ->emptyStateDescription('Hiện tại chưa có khách hay xe khai thác nào.')
             ->columns([
-                Tables\Columns\TextColumn::make('sort')
-                    ->label('Sort')
-                    ->numeric()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\IconColumn::make('type')
                     ->icon(fn (?string $state): string => match ($state) {
                         'passenger' => 'heroicon-o-user',
@@ -180,11 +192,11 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('name')
                     ->label('Họ và tên')
                     ->formatStateUsing(
-                        fn(RegisterDirectly $record): string =>
-                        isset(explode('|', $record->name)[0]) ? trim(explode('|', $record->name)[0]) : $record->name
+                        fn (RegisterDirectly $record): string => isset(explode('|', $record->name)[0]) ? trim(explode('|', $record->name)[0]) : $record->name
                     )
                     ->description(function (RegisterDirectly $record): string {
                         $parts = explode('|', $record->name);
+
                         return isset($parts[1]) ? trim($parts[1]) : '';
                     })
                     ->weight(FontWeight::Bold),
@@ -192,30 +204,47 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     ->label('Số CCCD'),
                 Tables\Columns\TextColumn::make('bks')
                     ->label('Biển kiểm soát'),
-                Tables\Columns\TextColumn::make('job')
-                    ->label('Mục đích')
-                    ->formatStateUsing(
-                        fn(RegisterDirectly $record): string =>
-                        isset(explode('|', $record->job)[0]) ? trim(explode('|', $record->job)[0]) : $record->job
-                    )
-                    ->description(function (RegisterDirectly $record): string {
-                        $parts = explode('|', $record->job);
-                        return isset($parts[1]) ? trim($parts[1]) : '';
+
+                Tables\Columns\TextColumn::make('areas')
+                    ->label('Khu vực')
+                    ->formatStateUsing(function (string $state): string {
+                        $area = Area::where('code', $state)->first();
+
+                        return $area ? $area->name : '';
+                    })
+                    ->badge(),
+
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Trạng thái')
+                    ->sortable()
+                    ->badge()
+                    ->color(function ($state) {
+                        if (is_null($state) || $state === 'none' || $state === '') {
+                            return 'warning';
+                        }
+
+                        return match ($state) {
+                            'coming_in' => 'danger',
+                            'came_out' => 'primary',
+                        };
+                    })
+                    ->formatStateUsing(function ($state) {
+                        if (is_null($state) || $state === 'none' || $state === '') {
+                            return 'Chờ vào';
+                        }
+
+                        return match ($state) {
+                            'coming_in' => 'Đang vào',
+                            'came_out' => 'Đã ra',
+                        };
                     }),
-                Tables\Columns\ToggleColumn::make('is_priority')
-                    ->label('Ưu tiên')
-                    ->onIcon('heroicon-s-arrow-up')
-                    ->offIcon('heroicon-s-arrow-down')
-                    ->disabled(),
-                Tables\Columns\TextColumn::make('card.card_name')
-                    ->label('Thẻ')
-                    ->numeric(),
+
                 // Tables\Columns\ColumnGroup::make('Thời gian dự kiến', [
-                    Tables\Columns\TextColumn::make('start_date')
-                        ->label('Giờ vào dự kiến')
-                        ->dateTime('d/m/Y H:i')
-                        ->sortable()
-                        ->alignment(Alignment::Center),
+                Tables\Columns\TextColumn::make('start_date')
+                    ->label('Giờ vào dự kiến')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable()
+                    ->alignment(Alignment::Center),
                 //     Tables\Columns\TextColumn::make('end_date')
                 //         ->label('Giờ ra dự kiến')
                 //         ->dateTime('d/m/Y H:i')
@@ -231,36 +260,25 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                         ->dateTime('d/m/Y H:i')
                         ->alignment(Alignment::Center),
                 ])->alignment(Alignment::Center)->wrapHeader(),
+                Tables\Columns\TextColumn::make('job')
+                    ->label('Mục đích')
+                    ->formatStateUsing(
+                        fn (RegisterDirectly $record): string => isset(explode('|', $record->job)[0]) ? trim(explode('|', $record->job)[0]) : $record->job
+                    )
+                    ->description(function (RegisterDirectly $record): string {
+                        $parts = explode('|', $record->job);
 
-                Tables\Columns\TextColumn::make('areas')
-                    ->label('Khu vực')
-                    ->formatStateUsing(function (string $state): string {
-                        $area = Area::where('code', $state)->first();
-                        return $area ? $area->name : '';
-                    })
-                    ->badge(),
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Trạng thái')
-                    ->sortable()
-                    ->badge()
-                    ->color(function ($state) {
-                        if (is_null($state) || $state === 'none' || $state === '') {
-                            return 'warning';
-                        }
-                        return match ($state) {
-                            'coming_in' => 'danger',
-                            'came_out' => 'primary',
-                        };
-                    })
-                    ->formatStateUsing(function ($state) {
-                        if (is_null($state) || $state === 'none' || $state === '') {
-                            return 'Chờ vào';
-                        }
-                        return match ($state) {
-                            'coming_in' => 'Đang vào',
-                            'came_out' => 'Đã ra',
-                        };
+                        return isset($parts[1]) ? trim($parts[1]) : '';
                     }),
+
+                Tables\Columns\ToggleColumn::make('is_priority')
+                    ->label('Ưu tiên')
+                    ->onIcon('heroicon-s-arrow-up')
+                    ->offIcon('heroicon-s-arrow-down')
+                    ->disabled(),
+                Tables\Columns\TextColumn::make('card.card_name')
+                    ->label('Thẻ')
+                    ->numeric(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Ngày tạo')
                     ->dateTime('d/m/Y H:i')
@@ -273,19 +291,20 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                 // Lấy filter data từ request
                 $tableFilters = request()->input('tableFilters', []);
                 $isPriorityEnabled = $tableFilters['date_range']['is_priority'] ?? false;
-                
+
                 // Nếu filter is_priority được bật, sắp xếp theo is_priority trước
                 if ($isPriorityEnabled === true) {
                     return $query->orderByRaw('is_priority DESC, sort ASC, created_at DESC');
                 }
-                
+
                 return $query;
             })
             ->filters([
-                ListFilterRegisterDirectly::make()
+                ListFilterRegisterDirectly::make(),
             ], layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(1)
             ->deferLoading()
+            ->defaultPaginationPageOption(25)
             ->actions([
                 GiveCardAction::make(),
                 ReturnCardAction::make(),
@@ -293,7 +312,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     Tables\Actions\EditAction::make()
                         ->slideOver()
                         ->modalWidth(MaxWidth::SixExtraLarge)
-                        ->hidden(fn($record) => $record->status === 'came_out'),
+                        ->hidden(fn ($record) => $record->status === 'came_out'),
                     Tables\Actions\DeleteAction::make(),
                 ])
                     ->icon('heroicon-m-adjustments-vertical')
@@ -308,7 +327,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     ->modalHeading('Xuất Excel đăng ký ra vào')
                     ->icon('heroicon-o-inbox-arrow-down')
                     ->color('success')
-                    ->fileName(fn(Export $export): string => "Danh sách khách ra vào-{$export->getKey()}.csv")
+                    ->fileName(fn (Export $export): string => "Danh sách khách ra vào-{$export->getKey()}.csv")
                     ->exporter(RegisterDirectlyExporter::class),
             ]);
     }

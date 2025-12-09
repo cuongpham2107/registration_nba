@@ -17,6 +17,8 @@ use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 class CustomerResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Customer::class;
+     protected static ?string $modelLabel = 'Khách';
+
     protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationLabel = 'Danh sách khách';
     protected static ?string $navigationGroup = 'Quản lý danh mục';

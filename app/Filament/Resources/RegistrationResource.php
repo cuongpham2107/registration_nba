@@ -40,6 +40,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
     protected static ?string $model = Registration::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-plus';
     protected static ?string $navigationLabel = 'Đăng ký khách';
+     protected static ?string $modelLabel = 'Đăng ký khách';
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 1;
     public static function form(Form $form): Form
@@ -238,6 +239,9 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                 }
                 return '';
             })
+            ->emptyStateHeading('Không có đơn đăng ký khách nào')
+            ->emptyStateIcon('heroicon-o-user')
+            ->emptyStateDescription('Hiện tại chưa có đơn đăng ký khách nào được tạo. Vui lòng nhấn nút "Đăng ký khách mới" để tạo mới.')
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label("Mã ĐK")

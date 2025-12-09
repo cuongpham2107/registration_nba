@@ -66,6 +66,6 @@ class ListRegisterDirectlies extends ListRecords
 
     public function getHeading(): string
     {
-        return 'Danh sách đăng ký';
+        return 'Danh sách đơn đăng ký';
     }
 }

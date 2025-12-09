@@ -267,6 +267,30 @@ class RegistrationController extends Controller
             'expected_in_at.date' => 'Thời gian vào dự kiến phải là ngày hợp lệ.',
         ]);
 
+        // Kiểm tra trùng lặp với điều kiện thời gian 4 tiếng
+        $newExpectedTime = Carbon::parse($validated['expected_in_at']);
+        
+        $existingRegistration = RegistrationVehicle::where('name', $validated['name'])
+            ->where('driver_name', $validated['driver_name'])
+            ->where('driver_phone', $validated['driver_phone'])
+            ->where('driver_id_card', $validated['driver_id_card'])
+            ->where('vehicle_number', $validated['vehicle_number'])
+            ->where('hawb_number', $validated['hawb_number'])
+            ->orderBy('expected_in_at', 'desc')
+            ->first();
+        
+        if ($existingRegistration) {
+            $existingTime = Carbon::parse($existingRegistration->expected_in_at);
+            $hoursDifference = $newExpectedTime->diffInHours($existingTime, false);
+            
+            // Kiểm tra nếu thời gian mới không cách thời gian cũ ít nhất 4 tiếng
+            if (abs($hoursDifference) < 4) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Đăng ký trước đó thành công rồi phải vào giờ khác.');
+            }
+        }
+
         $validated['status'] = 'none';
 
         $record = RegistrationVehicle::create($validated);
