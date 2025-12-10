@@ -72,6 +72,7 @@ class HawbService
         try {
             $response = Http::timeout(10)->get('https://wh-nba.asgl.net.vn/api/list-agent');
             $data = $response->json();
+            // dd($data);
             if (($data['success'] ?? false)) {
                 $payload = $data['data'] ?? null;
 

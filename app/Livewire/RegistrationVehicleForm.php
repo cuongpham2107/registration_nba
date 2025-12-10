@@ -49,56 +49,81 @@ class RegistrationVehicleForm extends Component implements HasForms
                             ->label('Tên tài xế')
                             ->required()
                             ->maxLength(255)
-                            ->columnSpan(1),
+                            ->columnSpan([
+                                'sm' => 2, // Mobile: full width
+                                'md' => 1, // Desktop: half width
+                            ]),
+
                         TextInput::make('driver_id_card')
                             ->label('Số CCCD/CMND')
                             ->required()
                             ->maxLength(255)
-                            ->columnSpan(1),
+                            ->columnSpan([
+                                'sm' => 1, // Mobile: half width
+                                'md' => 1, // Desktop: half width
+                            ]),
 
                         TextInput::make('driver_phone')
                             ->label('Số điện thoại')
                             ->tel()
                             ->maxLength(20)
-                            ->columnSpan(1),
+                            ->columnSpan([
+                                'sm' => 1, // Mobile: half width
+                                'md' => 1, // Desktop: half width
+                            ]),
+
                         TextInput::make('vehicle_number')
                             ->label('Biển số xe')
                             ->required()
                             ->maxLength(255)
-                            ->columnSpan(1),
+                            ->columnSpan([
+                                'sm' => 2, // Mobile: full width
+                                'md' => 1, // Desktop: half width
+                            ]),
                     ])
-                    ->columns(2),
+                    ->columns([
+                        'sm' => 2, // Mobile: 2 columns
+                        'md' => 2, // Desktop: 2 columns
+                    ]),
 
                 Section::make('Thông tin đơn vị và hàng hóa')
                     ->description('Vui lòng điền đầy đủ thông tin đơn vị và hàng hóa')
                     ->icon('heroicon-o-truck')
                     ->schema([
-                       Select::make('name')
+                        Select::make('name')
                             ->label('Tên đơn vị')
                             ->native(false)
-                            ->options(HawbService::getListAgentApi()),
+                            ->options(HawbService::getListAgentApi())
+                            // ->searchable()
+                            ->columnSpan([
+                                'sm' => 2, // Mobile: full width
+                                'md' => 1, // Desktop: half width
+                            ]),
+
                         TextInput::make('search_hawb')
                             ->label('Tìm kiếm HAWB')
                             ->suffixAction(function () {
-                                // Return the Action instance so Filament can render it
                                 return Action::make('search-hawb')
                                     ->icon('heroicon-o-magnifying-glass')
                                     ->action(function (Get $get) {
-                                        // $data contains the whole form state; extract the input value if present
                                         $search = $get('search_hawb') ?? null;
                                         if ($search) {
                                             $this->fetchAndBindHawbs($search);
                                         }
                                     });
                             })
-                            ->helperText(fn (Get $get) => $this->getSearchHelperText($get('search_hawb'))),
+                            ->helperText(fn (Get $get) => $this->getSearchHelperText($get('search_hawb')))
+                            ->columnSpan([
+                                'sm' => 2, // Mobile: full width
+                                'md' => 1, // Desktop: half width
+                            ]),
 
                         TableRepeater::make('hawbs')
                             ->label('Danh sách HAWB')
                             ->columns(1)
                             ->headers([
                                 Header::make('hawb_number')->label('Số HAWB'),
-                                Header::make('pcs')->label('Số PCS')->width('80px')->align(Alignment::Center),
+                                Header::make('pcs')->label('Số PCS')->width('120px')->align(Alignment::Center),
                             ])
                             ->schema([
                                 TextInput::make('hawb_number')
@@ -109,27 +134,35 @@ class RegistrationVehicleForm extends Component implements HasForms
                                 TextInput::make('pcs')
                                     ->label('Số PCS')
                                     ->maxLength(255)
+                                    ->numeric()
                             ])
                             ->addable(false)
                             ->reorderable(false)
                             ->emptyLabel('Chưa có HAWB nào được thêm')
                             ->minItems(1)
-                            ->columnSpan(1),
+                            ->columnSpanFull(),
+
                         DateTimePicker::make('expected_in_at')
                             ->label('Thời gian vào dự kiến')
                             ->required()
                             ->native(false)
                             ->seconds(false)
                             ->displayFormat('H:i d/m/Y')
-                            ->columnSpan(1),
+                            ->columnSpan([
+                                'sm' => 2, // Mobile: full width
+                                'md' => 1, // Desktop: half width
+                            ]),
                     ])
-                    ->columns(2),
+                    ->columns([
+                        'sm' => 2, // Mobile: 2 columns
+                        'md' => 2, // Desktop: 2 columns
+                    ]),
 
-                    Textarea::make('notes')
-                        ->label('Ghi chú')
-                        ->rows(3)
-                        ->maxLength(1000)
-                        ->columnSpanFull(),
+                Textarea::make('notes')
+                    ->label('Ghi chú')
+                    ->rows(3)
+                    ->maxLength(1000)
+                    ->columnSpanFull(),
             ])
             ->statePath('data');
     }

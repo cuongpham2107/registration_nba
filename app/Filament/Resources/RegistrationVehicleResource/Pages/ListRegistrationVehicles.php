@@ -54,9 +54,9 @@ class ListRegistrationVehicles extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()
-                ->label('Thêm đăng ký xe')
-                ->modalHeading('Thêm đăng ký xe khai thác')
+            // Actions\CreateAction::make()
+            //     ->label('Thêm đăng ký xe')
+            //     ->modalHeading('Thêm đăng ký xe khai thác')
         ];
     }
     public function reorderTable(array $order): void

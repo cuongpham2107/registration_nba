@@ -253,10 +253,10 @@ class RegistrationVehicleResource extends Resource
                         return !empty($hawbs) ? implode(', ', $hawbs) : $state;
                     })
                     ->searchable(),
-                // Tables\Columns\TextColumn::make('pcs')
-                //     ->label('Số kiện')
-                //     ->alignment(Alignment::Center)
-                //     ->searchable(),
+                Tables\Columns\TextColumn::make('pcs')
+                    ->label('Số kiện')
+                    ->alignment(Alignment::Center)
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('expected_in_at')
                     ->label('Thời gian vào dự kiến')
                     ->dateTime('d/m/Y H:i')

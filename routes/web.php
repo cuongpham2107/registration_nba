@@ -37,6 +37,6 @@ Route::get('/dang-ky-xe-khai-thac', function(){
 })->name('registration-vehicle.index-old');
 
 // Route mới với Filament Livewire
-Route::get('/dang-ky-xe-khai-thac-new', \App\Livewire\RegistrationVehicleForm::class)->name('registration-vehicle.index');
+Route::get('/dang-ky-xe-khai-thac-old', \App\Livewire\RegistrationVehicleForm::class)->name('registration-vehicle.index');
 
 Route::post('/registration-vehicle', [RegistrationController::class, 'storeVehicle'])->name('registration-vehicle.store');
