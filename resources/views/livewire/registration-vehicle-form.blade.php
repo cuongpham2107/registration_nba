@@ -10,13 +10,24 @@
             </div>
 
             <!-- Form Content -->
-            <div class="px-6 py-8">
+            <div class="px-1 py-2">
+                <!-- Thông báo dữ liệu đã lưu -->
+                <div id="stored-data-alert" style="display: none;" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
+                    <span style="font-size: 18px;">ℹ️</span>
+                    <div>
+                        <span id="stored-data-message" style="color: #1e40af; font-size: 14px; font-weight: 500;"></span>
+                    </div>
+                </div>
+
                 <form wire:submit="create">
                     {{ $this->form }}
-                    <div class="mt-8 flex gap-4">
+                    <div class="flex gap-4" style="margin-top: 16px;">
                         <button 
                             type="submit"
                             class="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                            style="background: linear-gradient(45deg, #10b981, #059669); color: white; padding: 12px 24px; border-radius: 8px; border: none; font-weight: 600; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: all 0.2s; cursor: pointer;"
+                            onmouseover="this.style.background='linear-gradient(45deg, #059669, #047857)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.15)'"
+                            onmouseout="this.style.background='linear-gradient(45deg, #10b981, #059669)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'"
                             wire:loading.attr="disabled"
                         >
                             <span wire:loading.remove>Tạo và gửi</span>
@@ -32,6 +43,9 @@
                         <a 
                             href="javascript:history.back()"
                             class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg shadow hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-center"
+                            style="background: #f3f4f6; color: #374151; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;"
+                            onmouseover="this.style.background='#e5e7eb'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.15)'"
+                            onmouseout="this.style.background='#f3f4f6'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)'"
                         >
                             Hủy bỏ
                         </a>
@@ -49,4 +63,78 @@
     </div>
 
     <x-filament-actions::modals />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load stored data on page load
+            loadStoredData();
+
+            // Listen for successful form submission
+            document.addEventListener('livewire:initialized', () => {
+                Livewire.on('registration-success', (event) => {
+                    const data = event[0] || event;
+                    saveToStorage(data);
+                    showStoredDataAlert(data.savedAt);
+                });
+            });
+        });
+
+        function saveToStorage(data) {
+            const storageData = {
+                driver_name: data.driver_name || '',
+                driver_phone: data.driver_phone || '',
+                driver_id_card: data.driver_id_card || '',
+                vehicle_number: data.vehicle_number || '',
+                name: data.name || '',
+                hawb_number: data.hawb_number || '',
+                notes: data.notes || '',
+                savedAt: new Date().toISOString()
+            };
+            localStorage.setItem('livewireVehicleForm', JSON.stringify(storageData));
+        }
+
+        function loadStoredData() {
+            const saved = localStorage.getItem('livewireVehicleForm');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.savedAt) {
+                        showStoredDataAlert(data.savedAt);
+                    }
+                } catch (e) {
+                    console.error('Error loading stored data:', e);
+                }
+            }
+        }
+
+        function showStoredDataAlert(savedAt) {
+            const alertElement = document.getElementById('stored-data-alert');
+            const messageElement = document.getElementById('stored-data-message');
+            
+            if (alertElement && messageElement && savedAt) {
+                const formattedTime = formatDateTime(savedAt);
+                messageElement.textContent = `Lần gửi thành công: ${formattedTime}`;
+                alertElement.style.display = 'flex';
+            }
+        }
+
+        function formatDateTime(isoString) {
+            const date = new Date(isoString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        }
+
+        function clearStorage() {
+            localStorage.removeItem('livewireVehicleForm');
+            const alertElement = document.getElementById('stored-data-alert');
+            if (alertElement) {
+                alertElement.style.display = 'none';
+            }
+        }
+    </script>
 </div>

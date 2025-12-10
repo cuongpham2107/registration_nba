@@ -15,19 +15,20 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Awcodes\TableRepeater\Components\TableRepeater;
 use Awcodes\TableRepeater\Header;
 use Filament\Forms\Components\Actions\Action;
-
+use Filament\Support\Enums\Alignment;
+use App\Services\HawbService;
 class RegistrationVehicleForm extends Component implements HasForms
 {
     use InteractsWithForms;
 
     public ?array $data = [];
+    public ?string $searchMessage = null;
+    public bool $hasSearched = false;
 
     public function mount(): void
     {
@@ -75,7 +76,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                        Select::make('name')
                             ->label('Tên đơn vị')
                             ->native(false)
-                            ->options($this->getListAgentApi()),
+                            ->options(HawbService::getListAgentApi()),
                         TextInput::make('search_hawb')
                             ->label('Tìm kiếm HAWB')
                             ->suffixAction(function () {
@@ -90,22 +91,21 @@ class RegistrationVehicleForm extends Component implements HasForms
                                         }
                                     });
                             })
-                            ->helperText('Your full name here, including any middle names.'),
+                            ->helperText(fn (Get $get) => $this->getSearchHelperText($get('search_hawb'))),
 
                         TableRepeater::make('hawbs')
                             ->label('Danh sách HAWB')
                             ->columns(1)
                             ->headers([
                                 Header::make('hawb_number')->label('Số HAWB'),
-                                Header::make('pcs')->label('Số PCS'),
+                                Header::make('pcs')->label('Số PCS')->width('80px')->align(Alignment::Center),
                             ])
                             ->schema([
                                 TextInput::make('hawb_number')
                                     ->label('Số HAWB')
                                     ->required()
                                     ->maxLength(255)
-                                    ->reactive()
-                                    ->helperText(fn () => $this->getHawbHelperText()),
+                                    ->reactive(),
                                 TextInput::make('pcs')
                                     ->label('Số PCS')
                                     ->maxLength(255)
@@ -120,138 +120,61 @@ class RegistrationVehicleForm extends Component implements HasForms
                             ->required()
                             ->native(false)
                             ->seconds(false)
-                            ->displayFormat('d/m/Y H:i')
+                            ->displayFormat('H:i d/m/Y')
                             ->columnSpan(1),
                     ])
                     ->columns(2),
 
-                Section::make('Ghi chú')
-                    ->schema([
-                        Textarea::make('notes')
-                            ->label('Ghi chú')
-                            ->rows(3)
-                            ->maxLength(1000)
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible()
-                    ->collapsed(fn () => empty($this->data['notes'])),
+                    Textarea::make('notes')
+                        ->label('Ghi chú')
+                        ->rows(3)
+                        ->maxLength(1000)
+                        ->columnSpanFull(),
             ])
             ->statePath('data');
     }
 
-    protected function getListAgentApi(): array
-    {
-        try {
-            $response = Http::timeout(10)->get('https://wh-nba.asgl.net.vn/api/list-agent');
-            $data = $response->json();
-            if (($data['success'] ?? false)) {
-                $payload = $data['data'] ?? null;
-
-                // Case: data is an array of strings: ["BOLO","APEX",...]
-                if (is_array($payload) && !empty($payload) && is_string(array_values($payload)[0])) {
-                    $result = [];
-                    foreach ($payload as $agent) {
-                        $result[$agent] = $agent;
-                    }
-                    return $result;
-                }
-
-                // Case: data is an associative array containing 'agents'
-                if (is_array($payload) && isset($payload['agents']) && is_array($payload['agents'])) {
-                    $agentsArr = $payload['agents'];
-                    $result = [];
-                    foreach ($agentsArr as $item) {
-                        if (is_string($item)) {
-                            $result[$item] = $item;
-                        } elseif (is_array($item) && isset($item['AgentCode'], $item['AgentName'])) {
-                            $result[$item['AgentCode']] = $item['AgentName'];
-                        }
-                    }
-                    return $result;
-                }
-
-                // Case: data is an array of objects with AgentName / AgentCode
-                if (is_array($payload) && !empty($payload) && is_array(reset($payload))) {
-                    return collect($payload)->pluck('AgentName', 'AgentCode')->toArray();
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error('Agent API error: ' . $e->getMessage());
-        }
-
-        return [];
-    }
-
-
-    protected function searchHawbApi(string $hawbNumber): array
-    {
-        // This endpoint requires authentication via the identity provider.
-        $token = $this->getAuthToken();
-        if (empty($token)) {
-            Log::warning('No auth token available for HAWB check');
-            return [];
-        }
-
-        try {
-            // Use the check-in endpoint which accepts ?search=
-            $url = "https://wh-nba.asgl.net.vn/api/check-in/hawb?search={$hawbNumber}";
-            $response = Http::withHeaders([
-                'Authorization' => "Bearer {$token}",
-                'Accept' => 'application/json',
-            ])->timeout(10)->get($url);
-
-            $data = $response->json();
-            if (($data['success'] ?? false) && isset($data['data'])) {
-                return $data['data'];
-            }
-        } catch (\Exception $e) {
-            Log::error('HAWB API error: ' . $e->getMessage());
-        }
-
-        return [];
-    }
-
-    /**
-     * Get cached auth token from identity provider. Cached for 1 hour.
-     */
-    protected function getAuthToken(): ?string
-    {
-        return Cache::remember('asgl_api_token', 3600, function () {
-            try {
-                $login = env('ASGL_API_LOGIN', 'ASGL-ĐKK');
-                $password = env('ASGL_API_PASSWORD', 'Asgl@1909');
-
-                $response = Http::timeout(10)->post('https://id.asgl.net.vn/api/auth/login', [
-                    'login' => $login,
-                    'password' => $password,
-                ]);
-
-                $data = $response->json();
-                if (($data['success'] ?? false) && isset($data['data']['token'])) {
-                    return $data['data']['token'];
-                }
-            } catch (\Exception $e) {
-                Log::error('Auth token fetch error: ' . $e->getMessage());
-            }
-
-            return null;
-        });
-    }
-
     protected function fetchAndBindHawbs(string $search): void
     {
-        $apiData = $this->searchHawbApi($search);
-        // dd($apiData);
-        // Expected shape: ['hawb' => [ {Hawb, Pcs, ...}, ... ]]
-        $rows = [];
-        if (isset($apiData['hawb']) && is_array($apiData['hawb'])) {
-            foreach ($apiData['hawb'] as $item) {
-                $rows[] = [
-                    'hawb_number' => $item['Hawb'] ?? null,
-                    'pcs' => isset($item['Pcs']) ? (string)$item['Pcs'] : null,
-                ];
+        $this->hasSearched = true;
+        $apiData = HawbService::searchHawbApi($search);
+        
+        if ($apiData) {
+            $newRows = HawbService::processHawbSearchResults($apiData);
+            
+            if (!empty($newRows)) {
+                // Get existing hawbs or initialize empty array
+                $existingHawbs = $this->data['hawbs'] ?? [];
+                
+                $result = HawbService::addHawbsToExisting($existingHawbs, $newRows);
+                
+                // Update the data
+                $this->data['hawbs'] = $result['hawbs'];
+                
+                if ($result['added_count'] > 0) {
+                    $this->searchMessage = "Đã thêm {$result['added_count']} HAWB mới (Tổng: {$result['total_count']})";
+                } else {
+                    $this->searchMessage = 'HAWB đã tồn tại trong danh sách';
+                }
+            } else {
+                $this->searchMessage = 'Mã HAWB sai';
             }
+        } else {
+            $this->searchMessage = 'Mã HAWB sai';
         }
+    }
+
+    protected function getSearchHelperText(?string $searchValue): string
+    {
+        if (empty($searchValue)) {
+            return 'Vui lòng nhập mã HAWB để tìm kiếm';
+        }
+
+        if (!$this->hasSearched) {
+            return 'Nhấn nút tìm kiếm để lấy dữ liệu HAWB';
+        }
+
+        return $this->searchMessage ?? 'Nhấn nút tìm kiếm để lấy dữ liệu HAWB';
     }
 
     public function create(): void
@@ -266,27 +189,35 @@ class RegistrationVehicleForm extends Component implements HasForms
             ->where('driver_phone', $data['driver_phone'])
             ->where('driver_id_card', $data['driver_id_card'])
             ->where('vehicle_number', $data['vehicle_number'])
-            ->where('hawb_number', $data['hawb_number'])
+            ->where('expected_in_at', '>=', $newExpectedTime->copy()->subHours(4))
+            ->where('expected_in_at', '<=', $newExpectedTime->copy()->addHours(4))
             ->orderBy('expected_in_at', 'desc')
             ->first();
 
         if ($existingRegistration) {
-            $existingTime = Carbon::parse($existingRegistration->expected_in_at);
-            $hoursDifference = $newExpectedTime->diffInHours($existingTime, false);
-
-            if (abs($hoursDifference) < 4) {
-                Notification::make()
-                    ->title('Lỗi đăng ký')
-                    ->body('Đăng ký trước đó thành công rồi phải vào giờ khác (ít nhất cách 4 tiếng).')
-                    ->danger()
-                    ->duration(5000)
-                    ->send();
-                return;
-            }
+            Notification::make()
+                ->title('Lỗi đăng ký')
+                ->body('Đăng ký trước đó thành công rồi phải vào giờ khác (ít nhất cách 4 tiếng).')
+                ->danger()
+                ->duration(5000)
+                ->send();
+            return;
         }
-
-        $data['status'] = 'none';
-        $record = RegistrationVehicle::create($data);
+        
+        // Process data before saving
+        $processedData = $data;
+        
+        // Encode hawbs array to JSON for hawb_number field
+        if (isset($processedData['hawbs'])) {
+            $processedData['hawb_number'] = json_encode($processedData['hawbs']);
+            unset($processedData['hawbs']); // Remove hawbs array
+        }
+        
+        // Remove search_hawb field as it's not needed in database
+        unset($processedData['search_hawb']);
+        
+        $processedData['status'] = 'none';
+        $record = RegistrationVehicle::create($processedData);
 
         // Gửi email và thông báo
         $this->sendEmailAndNotifications($record);
@@ -298,21 +229,25 @@ class RegistrationVehicleForm extends Component implements HasForms
             ->duration(5000)
             ->send();
 
-        // Reset form
+        // Dispatch event for localStorage saving
+        $this->dispatch('registration-success', $data);
+
+        // Reset form - updated to match current structure
         $this->form->fill([
             'driver_name' => null,
             'name' => null,
             'driver_id_card' => null,
             'driver_phone' => null,
             'vehicle_number' => null,
-            'hawb_number' => null,
-            'pcs' => null,
+            'search_hawb' => null,
+            'hawbs' => [],
             'expected_in_at' => now()->format('Y-m-d H:i'),
             'notes' => null,
         ]);
 
-        $this->hawbMessage = null;
-        $this->hawbMessageType = null;
+        // Reset search state
+        $this->searchMessage = null;
+        $this->hasSearched = false;
     }
 
     protected function sendEmailAndNotifications(RegistrationVehicle $record): void
