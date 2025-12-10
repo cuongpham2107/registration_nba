@@ -199,11 +199,16 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
 
                         return isset($parts[1]) ? trim($parts[1]) : '';
                     })
-                    ->weight(FontWeight::Bold),
+                    ->weight(FontWeight::Bold)
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('papers')
-                    ->label('Số CCCD'),
+                    ->label('Số CCCD')
+                    ->weight(FontWeight::Bold)
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('bks')
-                    ->label('Biển kiểm soát'),
+                    ->label('Biển kiểm soát')
+                    ->weight(FontWeight::Bold)
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('areas')
                     ->label('Khu vực')
@@ -212,7 +217,8 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
 
                         return $area ? $area->name : '';
                     })
-                    ->badge(),
+                    ->badge()
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Trạng thái')
@@ -237,14 +243,16 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             'coming_in' => 'Đang vào',
                             'came_out' => 'Đã ra',
                         };
-                    }),
+                    })
+                    ->toggleable(),
 
                 // Tables\Columns\ColumnGroup::make('Thời gian dự kiến', [
                 Tables\Columns\TextColumn::make('start_date')
                     ->label('Giờ vào dự kiến')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
-                    ->alignment(Alignment::Center),
+                    ->alignment(Alignment::Center)
+                    ->toggleable(),
                 //     Tables\Columns\TextColumn::make('end_date')
                 //         ->label('Giờ ra dự kiến')
                 //         ->dateTime('d/m/Y H:i')
@@ -254,11 +262,13 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                 Tables\Columns\ColumnGroup::make('Thời gian thực tế', [
                     Tables\Columns\TextColumn::make('actual_date_in')
                         ->label('Giờ vào thực tế')
-                        ->dateTime('d/m/Y H:i'),
+                        ->dateTime('d/m/Y H:i')
+                        ->toggleable(),
                     Tables\Columns\TextColumn::make('actual_date_out')
                         ->label('Giờ ra thực tế')
                         ->dateTime('d/m/Y H:i')
-                        ->alignment(Alignment::Center),
+                        ->alignment(Alignment::Center)
+                        ->toggleable(),
                 ])->alignment(Alignment::Center)->wrapHeader(),
                 Tables\Columns\TextColumn::make('job')
                     ->label('Mục đích')
@@ -270,7 +280,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
 
                         return isset($parts[1]) ? trim($parts[1]) : '';
                     })
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\ToggleColumn::make('is_priority')
                     ->label('Ưu tiên')

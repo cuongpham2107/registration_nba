@@ -27,7 +27,7 @@ class GiveCardAction
                     ->schema([
                         Forms\Components\Select::make('id')
                             ->label('Thẻ')
-                            ->options(Card::where('status', 'inactive')->get()->pluck('card_name', 'id'))
+                            ->options(Card::all()->pluck('card_name', 'id'))
                             ->required()
                             ->searchable(['card_name', 'card_number'])
                             ->preload(),
