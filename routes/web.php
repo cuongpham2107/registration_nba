@@ -31,8 +31,12 @@ Route::get('test', function(){
     dd($registration->customers->first());
 });
 
+// Route cũ với blade template thuần
 Route::get('/dang-ky-xe-khai-thac', function(){
     return view('registration_vehicle.index');
-});
+})->name('registration-vehicle.index-old');
+
+// Route mới với Filament Livewire
+Route::get('/dang-ky-xe-khai-thac-new', \App\Livewire\RegistrationVehicleForm::class)->name('registration-vehicle.index');
 
 Route::post('/registration-vehicle', [RegistrationController::class, 'storeVehicle'])->name('registration-vehicle.store');

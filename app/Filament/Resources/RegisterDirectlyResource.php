@@ -269,7 +269,8 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                         $parts = explode('|', $record->job);
 
                         return isset($parts[1]) ? trim($parts[1]) : '';
-                    }),
+                    })
+                    ->toggleable(),
 
                 Tables\Columns\ToggleColumn::make('is_priority')
                     ->label('Ưu tiên')

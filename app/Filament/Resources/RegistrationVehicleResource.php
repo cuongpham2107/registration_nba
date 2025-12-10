@@ -19,6 +19,7 @@ use Filament\Tables;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
 
+
 class RegistrationVehicleResource extends Resource
 {
     protected static ?string $model = RegistrationVehicle::class;
@@ -66,6 +67,7 @@ class RegistrationVehicleResource extends Resource
                         ->maxLength(255),
                     Forms\Components\TextInput::make('pcs')
                         ->label('Số kiện')
+                        
                         ->maxLength(255),
                     Forms\Components\Toggle::make('is_priority')
                         ->label('Ưu tiên')
@@ -143,6 +145,7 @@ class RegistrationVehicleResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('pcs')
                     ->label('Số kiện')
+                    ->alignment(Alignment::Center)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('expected_in_at')
                     ->label('Thời gian vào dự kiến')
