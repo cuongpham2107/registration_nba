@@ -67,6 +67,8 @@ class GiveCardAction
                     $card->status = 'active';
                     $card->save();
                     $record->card_id = $card->id;
+                    $record->registrationVehicle->status = 'entering';
+                    $record->registrationVehicle->save();
                     $record->save();
 
                     Notification::make()

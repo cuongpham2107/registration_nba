@@ -31,6 +31,8 @@ class RegistrationVehicleFilter extends Filter
                         'none' => 'Chưa gửi',
                         'sent' => 'Cần duyệt',
                         'approve' => 'Đã phê duyệt',
+                        'entering' => 'Đang vào',
+                        'exited' => 'Đã ra',
                         'reject' => 'Bị từ chối',
                     ])
                     ->default('sent'),
@@ -94,6 +96,8 @@ class RegistrationVehicleFilter extends Filter
                         'none' => 'Chưa gửi',
                         'sent' => 'Cần duyệt',
                         'approve' => 'Đã phê duyệt',
+                        'entering' => 'Đang vào',
+                        'exited' => 'Đã ra',
                         'reject' => 'Bị từ chối',
                         default => $data['status'],
                     };

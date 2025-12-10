@@ -28,6 +28,8 @@ class ReturnCardAction
                 try {
                     $record->card->update(['status' => 'inactive']);
                     $record->card_id = null;
+                    $record->registrationVehicle->status = 'exited';
+                    $record->registrationVehicle->save();
                     $record->update([
                         'status' => 'came_out',
                         'actual_date_out' => Carbon::now('Asia/Ho_Chi_Minh'),

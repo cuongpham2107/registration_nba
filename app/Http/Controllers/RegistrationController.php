@@ -9,6 +9,7 @@ use App\Models\RegisterDirectly;
 use App\Models\Registration;
 use App\Models\RegistrationVehicle;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class RegistrationController extends Controller
@@ -217,25 +218,67 @@ class RegistrationController extends Controller
 
     public function createRegistrationDirectlyFromVehicle(RegistrationVehicle $registration, array $areas, bool $is_priority = false)
     {
-        $startDate = Carbon::parse($registration->expected_in_at, 'Asia/Ho_Chi_Minh');
+        // Sử dụng database transaction với lock để đảm bảo atomic operation
+        return DB::transaction(function () use ($registration, $areas, $is_priority) {
+            // Lock bản ghi registration để tránh race condition
+            $lockedRegistration = RegistrationVehicle::where('id', $registration->id)->lockForUpdate()->first();
+            
+            if (!$lockedRegistration) {
+                throw new \Exception('Không tìm thấy bản ghi đăng ký');
+            }
 
-        $record = RegisterDirectly::create([
-            'name' => $registration->driver_name . ' | ' . $registration->name,
-            'papers' => $registration->driver_id_card ?? '',
-            'address' => '',
-            'bks' => $registration->vehicle_number ?? '',
-            'contact_person' => '',
-            'job' => 'Số HAWB: ' . ($registration->hawb_number ?? '') .
-                ($registration->notes ? ' | Ghi chú: ' . $registration->notes : ''),
-            'start_date' => $startDate,
-            'end_date' => null,
-            'is_priority' => $is_priority,
-            'type' => 'vehicle',
-            'areas' => $areas,
-            'status' => 'none',
-        ]);
+            // Kiểm tra status để tránh double processing
+            if ($lockedRegistration->status === 'approve') {
+                // Tìm bản ghi RegisterDirectly đã tồn tại
+                $existingRecord = RegisterDirectly::where('id_registration_vehicle', $lockedRegistration->id)->first();
+                if ($existingRecord) {
+                    return $existingRecord->id;
+                }
+            }
 
-        return $record->id;
+            $startDate = Carbon::parse($registration->expected_in_at, 'Asia/Ho_Chi_Minh');
+
+            // Kiểm tra xem đã có bản ghi nào được tạo từ registration này trong 2 phút qua không (tăng từ 30 giây)
+            $existingRecord = RegisterDirectly::where('id_registration_vehicle', $registration->id)
+                ->where('created_at', '>=', now()->subMinutes(2))
+                ->first();
+                
+            if ($existingRecord) {
+                // Trả về ID của bản ghi đã tồn tại thay vì tạo mới
+                return $existingRecord->id;
+            }
+
+            // Kiểm tra xem đã có bản ghi nào với cùng thông tin trong vòng 5 phút (tăng từ 1 phút)
+            $duplicateCheck = RegisterDirectly::where('name', $registration->driver_name . ' | ' . $registration->name)
+                ->where('papers', $registration->driver_id_card ?? '')
+                ->where('bks', $registration->vehicle_number ?? '')
+                ->where('created_at', '>=', now()->subMinutes(5))
+                ->first();
+                
+            if ($duplicateCheck) {
+                return $duplicateCheck->id;
+            }
+
+            // Tạo bản ghi mới trong transaction
+            $record = RegisterDirectly::create([
+                'name' => $registration->driver_name . ' | ' . $registration->name,
+                'papers' => $registration->driver_id_card ?? '',
+                'address' => '',
+                'bks' => $registration->vehicle_number ?? '',
+                'contact_person' => '',
+                'job' => 'Số HAWB: ' . ($registration->hawb_number ?? '') .
+                    ($registration->notes ? ' | Ghi chú: ' . $registration->notes : ''),
+                'start_date' => $startDate,
+                'end_date' => null,
+                'is_priority' => $is_priority,
+                'id_registration_vehicle' => $registration->id,
+                'type' => 'vehicle',
+                'areas' => $areas,
+                'status' => 'none',
+            ]);
+
+            return $record->id;
+        });
     }
 
     public function storeVehicle(Request $request)

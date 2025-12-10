@@ -23,7 +23,10 @@ class RegisterDirectly extends Model
     {
         return $this->belongsTo(Card::class);
     }
-
+    public function registrationVehicle()
+    {
+        return $this->belongsTo(RegistrationVehicle::class, 'id_registration_vehicle');
+    }
     protected $casts = [
         'areas' => 'array',
     ];

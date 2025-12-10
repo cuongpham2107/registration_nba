@@ -272,6 +272,8 @@ class RegistrationVehicleResource extends Resource
                         'none' => 'Chưa gửi',
                         'sent' => 'Cần duyệt',
                         'approve' => 'Đã phê duyệt',
+                        'entering' => 'Đang vào',
+                        'exited' => 'Đã ra',
                         'reject' => 'Từ chối',
                         default => $state,
                     })
@@ -279,6 +281,8 @@ class RegistrationVehicleResource extends Resource
                         'none' => 'gray',
                         'sent' => 'warning',
                         'approve' => 'success',
+                        'entering' => 'primary',
+                        'exited' => 'secondary',
                         'reject' => 'danger',
                         default => 'gray',
                     })

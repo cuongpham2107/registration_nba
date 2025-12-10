@@ -55,6 +55,18 @@ class ApproveVehicleAction
             )
             ->action(function (array $data, RegistrationVehicle $record) {
                 try {
+                    // Kiểm tra xem record đã được approve chưa để tránh double-click
+                    $record->refresh(); // Reload từ database
+                    
+                    if ($record->status === 'approve') {
+                        Notification::make()
+                            ->title('Thông báo')
+                            ->warning()
+                            ->body('Đăng ký này đã được phê duyệt rồi.')
+                            ->send();
+                        return;
+                    }
+
                     $id = (new \App\Http\Controllers\RegistrationController())->createRegistrationDirectlyFromVehicle($record, $data['areas'], $data['is_priority'] ?? false);
                     
                     if (!$id) {
