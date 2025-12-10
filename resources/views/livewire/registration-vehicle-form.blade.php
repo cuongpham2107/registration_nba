@@ -1,20 +1,18 @@
-<div class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-700 py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-700 py-3 px-2 sm:px-3 lg:px-4">
     <div class="max-w-3xl mx-auto">
         <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
             <!-- Header -->
-            <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-8 text-center">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-1 py-2 text-center">
                 <div class="flex justify-center mb-4">
-                    <img src="{{ asset('images/ASG.png') }}" alt="ASG Logo" class="h-16 w-16">
+                    <img src="{{ asset('images/ASG.png') }}" alt="ASG Logo" class="h-8 w-24">
                 </div>
-                <h1 class="text-3xl font-bold text-white mb-2">Đăng ký xe khai thác</h1>
-                <p class="text-blue-100">Vui lòng điền đầy đủ thông tin bên dưới</p>
+                <h1 class="text-xl font-bold mb-2">Đăng ký xe khai thác</h1>
             </div>
 
             <!-- Form Content -->
             <div class="px-6 py-8">
                 <form wire:submit="create">
                     {{ $this->form }}
-
                     <div class="mt-8 flex gap-4">
                         <button 
                             type="submit"
