@@ -35,6 +35,9 @@ class RegistrationVehicleForm extends Component implements HasForms
         $this->form->fill([
             'expected_in_at' => now()->format('Y-m-d H:i'),
         ]);
+        
+        // Load data from localStorage if available via JavaScript
+        $this->dispatch('load-stored-data');
     }
 
     public function form(Form $form): Form
@@ -208,6 +211,30 @@ class RegistrationVehicleForm extends Component implements HasForms
         }
 
         return $this->searchMessage ?? 'Nhấn nút tìm kiếm để lấy dữ liệu HAWB';
+    }
+
+    public function loadStoredDataFromJs($storedData): void
+    {
+        if (!empty($storedData)) {
+            // Fill form with stored data (excluding HAWB data)
+            $formData = [
+                'driver_name' => $storedData['driver_name'] ?? '',
+                'driver_phone' => $storedData['driver_phone'] ?? '',
+                'driver_id_card' => $storedData['driver_id_card'] ?? '',
+                'vehicle_number' => $storedData['vehicle_number'] ?? '',
+                'name' => $storedData['name'] ?? '',
+                'notes' => $storedData['notes'] ?? '',
+                'expected_in_at' => now()->format('Y-m-d H:i'),
+                'hawbs' => [], // Always reset HAWB to empty
+                'search_hawb' => '', // Reset search field
+            ];
+            
+            $this->form->fill($formData);
+            
+            // Reset search state
+            $this->searchMessage = null;
+            $this->hasSearched = false;
+        }
     }
 
     public function create(): void

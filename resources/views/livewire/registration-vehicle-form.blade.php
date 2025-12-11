@@ -12,10 +12,21 @@
             <!-- Form Content -->
             <div class="px-1 py-2">
                 <!-- Thông báo dữ liệu đã lưu -->
-                <div id="stored-data-alert" style="display: none;" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
-                    <span style="font-size: 18px;">ℹ️</span>
-                    <div>
-                        <span id="stored-data-message" style="color: #1e40af; font-size: 14px; font-weight: 500;"></span>
+                <div id="stored-data-alert" style="display: none;" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span style="font-size: 18px;">ℹ️</span>
+                            <div>
+                                <span id="stored-data-message" style="color: #1e40af; font-size: 14px; font-weight: 500;">Đã có dữ liệu được lưu trước đó</span>
+                            </div>
+                        </div>
+                        <button 
+                            onclick="clearStorage()" 
+                            class="text-red-600 hover:text-red-800 text-sm font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                            title="Xóa dữ liệu đã lưu"
+                        >
+                            ✕ Xóa
+                        </button>
                     </div>
                 </div>
 
@@ -65,19 +76,86 @@
     <x-filament-actions::modals />
 
     <script>
+        let alertShown = false; // Flag to prevent showing alert multiple times
+        let alertObserver = null; // Observer for alert element
+        
         document.addEventListener('DOMContentLoaded', function() {
+            // Setup observer for alert element to prevent unexpected hiding
+            setupAlertObserver();
+            
+            console.log('DOM loaded, checking for stored data...');
+            
             // Load stored data on page load
             loadStoredData();
 
             // Listen for successful form submission
             document.addEventListener('livewire:initialized', () => {
+                console.log('Livewire initialized');
+                
+                // Load stored data again after Livewire is initialized (only if not shown yet)
+                setTimeout(() => {
+                    if (!alertShown) {
+                        console.log('Livewire ready, attempting to load stored data again...');
+                        loadStoredData();
+                    }
+                }, 100);
+
                 Livewire.on('registration-success', (event) => {
                     const data = event[0] || event;
                     saveToStorage(data);
+                    alertShown = false; // Reset flag for new data
                     showStoredDataAlert(data.savedAt);
+                });
+
+                // Listen for load-stored-data event from Livewire
+                Livewire.on('load-stored-data', () => {
+                    const saved = localStorage.getItem('livewireVehicleForm');
+                    if (saved) {
+                        try {
+                            const data = JSON.parse(saved);
+                            if (data.savedAt) {
+                                // Send stored data to Livewire component
+                                const component = window.Livewire.find(document.querySelector('[wire\\:id]').getAttribute('wire:id'));
+                                if (component) {
+                                    component.call('loadStoredDataFromJs', data);
+                                }
+                                if (!alertShown) {
+                                    showStoredDataAlert(data.savedAt);
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Error loading stored data:', e);
+                        }
+                    }
                 });
             });
         });
+
+        function setupAlertObserver() {
+            const alertElement = document.getElementById('stored-data-alert');
+            if (alertElement && window.MutationObserver) {
+                alertObserver = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                            const target = mutation.target;
+                            if (alertShown && target.style.display === 'none') {
+                                console.log('Alert was hidden unexpectedly, restoring...');
+                                setTimeout(() => {
+                                    target.style.display = 'block';
+                                    target.style.visibility = 'visible';
+                                    target.style.opacity = '1';
+                                }, 10);
+                            }
+                        }
+                    });
+                });
+                
+                alertObserver.observe(alertElement, {
+                    attributes: true,
+                    attributeFilter: ['style']
+                });
+            }
+        }
 
         function saveToStorage(data) {
             const storageData = {
@@ -86,35 +164,100 @@
                 driver_id_card: data.driver_id_card || '',
                 vehicle_number: data.vehicle_number || '',
                 name: data.name || '',
-                hawb_number: data.hawb_number || '',
                 notes: data.notes || '',
                 savedAt: new Date().toISOString()
             };
+            
+            // Clean up old data format by removing hawb_number if exists
+            localStorage.removeItem('livewireVehicleForm');
             localStorage.setItem('livewireVehicleForm', JSON.stringify(storageData));
+            
+            console.log('Saved to storage:', storageData);
         }
 
         function loadStoredData() {
+            // This function is now mainly for showing the alert
+            // The actual form filling is handled by the load-stored-data event
             const saved = localStorage.getItem('livewireVehicleForm');
+            console.log('Loading stored data:', saved);
+            
             if (saved) {
                 try {
                     const data = JSON.parse(saved);
-                    if (data.savedAt) {
-                        showStoredDataAlert(data.savedAt);
+                    console.log('Parsed stored data:', data);
+                    
+                    // Clean up old format - remove hawb_number if exists
+                    if (data.hawb_number !== undefined) {
+                        console.log('Cleaning up old storage format...');
+                        delete data.hawb_number;
+                        localStorage.setItem('livewireVehicleForm', JSON.stringify(data));
+                    }
+                    
+                    // Always try to show alert if we have stored data
+                    if (!alertShown) {
+                        console.log('Attempting to show alert with savedAt:', data.savedAt);
+                        showStoredDataAlert(data.savedAt || null);
+                    } else {
+                        console.log('Alert already shown, skipping');
                     }
                 } catch (e) {
                     console.error('Error loading stored data:', e);
+                    // Even if there's an error, try to show a basic alert
+                    if (!alertShown) {
+                        showStoredDataAlert(null);
+                    }
                 }
+            } else {
+                console.log('No stored data found');
             }
         }
 
         function showStoredDataAlert(savedAt) {
+            if (alertShown) return; // Prevent showing multiple times
+            
             const alertElement = document.getElementById('stored-data-alert');
             const messageElement = document.getElementById('stored-data-message');
             
-            if (alertElement && messageElement && savedAt) {
-                const formattedTime = formatDateTime(savedAt);
-                messageElement.textContent = `Lần gửi thành công: ${formattedTime}`;
-                alertElement.style.display = 'flex';
+            console.log('showStoredDataAlert called with:', savedAt);
+            console.log('Alert element:', alertElement);
+            console.log('Message element:', messageElement);
+            
+            if (alertElement && messageElement) {
+                let displayText = 'Đã có dữ liệu được lưu trước đó';
+                
+                if (savedAt) {
+                    try {
+                        const formattedTime = formatDateTime(savedAt);
+                        displayText = `Lần gửi thành công: ${formattedTime}`;
+                        console.log('Formatted time:', formattedTime);
+                    } catch (e) {
+                        console.error('Error formatting date:', e);
+                    }
+                }
+                
+                messageElement.textContent = displayText;
+                console.log('Set message text to:', displayText);
+                
+                // Show the alert and mark as shown
+                alertElement.style.display = 'block';
+                alertElement.style.visibility = 'visible';
+                alertElement.style.opacity = '1';
+                alertShown = true;
+                
+                console.log('Alert shown, alertShown flag set to true');
+                
+                // Ensure it stays visible by setting it again after a short delay
+                setTimeout(() => {
+                    if (alertElement.style.display !== 'none') {
+                        alertElement.style.display = 'block';
+                        alertElement.style.visibility = 'visible';
+                        alertElement.style.opacity = '1';
+                        messageElement.textContent = displayText; // Ensure text is still there
+                        console.log('Alert visibility reinforced');
+                    }
+                }, 200);
+            } else {
+                console.error('Alert or message element not found');
             }
         }
 
@@ -134,7 +277,15 @@
             const alertElement = document.getElementById('stored-data-alert');
             if (alertElement) {
                 alertElement.style.display = 'none';
+                alertElement.style.visibility = 'hidden';
+                alertElement.style.opacity = '0';
             }
+            
+            // Reset the flag
+            alertShown = false;
+            
+            // Reload the page to reset the form
+            window.location.reload();
         }
     </script>
 </div>

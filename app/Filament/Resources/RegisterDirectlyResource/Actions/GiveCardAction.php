@@ -12,6 +12,7 @@ use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class GiveCardAction
 {
@@ -61,25 +62,38 @@ class GiveCardAction
             ])
             ->action(function (array $data, RegisterDirectly $record): void {
                 try {
-                    $record->status = 'coming_in';
-                    $record->actual_date_in =  $data['start_date'];
-                    $card = Card::where('id', $data['id'])->first();
-                    $card->status = 'active';
-                    $card->save();
-                    $record->card_id = $card->id;
-                    $record->registrationVehicle->status = 'entering';
-                    $record->registrationVehicle->save();
-                    $record->save();
+                    DB::transaction(function () use ($data, $record) {
+                        // Update record status and actual_date_in
+                        $record->status = 'coming_in';
+                        $record->actual_date_in = $data['start_date'];
+                        
+                        // Get and update card
+                        $card = Card::where('id', $data['id'])->firstOrFail();
+                        $card->status = 'active';
+                        $card->save();
+                        
+                        // Assign card to record
+                        $record->card_id = $card->id;
+                        
+                        // Update registration vehicle status
+                        $record->registrationVehicle->status = 'entering';
+                        $record->registrationVehicle->save();
+                        
+                        // Save record
+                        $record->save();
+                    });
 
                     Notification::make()
                         ->title('Thành công')
                         ->body('Đã chuyển trạng thái cho khách vào')
-                        ->success();
+                        ->success()
+                        ->send();
                 } catch (\Exception $e) {
                     Notification::make()
                         ->title('Thất bại')
                         ->body('Lỗi: ' . $e->getMessage())
-                        ->warning();
+                        ->danger()
+                        ->send();
                 }
             });
     }
