@@ -46,7 +46,7 @@ table.fi-ta-table tbody {
 } */
 
 /* Container chính */
-.fi-ta-content {
+/* .fi-ta-content {
     position: relative;
     max-width: 100%;
     overflow: hidden;
@@ -55,7 +55,7 @@ table.fi-ta-table tbody {
     height: 800px;
     overflow: auto;
     cursor: grab;
-}
+} */
 
 /* Dark Mode - Container */
 .dark .fi-ta-content {
