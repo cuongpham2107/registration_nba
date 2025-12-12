@@ -299,7 +299,13 @@ class RegistrationVehicleResource extends Resource
                     ->label('Ưu tiên')
                     ->sortable()
                     ->onIcon('heroicon-o-arrow-up')
-                    ->offIcon('heroicon-o-arrow-down'),
+                    ->offIcon('heroicon-o-arrow-down')
+                    ->beforeStateUpdated(function ($record, $state) {
+                        if($record->status === 'approve' && $record->registerDirectly !== null) {
+                            $record->registerDirectly->is_priority = $state;
+                            $record->registerDirectly->save();
+                        }
+                    }),
                 Tables\Columns\TextColumn::make('approver.name')
                     ->label('Người phê duyệt')
                     ->badge()
