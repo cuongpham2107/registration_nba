@@ -387,7 +387,9 @@ class RegistrationController extends Controller
                         \Illuminate\Support\Facades\Log::error('Notification sending failed: ' . $e->getMessage());
                     }
                     
-                    return redirect()->back()->with('success', 'Đăng ký xe đã được tạo và gửi email thành công!');
+                    // Redirect to success page with registration data
+                    return redirect()->route('registration-vehicle.success')
+                        ->with('registration_data', $validated);
                 }
 
                 return redirect()->back()->with('error', 'Đăng ký xe đã được tạo nhưng không thể gửi email.');

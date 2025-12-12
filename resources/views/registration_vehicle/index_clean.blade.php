@@ -55,15 +55,15 @@
         .icon {
             width: 70px;
             height: 70px;
-            /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
-            /* border-radius: 50%; */
-            margin: 0 auto 5px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            margin: 0 auto 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            /* color: white; */
-            /* font-size: 30px; */
-            /* box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3); */
+            color: white;
+            font-size: 30px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
 
         h1 {
@@ -77,17 +77,17 @@
         .subtitle {
             color: #718096;
             font-size: 14px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
         }
 
         .form-group {
-            margin-bottom: 5px;
+            margin-bottom: 15px;
         }
 
         .form-row {
             display: grid;
             gap: 8px;
-            margin-bottom: 5px;
+            margin-bottom: 15px;
         }
 
         label {
@@ -263,7 +263,7 @@
             }
 
             .form-group {
-                margin-bottom: 5px;
+                margin-bottom: 10px;
             }
 
             label {
@@ -308,7 +308,7 @@
         @media (min-width: 641px) {
             .form-row {
                 grid-template-columns: 1fr 1fr;
-                gap: 5px;
+                gap: 15px;
             }
         }
 
@@ -321,7 +321,7 @@
 
         @media (min-width: 641px) {
             .form-row-always-2 {
-                gap: 5px !important;
+                gap: 15px !important;
             }
         }
     </style>

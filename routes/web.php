@@ -40,3 +40,8 @@ Route::get('/dang-ky-xe-khai-thac', function(){
 Route::get('/dang-ky-xe-khai-thac-old', \App\Livewire\RegistrationVehicleForm::class)->name('registration-vehicle.index');
 
 Route::post('/registration-vehicle', [RegistrationController::class, 'storeVehicle'])->name('registration-vehicle.store');
+
+// Success page route
+Route::get('/registration-vehicle/success', function(){
+    return view('registration_vehicle.success');
+})->name('registration-vehicle.success');
