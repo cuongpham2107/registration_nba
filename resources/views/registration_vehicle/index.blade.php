@@ -629,6 +629,47 @@
                 }
             }))
         })
+
+        // Vô hiệu hóa việc nhấn Enter để submit form trên điện thoại
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('vehicleForm');
+            const inputs = form.querySelectorAll('input[type="text"], input[type="datetime-local"], textarea');
+            
+            // Ngăn chặn Enter key submit form cho tất cả input
+            inputs.forEach(function(input) {
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        
+                        // Chuyển focus đến input tiếp theo thay vì submit
+                        const currentIndex = Array.from(inputs).indexOf(input);
+                        const nextInput = inputs[currentIndex + 1];
+                        
+                        if (nextInput) {
+                            nextInput.focus();
+                        } else {
+                            // Nếu đã ở input cuối cùng, blur input hiện tại
+                            input.blur();
+                        }
+                        
+                        return false;
+                    }
+                });
+            });
+            
+            // Ngăn chặn submit form khi nhấn Enter trên form
+            form.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    // Chỉ cho phép submit nếu đang focus vào button submit
+                    const activeElement = document.activeElement;
+                    if (activeElement && activeElement.type === 'submit') {
+                        return true;
+                    }
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
     </script>
 </body>
 

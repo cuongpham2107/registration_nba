@@ -324,10 +324,10 @@ class RegistrationController extends Controller
         
         if ($existingRegistration) {
             $existingTime = Carbon::parse($existingRegistration->expected_in_at);
-            $hoursDifference = $newExpectedTime->diffInHours($existingTime, false);
+            $minutesDifference = $newExpectedTime->diffInMinutes($existingTime, false);
             
-            // Kiểm tra nếu thời gian mới không cách thời gian cũ ít nhất 4 tiếng
-            if (abs($hoursDifference) < 4) {
+            // Kiểm tra nếu thời gian mới không cách thời gian cũ ít nhất 30 phút
+            if (abs($minutesDifference) < 30) {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'Đăng ký trước đó thành công rồi phải vào giờ khác.');

@@ -76,82 +76,89 @@ class RegistrationVehicleResource extends Resource
                         ->onIcon('heroicon-o-arrow-up')
                         ->offIcon('heroicon-o-arrow-down')
                         ->inline(false),
-                    Forms\Components\Hidden::make('hawb_number')
-                        ->dehydrated(true),
+                    Forms\Components\TextInput::make('hawb_number')
+                        ->label('Số HAWB')
+                        ->disabled(),
+                    Forms\Components\TextInput::make('pcs')
+                        ->label('Số kiện')
+                        ->disabled(),
+                        // ->helperText('Danh sách số HAWB đã thêm sẽ hiển thị bên dưới'),
+                    // Forms\Components\Hidden::make('hawb_number')
+                    //     ->dehydrated(true),
                         
-                    TextInput::make('search_hawb')
-                            ->label('Tìm kiếm HAWB')
-                            ->dehydrated(false)
-                            ->suffixAction(function () {
-                                return Action::make('search-hawb')
-                                    ->icon('heroicon-o-magnifying-glass')
-                                    ->action(function (Get $get, Set $set) {
-                                        $search = $get('search_hawb');
-                                        if ($search) {
-                                            $apiData = HawbService::searchHawbApi($search);
-                                            if ($apiData) {
-                                                self::processHawbSearchResults($apiData, $get, $set);
-                                            } else {
-                                                \Filament\Notifications\Notification::make()
-                                                    ->title('Không tìm thấy')
-                                                    ->body('Mã HAWB không tồn tại hoặc không hợp lệ')
-                                                    ->danger()
-                                                    ->send();
-                                            }
-                                        }
-                                    });
-                            })
-                            ->helperText('Nhập mã HAWB và nhấn nút tìm kiếm'),   
-                    TableRepeater::make('hawbs')
-                            ->label('Danh sách HAWB')
-                            ->columns(1)
-                            ->headers([
-                                Header::make('hawb_number')->label('Số HAWB'),
-                                Header::make('pcs')->label('Số PCS')->width('80px')->align(Alignment::Center),
-                            ])
-                            ->schema([
-                                TextInput::make('hawb_number')
-                                    ->label('Số HAWB')
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->reactive(),
-                                TextInput::make('pcs')
-                                    ->label('Số PCS')
-                                    ->maxLength(255)
-                            ])
-                            ->afterStateHydrated(function (TableRepeater $component, $state, $record) {
-                                // Get data from the hidden hawb_number field instead
-                                if ($record && $record->hawb_number) {
-                                    $hawbData = $record->hawb_number;
-                                    if (is_string($hawbData)) {
-                                        try {
-                                            $decoded = json_decode($hawbData, true, 512, JSON_THROW_ON_ERROR);
-                                            if (is_array($decoded)) {
-                                                $component->state($decoded);
-                                                return;
-                                            }
-                                        } catch (\JsonException $e) {
-                                            // If JSON decode fails, set empty array
-                                        }
-                                    }
-                                }
-                                $component->state([]);
-                            })
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                // Update the hidden hawb_number field when TableRepeater changes
-                                if (is_array($state)) {
-                                    $filtered = array_filter($state, function($item) {
-                                        return is_array($item) && !empty($item['hawb_number']);
-                                    });
-                                    $set('hawb_number', !empty($filtered) ? json_encode(array_values($filtered)) : null);
-                                }
-                            })
-                            ->dehydrated(false) // Don't save this field directly
-                            ->addable(false)
-                            ->reorderable(false)
-                            ->emptyLabel('Chưa có HAWB nào được thêm')
-                            ->minItems(0)
-                            ->columnSpanFull(),
+                    // TextInput::make('search_hawb')
+                    //         ->label('Tìm kiếm HAWB')
+                    //         ->dehydrated(false)
+                    //         ->suffixAction(function () {
+                    //             return Action::make('search-hawb')
+                    //                 ->icon('heroicon-o-magnifying-glass')
+                    //                 ->action(function (Get $get, Set $set) {
+                    //                     $search = $get('search_hawb');
+                    //                     if ($search) {
+                    //                         $apiData = HawbService::searchHawbApi($search);
+                    //                         if ($apiData) {
+                    //                             self::processHawbSearchResults($apiData, $get, $set);
+                    //                         } else {
+                    //                             \Filament\Notifications\Notification::make()
+                    //                                 ->title('Không tìm thấy')
+                    //                                 ->body('Mã HAWB không tồn tại hoặc không hợp lệ')
+                    //                                 ->danger()
+                    //                                 ->send();
+                    //                         }
+                    //                     }
+                    //                 });
+                    //         })
+                    //         ->helperText('Nhập mã HAWB và nhấn nút tìm kiếm'),   
+                    // TableRepeater::make('hawbs')
+                    //         ->label('Danh sách HAWB')
+                    //         ->columns(1)
+                    //         ->headers([
+                    //             Header::make('hawb_number')->label('Số HAWB'),
+                    //             Header::make('pcs')->label('Số PCS')->width('80px')->align(Alignment::Center),
+                    //         ])
+                    //         ->schema([
+                    //             TextInput::make('hawb_number')
+                    //                 ->label('Số HAWB')
+                    //                 ->required()
+                    //                 ->maxLength(255)
+                    //                 ->reactive(),
+                    //             TextInput::make('pcs')
+                    //                 ->label('Số PCS')
+                    //                 ->maxLength(255)
+                    //         ])
+                    //         ->afterStateHydrated(function (TableRepeater $component, $state, $record) {
+                    //             // Get data from the hidden hawb_number field instead
+                    //             if ($record && $record->hawb_number) {
+                    //                 $hawbData = $record->hawb_number;
+                    //                 if (is_string($hawbData)) {
+                    //                     try {
+                    //                         $decoded = json_decode($hawbData, true, 512, JSON_THROW_ON_ERROR);
+                    //                         if (is_array($decoded)) {
+                    //                             $component->state($decoded);
+                    //                             return;
+                    //                         }
+                    //                     } catch (\JsonException $e) {
+                    //                         // If JSON decode fails, set empty array
+                    //                     }
+                    //                 }
+                    //             }
+                    //             $component->state([]);
+                    //         })
+                    //         ->afterStateUpdated(function ($state, Forms\Set $set) {
+                    //             // Update the hidden hawb_number field when TableRepeater changes
+                    //             if (is_array($state)) {
+                    //                 $filtered = array_filter($state, function($item) {
+                    //                     return is_array($item) && !empty($item['hawb_number']);
+                    //                 });
+                    //                 $set('hawb_number', !empty($filtered) ? json_encode(array_values($filtered)) : null);
+                    //             }
+                    //         })
+                    //         ->dehydrated(false) // Don't save this field directly
+                    //         ->addable(false)
+                    //         ->reorderable(false)
+                    //         ->emptyLabel('Chưa có HAWB nào được thêm')
+                    //         ->minItems(0)
+                    //         ->columnSpanFull(),
                     Forms\Components\DateTimePicker::make('expected_in_at')
                         ->label('Thời gian vào dự kiến')
                         ->seconds(false)
