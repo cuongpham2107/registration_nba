@@ -290,7 +290,7 @@ class RegistrationController extends Controller
             'driver_id_card' => 'required|string|max:255',
             'vehicle_number' => 'required|string|max:255',
             'hawb_number' => 'required|string|max:255',
-            'pcs' => 'nullable|string|max:255',
+            'pcs' => 'nullable|integer',
             'expected_in_at' => 'required|date',
             'notes' => 'nullable|string',
         ], [
@@ -319,6 +319,7 @@ class RegistrationController extends Controller
             ->where('driver_id_card', $validated['driver_id_card'])
             ->where('vehicle_number', $validated['vehicle_number'])
             ->where('hawb_number', $validated['hawb_number'])
+            ->where('pcs', $validated['pcs'])
             ->orderBy('expected_in_at', 'desc') 
             ->first();
         
