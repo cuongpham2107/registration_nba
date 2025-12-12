@@ -21,7 +21,42 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',                    } finally {
+                        this.hawbLoading = false;
+                    }
+                },
+
+                showSuccessPopupWithCountdown() {
+                    this.showSuccessPopup = true;
+                    this.countdown = 5;
+                    this.closingPopup = false;
+                    
+                    // Start countdown
+                    this.countdownInterval = setInterval(() => {
+                        this.countdown--;
+                        if (this.countdown <= 0) {
+                            this.closeSuccessPopup();
+                        }
+                    }, 1000);
+                },
+
+                closeSuccessPopup() {
+                    if (this.countdownInterval) {
+                        clearInterval(this.countdownInterval);
+                        this.countdownInterval = null;
+                    }
+                    
+                    this.closingPopup = true;
+                    
+                    // Wait for animation to complete before hiding
+                    setTimeout(() => {
+                        this.showSuccessPopup = false;
+                        this.closingPopup = false;
+                        this.countdown = 5;
+                    }, 400);
+                }
+            })
+        }), sans-serif;
             background: rgba(82, 135, 173, 1);
             min-height: 100vh;
             display: flex;
@@ -230,6 +265,148 @@
             background: none;
         }
 
+        /* Success Popup Styles */
+        .success-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 
+                        0 0 0 1px rgba(255, 255, 255, 0.1);
+            z-index: 9999;
+            text-align: center;
+            width: 350px;
+            height: 350px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: popupIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .success-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9998;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes popupIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8) rotateY(20deg);
+                filter: blur(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) rotateY(0deg);
+                filter: blur(0px);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes popupOut {
+            from {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) rotateY(0deg);
+                filter: blur(0px);
+            }
+            to {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8) rotateY(-20deg);
+                filter: blur(10px);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        .success-popup.closing {
+            animation: popupOut 0.4s cubic-bezier(0.55, 0.085, 0.68, 0.53);
+        }
+
+        .success-popup-overlay.closing {
+            animation: fadeOut 0.4s ease-in;
+        }
+
+        .success-popup .success-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border-radius: 50%;
+            margin: 0 auto 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(17, 153, 142, 0.3);
+            animation: iconPulse 2s infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 10px 30px rgba(17, 153, 142, 0.3);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 15px 40px rgba(17, 153, 142, 0.5);
+            }
+        }
+
+        .success-popup h3 {
+            color: #2d3748;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .success-popup p {
+            color: #718096;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        .success-popup .countdown {
+            color: #11998e;
+            font-weight: 700;
+            font-size: 14px;
+            background: rgba(17, 153, 142, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(17, 153, 142, 0.2);
+        }
+
         @media (max-width: 640px) {
             body {
                 padding: 5px;
@@ -238,6 +415,34 @@
             .container {
                 padding: 15px;
                 border-radius: 12px;
+            }
+
+            .success-popup {
+                width: 300px;
+                height: 300px;
+                padding: 30px;
+            }
+
+            .success-popup .success-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 40px;
+                margin-bottom: 20px;
+            }
+
+            .success-popup h3 {
+                font-size: 20px;
+                margin-bottom: 12px;
+            }
+
+            .success-popup p {
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
+
+            .success-popup .countdown {
+                font-size: 12px;
+                padding: 6px 12px;
             }
 
             h1 {
@@ -328,7 +533,7 @@
             <p class="subtitle">Điền thông tin bên dưới</p>
         </div>
 
-        @if(session('success'))
+        @if(session('success') && !str_contains(session('success'), 'gửi email thành công'))
             <div class="alert alert-success">
                 {{ session('success') }}
             </div>
@@ -339,6 +544,20 @@
                 {{ session('error') }}
             </div>
         @endif
+
+        <!-- Success Popup -->
+        <div x-show="showSuccessPopup" x-cloak>
+            <div class="success-popup-overlay" 
+                 :class="{ 'closing': closingPopup }"
+                 @click="closeSuccessPopup"></div>
+            <div class="success-popup" 
+                 :class="{ 'closing': closingPopup }">
+                <div class="success-icon">✓</div>
+                <h3>Gửi thành công!</h3>
+                <p>Đăng ký xe khai thác đã được gửi thành công.<br>Vui lòng chờ phê duyệt.</p>
+                <div class="countdown" x-text="'Tự động đóng sau ' + countdown + ' giây'"></div>
+            </div>
+        </div>
 
         <!-- Thông báo dữ liệu đã lưu -->
         <div x-show="hasStoredData" x-cloak class="alert alert-info">
@@ -479,10 +698,20 @@
                 hawbError: '',
                 hawbSuccess: '',
                 lastCheckedHawb: '',
+                showSuccessPopup: false,
+                closingPopup: false,
+                countdown: 5,
+                countdownInterval: null,
 
                 init() {
                     // Load data from localStorage
                     this.loadFromStorage();
+
+                    // Check for success session and show popup
+                    const successMessage = @json(session('success'));
+                    if (successMessage && successMessage.includes('gửi email thành công')) {
+                        this.showSuccessPopupWithCountdown();
+                    }
 
                     // Set default datetime values if not loaded from storage or old input
                     const now = new Date();

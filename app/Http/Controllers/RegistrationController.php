@@ -310,7 +310,7 @@ class RegistrationController extends Controller
             'expected_in_at.date' => 'Thời gian vào dự kiến phải là ngày hợp lệ.',
         ]);
 
-        // Kiểm tra trùng lặp với điều kiện thời gian 4 tiếng
+        // Kiểm tra trùng lặp với điều kiện thời gian 30 phút
         $newExpectedTime = Carbon::parse($validated['expected_in_at']);
         
         $existingRegistration = RegistrationVehicle::where('name', $validated['name'])
