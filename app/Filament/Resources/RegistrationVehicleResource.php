@@ -219,6 +219,7 @@ class RegistrationVehicleResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('hawb_number')
                     ->label('Số Hawb')
+                    
                     ->formatStateUsing(function (?string $state): string {
                         if (empty($state)) {
                             return '';
@@ -282,7 +283,7 @@ class RegistrationVehicleResource extends Resource
                         'sent' => 'warning',
                         'approve' => 'success',
                         'entering' => 'primary',
-                        'exited' => 'secondary',
+                        'exited' => 'info',
                         'reject' => 'danger',
                         default => 'gray',
                     })
