@@ -753,7 +753,7 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="pcs">PCS</label>
+                    <label for="pcs">Số kiện</label>
                     <input type="number" id="pcs" name="pcs" x-model="pcs"
                         value="{{ old('pcs') }}">
                     @error('pcs')
