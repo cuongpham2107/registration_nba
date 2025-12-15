@@ -106,6 +106,7 @@
         input[type="text"],
         input[type="number"],
         input[type="datetime-local"],
+        select,
         textarea {
             width: 100%;
             padding: 10px 14px;
@@ -120,11 +121,40 @@
         input[type="text"]:focus,
         input[type="number"]:focus,
         input[type="datetime-local"]:focus,
+        select:focus,
         textarea:focus {
             outline: none;
             border-color: #667eea;
             background: white;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 10px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        select:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            background-color: #f3f4f6;
+        }
+
+        select option {
+            background: white;
+            color: #374151;
+            padding: 8px 12px;
+        }
+
+        select option:hover {
+            background: #f3f4f6;
         }
 
         textarea {
@@ -274,9 +304,16 @@
             input[type="text"],
             input[type="number"],
             input[type="datetime-local"],
+            select,
             textarea {
                 padding: 8px 12px;
                 font-size: 14px;
+            }
+
+            select {
+                padding-right: 35px;
+                background-size: 14px;
+                background-position: right 8px center;
             }
 
             textarea {
@@ -371,7 +408,15 @@
 
                 <div class="form-group">
                     <label for="name">Tên đơn vị</label>
-                    <input type="text" id="name" name="name" x-model="unitName" value="{{ old('name') }}">
+                    <select id="name" name="name" x-model="unitName" :disabled="agentsLoading">
+                        <option value="">-- Chọn đơn vị --</option>
+                        <template x-for="(agentName, agentCode) in agents" :key="agentCode">
+                            <option :value="agentCode" x-text="agentName" :selected="unitName === agentCode"></option>
+                        </template>
+                    </select>
+                    <div x-show="agentsLoading" x-cloak style="color: #667eea; font-size: 12px; margin-top: 4px;">
+                        🔄 Đang tải danh sách đơn vị...
+                    </div>
                     @error('name')
                         <span style="color: #e53e3e; font-size: 12px;">{{ $message }}</span>
                     @enderror
@@ -491,6 +536,8 @@
                 hawbError: '',
                 hawbSuccess: '',
                 lastCheckedHawb: '',
+                agents: {},
+                agentsLoading: false,
 
                 // Return true when required fields are filled and valid
                 isFormComplete() {
@@ -502,6 +549,9 @@
                 },
 
                 init() {
+                    // Load agents from API
+                    this.loadAgents();
+                    
                     // Load data from localStorage
                     this.loadFromStorage();
 
@@ -531,6 +581,50 @@
                             this.hawbSuccess = '';
                         }
                     });
+                },
+
+                async loadAgents() {
+                    this.agentsLoading = true;
+                    try {
+                        const response = await fetch('https://wh-nba.asgl.net.vn/api/list-agent');
+                        const data = await response.json();
+                        
+                        if (data.success && data.data) {
+                            const payload = data.data;
+                            let agents = {};
+
+                            // Case: data is an array of strings: ["BOLO","APEX",...]
+                            if (Array.isArray(payload) && payload.length > 0 && typeof payload[0] === 'string') {
+                                payload.forEach(agent => {
+                                    agents[agent] = agent;
+                                });
+                            }
+                            // Case: data is an associative array containing 'agents'
+                            else if (payload.agents && Array.isArray(payload.agents)) {
+                                payload.agents.forEach(item => {
+                                    if (typeof item === 'string') {
+                                        agents[item] = item;
+                                    } else if (item.AgentCode && item.AgentName) {
+                                        agents[item.AgentCode] = item.AgentName;
+                                    }
+                                });
+                            }
+                            // Case: data is an array of objects with AgentName / AgentCode
+                            else if (Array.isArray(payload) && payload.length > 0 && payload[0].AgentCode) {
+                                payload.forEach(item => {
+                                    agents[item.AgentCode] = item.AgentName;
+                                });
+                            }
+
+                            this.agents = agents;
+                        } else {
+                            console.error('Failed to load agents:', data.message || 'Unknown error');
+                        }
+                    } catch (error) {
+                        console.error('Error loading agents:', error);
+                    } finally {
+                        this.agentsLoading = false;
+                    }
                 },
 
                 loadFromStorage() {

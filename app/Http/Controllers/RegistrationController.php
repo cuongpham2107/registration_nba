@@ -8,8 +8,10 @@ use Illuminate\Http\Request;
 use App\Models\RegisterDirectly;
 use App\Models\Registration;
 use App\Models\RegistrationVehicle;
+use App\Services\HawbService;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class RegistrationController extends Controller
