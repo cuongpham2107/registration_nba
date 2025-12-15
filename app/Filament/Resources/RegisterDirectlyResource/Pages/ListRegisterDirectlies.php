@@ -38,8 +38,8 @@ class ListRegisterDirectlies extends ListRecords
         $query->getQuery()->orders = null;
         
         // Nếu có search, sắp xếp status 'none' (Chờ vào) lên trước
-        if (!empty($searchTerm)) {
-            // Sắp xếp: status 'none' lên trước, sau đó theo is_priority, sort và created_at
+       
+            // Nếu không có search, giữ nguyên logic cũ
             if ($isPriorityEnabled === true) {
                 $query->orderByRaw("
                     CASE 
@@ -51,22 +51,9 @@ class ListRegisterDirectlies extends ListRecords
                     created_at DESC
                 ");
             } else {
-                $query->orderByRaw("
-                    CASE 
-                        WHEN status = 'none' OR status IS NULL OR status = '' THEN 0 
-                        ELSE 1 
-                    END ASC,
-                    created_at DESC
-                ");
-            }
-        } else {
-            // Nếu không có search, giữ nguyên logic cũ
-            if ($isPriorityEnabled === true) {
-                $query->orderByRaw('is_priority DESC, sort ASC, created_at DESC');
-            } else {
                 $query->orderBy('created_at', 'desc');
             }
-        }
+        
         
         return $query;
     }
