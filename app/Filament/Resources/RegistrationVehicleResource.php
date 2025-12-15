@@ -220,29 +220,28 @@ class RegistrationVehicleResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('vehicle_number')
                     ->label('Biển số xe')
+                    ->formatStateUsing(fn (string $state): string => strtoupper(str_replace(' ', '', $state)))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Tên đơn vị')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('hawb_number')
                     ->label('Số Hawb')
-                    
                     ->formatStateUsing(function (?string $state): string {
                         if (empty($state)) {
                             return '';
                         }
-                        
-                        // If it's already a plain string (not JSON), return as is
+                        // If it's already a plain string (not JSON), return as is but uppercase
                         if (!str_starts_with(trim($state), '[') && !str_starts_with(trim($state), '{')) {
-                            return $state;
+                            return strtoupper($state);
                         }
                         
                         // Try to decode JSON
                         $decoded = json_decode($state, true);
                         
-                        // If JSON decode failed or result is not an array, return original value
+                        // If JSON decode failed or result is not an array, return original value but uppercase
                         if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
-                            return $state;
+                            return strtoupper($state);
                         }
                         
                         // Format the HAWB list
@@ -250,7 +249,7 @@ class RegistrationVehicleResource extends Resource
                         foreach ($decoded as $item) {
                             // Ensure $item is an array and has required fields
                             if (is_array($item) && isset($item['hawb_number']) && !empty($item['hawb_number'])) {
-                                $hawb = $item['hawb_number'];
+                                $hawb = strtoupper($item['hawb_number']);
                                 if (isset($item['pcs']) && !empty($item['pcs'])) {
                                     $hawb .= ' (' . $item['pcs'] . ' PCS)';
                                 }
@@ -258,7 +257,7 @@ class RegistrationVehicleResource extends Resource
                             }
                         }
                         
-                        return !empty($hawbs) ? implode(', ', $hawbs) : $state;
+                        return !empty($hawbs) ? implode(', ', $hawbs) : strtoupper($state);
                     })
                     ->searchable(),
                 Tables\Columns\TextColumn::make('pcs')

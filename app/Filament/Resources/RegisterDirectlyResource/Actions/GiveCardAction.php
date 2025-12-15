@@ -22,11 +22,25 @@ class GiveCardAction
         return Action::make('give-card')
             ->label('Vào')
             ->button()
+
             ->hidden(fn(RegisterDirectly $record) => $record->status === 'coming_in' || $record->status === 'came_out')
             ->icon('heroicon-o-inbox-arrow-down')
+            ->modalHeading(function (RegisterDirectly $record) {
+                if($record->type === 'vehicle') {
+                    return 'Xe: ' . $record->bks;
+                } else {
+                    return 'Khách: ' . $record->name . ' | CMND: ' . $record->papers;
+                }
+            })
             ->form([
                 Fieldset::make('Lựa chọn')
                     ->schema([
+                        Forms\Components\TextInput::make('bks')
+                            ->label('Biển số xe')
+                            ->default(fn(RegisterDirectly $record) => $record->bks)
+                            ->required()
+                            ->disabled()
+                            ->columnSpanFull(),
                         Forms\Components\Select::make('id')
                             ->label('Thẻ')
                             ->options(Card::all()->pluck('card_name', 'id'))

@@ -18,6 +18,22 @@ class ReturnCardAction
             ->button()
             ->icon('heroicon-o-arrow-uturn-up')
             ->requiresConfirmation()
+            ->modalIcon('heroicon-o-arrow-uturn-up')
+            ->modalHeading(function (RegisterDirectly $record) {
+                    if($record->type === 'vehicle') {
+                        return 'Xe ra: ' . $record->bks;
+                    } else {
+                        return 'Người ra: ' . $record->name . ' | CMND: ' . $record->papers;
+                    }
+                })
+            ->modalDescription(function (RegisterDirectly $record) {
+                    if($record->type === 'vehicle') {
+                        return 'Xe ra khỏi khu vực kiểm soát, thẻ sẽ được trả lại hệ thống.';
+                    } else {
+                        return 'Người ra khỏi khu vực kiểm soát, thẻ sẽ được trả lại hệ thống.';
+                    }
+                }
+            )
             ->hidden(
                 fn(RegisterDirectly $record) =>
                 is_null($record->status) ||

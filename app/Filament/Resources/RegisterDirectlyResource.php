@@ -69,6 +69,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                         Forms\Components\TextInput::make('bks')
                             ->label('Biển kiểm soát')
                             ->prefixIcon('heroicon-o-truck')
+                            ->formatStateUsing(fn (string $state): string => strtoupper(str_replace(' ', '', $state)))
                             ->required(),
                         Forms\Components\TextInput::make('contact_person')
                             ->label('Người liên hệ'),
@@ -208,6 +209,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('bks')
                     ->label('Biển kiểm soát')
                     ->weight(FontWeight::Bold)
+                    ->formatStateUsing(fn (string $state): string => strtoupper($state))
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('areas')
