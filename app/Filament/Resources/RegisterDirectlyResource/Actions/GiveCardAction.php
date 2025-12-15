@@ -6,6 +6,7 @@ use App\Models\Card;
 use App\Models\RegisterDirectly;
 use Carbon\Carbon;
 use Closure;
+use Filament\Actions\StaticAction;
 use Filament\Forms;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Get;
@@ -95,6 +96,10 @@ class GiveCardAction
                         ->danger()
                         ->send();
                 }
-            });
+            })
+            ->modalCancelAction(fn (StaticAction $action) => $action
+                ->label('Hủy')
+                ->extraAttributes(['class' => 'ml-auto'])
+            );
     }
 }
