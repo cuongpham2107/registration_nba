@@ -319,7 +319,7 @@ class RegistrationController extends Controller
             ->where('driver_id_card', $validated['driver_id_card'])
             ->where('vehicle_number', $validated['vehicle_number'])
             ->where('hawb_number', $validated['hawb_number'])
-            ->where('pcs', $validated['pcs'])
+            // ->where('pcs', $validated['pcs'])
             ->orderBy('expected_in_at', 'desc') 
             ->first();
         
