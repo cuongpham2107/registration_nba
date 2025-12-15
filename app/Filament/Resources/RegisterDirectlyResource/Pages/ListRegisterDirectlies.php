@@ -32,15 +32,40 @@ class ListRegisterDirectlies extends ListRecords
         // Lấy filter data
         $filterData = $this->tableFilters['date_range'] ?? [];
         $isPriorityEnabled = $filterData['is_priority'] ?? false;
+        $searchTerm = $filterData['search'] ?? null;
         
         // Xóa order by cũ và thêm order mới
         $query->getQuery()->orders = null;
         
-        // Nếu filter is_priority được bật, sắp xếp theo is_priority trước
-        if ($isPriorityEnabled === true) {
-            $query->orderByRaw('is_priority DESC, sort ASC, created_at DESC');
+        // Nếu có search, sắp xếp status 'none' (Chờ vào) lên trước
+        if (!empty($searchTerm)) {
+            // Sắp xếp: status 'none' lên trước, sau đó theo is_priority, sort và created_at
+            if ($isPriorityEnabled === true) {
+                $query->orderByRaw("
+                    CASE 
+                        WHEN status = 'none' OR status IS NULL OR status = '' THEN 0 
+                        ELSE 1 
+                    END ASC,
+                    is_priority DESC,
+                    sort ASC,
+                    created_at DESC
+                ");
+            } else {
+                $query->orderByRaw("
+                    CASE 
+                        WHEN status = 'none' OR status IS NULL OR status = '' THEN 0 
+                        ELSE 1 
+                    END ASC,
+                    created_at DESC
+                ");
+            }
         } else {
-            $query->orderBy('sort', 'asc');
+            // Nếu không có search, giữ nguyên logic cũ
+            if ($isPriorityEnabled === true) {
+                $query->orderByRaw('is_priority DESC, sort ASC, created_at DESC');
+            } else {
+                $query->orderBy('created_at', 'desc');
+            }
         }
         
         return $query;
