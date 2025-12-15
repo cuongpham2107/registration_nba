@@ -100,6 +100,9 @@ class GiveCardAction
             ->modalCancelAction(fn (StaticAction $action) => $action
                 ->label('Hủy')
                 ->extraAttributes(['class' => 'ml-auto'])
+            )
+            ->modalSubmitAction(fn (StaticAction $action) => $action
+                ->label('Vào')
             );
     }
 }

@@ -37,22 +37,30 @@ class ListRegisterDirectlies extends ListRecords
         // Xóa order by cũ và thêm order mới
         $query->getQuery()->orders = null;
         
-        // Nếu có search, sắp xếp status 'none' (Chờ vào) lên trước
-       
-            // Nếu không có search, giữ nguyên logic cũ
-            if ($isPriorityEnabled === true) {
-                $query->orderByRaw("
-                    CASE 
-                        WHEN status = 'none' OR status IS NULL OR status = '' THEN 0 
-                        ELSE 1 
-                    END ASC,
-                    is_priority DESC,
-                    sort ASC,
-                    created_at DESC
-                ");
-            } else {
-                $query->orderBy('created_at', 'desc');
-            }
+        // Sắp xếp theo thứ tự trạng thái: none -> coming_in -> came_out
+        if ($isPriorityEnabled === true) {
+            $query->orderByRaw("
+                CASE 
+                    WHEN status = 'none' OR status IS NULL OR status = '' THEN 0 
+                    WHEN status = 'coming_in' THEN 1
+                    WHEN status = 'came_out' THEN 2
+                    ELSE 3 
+                END ASC,
+                is_priority DESC,
+                sort ASC,
+                created_at DESC
+            ");
+        } else {
+            $query->orderByRaw("
+                CASE 
+                    WHEN status = 'none' OR status IS NULL OR status = '' THEN 0 
+                    WHEN status = 'coming_in' THEN 1
+                    WHEN status = 'came_out' THEN 2
+                    ELSE 3 
+                END ASC,
+                created_at DESC
+            ");
+        }
         
         
         return $query;
