@@ -196,7 +196,6 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                         Forms\Components\TextInput::make('note')
                             ->label('Ghi chú'),
                     ])
-                    ->deleteAction(fn () => true)
                     ->defaultItems(1)
                     ->columns(6)
                     ->extraActions([
