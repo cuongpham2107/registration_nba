@@ -6,7 +6,7 @@
                 <div class="flex justify-center mb-3">
                     <img src="{{ asset('images/ASG.png') }}" alt="ASG Logo" class="h-8 w-24">
                 </div>
-                <h1 class="text-xl font-bold mb-2">Đăng ký xe khai thác</h1>
+                <h1 class="text-xl font-bold">Đăng ký xe khai thác</h1>
             </div>
 
             <!-- Form Content -->

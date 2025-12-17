@@ -16,7 +16,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
-use Filament\Forms\Get;
+use Filament\Forms\Components\Actions\Action;
+use Filament\Support\Enums\ActionSize;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\Alignment;
 use Illuminate\Support\Facades\Log;
@@ -44,7 +45,7 @@ class RegistrationVehicleForm extends Component implements HasForms
     public function form(Form $form): Form
     {
         return $form
-            ->extraAttributes(['style' => 'gap: 1rem;'])
+            ->extraAttributes(['style' => 'gap: 0.5rem;'])
             ->columns(2)
             ->schema([
                 TextInput::make('driver_name')
@@ -53,7 +54,9 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->validationMessages([
                         'required' => 'Tên tài xế không được để trống.',
                     ])
-                   
+                    ->extraAttributes([
+                        'class' => '!bg-gray-100'
+                        ])
                     ->maxLength(255)
                     ->columnSpan(2),
 
@@ -63,18 +66,21 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->validationMessages([
                         'required' => 'Số CCCD/CMND không được để trống.',
                     ])
+                    ->extraAttributes(['class' => '!bg-gray-100'])
                     ->maxLength(255)
                     ->columnSpan(1),
 
                 TextInput::make('driver_phone')
                     ->label('Số điện thoại')
                     ->tel()
+                    ->extraAttributes(['class' => '!bg-gray-100'])
                     ->maxLength(20)
                     ->columnSpan(1),
 
                 TextInput::make('vehicle_number')
                     ->label('Biển số xe')
                     ->required()
+                    ->extraAttributes(['class' => '!bg-gray-100'])
                     ->validationMessages([
                         'required' => 'Biển số xe không được để trống.',
                     ])
@@ -85,6 +91,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->label('Tên đơn vị')
                     ->native(false)
                     ->multiple()
+                    ->extraAttributes(['class' => '!bg-gray-100'])
                     ->options(HawbService::getListAgentApi())
                     ->columnSpan(2),
 
@@ -101,6 +108,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                             ->validationMessages([
                                 'required' => 'Chưa chọn số HAWB hợp lệ.',
                             ])
+                            ->extraAttributes(['class' => '!bg-gray-100 rounded-lg'])
                             ->live(onBlur: true)
                             ->afterStateUpdated(function (?string $state, callable $set) {
                                 // When a HAWB is selected, fetch its details and set pcs
@@ -136,12 +144,16 @@ class RegistrationVehicleForm extends Component implements HasForms
                         
                         TextInput::make('pcs')
                             ->label('Số PCS')
+                            ->extraAttributes(['class' => '!bg-gray-100'])
                             ->numeric()
                             ->minValue(1),
                     ])
                     ->reorderable(false)
                     ->emptyLabel('Chưa có HAWB nào được thêm')
-                    ->addActionLabel('Thêm số HAWB')
+                    ->addAction(callback: function(Action $action) {
+                        return $action->label('Thêm HAWB Mới')->icon('heroicon-o-plus')->size(ActionSize::ExtraSmall)
+                        ->extraAttributes(['class' => '-mt-2']);
+                    })
                     ->minItems(1)
                     ->defaultItems(1)
                     ->columnSpan(2),
@@ -150,6 +162,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->label('Thời gian vào dự kiến')
                     ->required()
                     ->native(true)
+                    ->extraAttributes(['class' => '!bg-gray-100'])
                     ->seconds(false)
                     ->displayFormat('H:i d/m/Y')
                     ->columnSpan(2),
@@ -157,6 +170,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                 Textarea::make('notes')
                     ->label('Ghi chú')
                     ->rows(2)
+                    ->extraAttributes(['class' => '!bg-gray-100'])
                     ->maxLength(1000)
                     ->columnSpan(2),
             ])
