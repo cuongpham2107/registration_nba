@@ -94,6 +94,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->multiple()
                     ->extraAttributes(['class' => '!bg-gray-100'])
                     ->options(HawbService::getListAgentApi())
+                    ->required()
                     ->columnSpan(2),
 
                 TableRepeater::make('hawbs')
