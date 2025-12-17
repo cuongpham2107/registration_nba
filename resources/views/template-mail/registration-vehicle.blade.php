@@ -65,7 +65,23 @@
                 </tr>
                 <tr>
                     <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Số Hawb</th>
-                    <td style="padding:10px 8px;">{{ $registration->hawb_number }}</td>
+                    <td style="padding:10px 8px;">
+                        @php
+                            $hawbs = json_decode($registration->hawb_number, true);
+                        @endphp
+                        @if(is_array($hawbs) && count($hawbs) > 0)
+                            @foreach($hawbs as $index => $hawb)
+                                <div style="margin-bottom: 4px;">
+                                    <strong>{{ $hawb['hawb_number'] ?? '—' }}</strong>
+                                    @if(!empty($hawb['pcs']))
+                                        <span style="color: #718096;">({{ $hawb['pcs'] }} PCS)</span>
+                                    @endif
+                                </div>
+                            @endforeach
+                        @else
+                            {{ $registration->hawb_number }}
+                        @endif
+                    </td>
                 </tr>
                 <tr>
                     <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Thời gian vào dự kiến</th>
