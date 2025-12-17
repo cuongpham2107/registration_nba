@@ -160,8 +160,8 @@
         <div 
             x-show="showResults && searchResults.length > 0" 
             x-cloak
-            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto overflow-x-hidden"
-            style="height: 300px; scrollbar-width: thin; scrollbar-color: rgba(156, 163, 175, 0.5) transparent;"
+            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-y-auto overflow-x-hidden"
+            style="scrollbar-width: thin; scrollbar-color: rgba(156, 163, 175, 0.5) transparent;"
         >
             <template x-for="(result, index) in searchResults" :key="`hawb-${index}-${result.hawb || ''}`">
                 <div 
@@ -173,8 +173,8 @@
                     class="px-4 py-3 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
                 >
                     <div class="flex justify-between items-center">
-                        <span class="font-medium text-gray-900 dark:text-gray-100" x-text="result.hawb"></span>
-                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                        <span class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="result.hawb"></span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">
                             <span x-text="result.pcs"></span> PCS
                         </span>
                     </div>
