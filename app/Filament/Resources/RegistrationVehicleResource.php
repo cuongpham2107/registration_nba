@@ -264,7 +264,7 @@ class RegistrationVehicleResource extends Resource
                     ->label('Số kiện')
                     ->alignment(Alignment::Center)
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('expected_in_at')
                     ->label('Thời gian vào dự kiến')
                     ->dateTime('d/m/Y H:i')
