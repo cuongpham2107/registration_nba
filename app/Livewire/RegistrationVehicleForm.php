@@ -75,6 +75,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->tel()
                     ->extraAttributes(['class' => '!bg-gray-100'])
                     ->maxLength(20)
+                    ->required()
                     ->columnSpan(1),
 
                 TextInput::make('vehicle_number')
