@@ -248,7 +248,28 @@
                 
                 <div class="detail-row">
                     <span class="detail-label">Số HAWB:</span>
-                    <span class="detail-value">{{ $data['hawb_number'] ?? 'N/A' }}</span>
+                    <span class="detail-value" style="text-align: right; display: block;">
+                        @php
+                            $hawbNumber = $data['hawb_number'] ?? 'N/A';
+                            // Try to decode JSON if it's a JSON string
+                            if (is_string($hawbNumber) && (str_starts_with(trim($hawbNumber), '[') || str_starts_with(trim($hawbNumber), '{'))) {
+                                $decoded = json_decode($hawbNumber, true);
+                                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                    $hawbList = [];
+                                    foreach ($decoded as $item) {
+                                        if (is_array($item) && isset($item['hawb_number'])) {
+                                            $hawbList[] = strtoupper($item['hawb_number']);
+                                        }
+                                    }
+                                    echo !empty($hawbList) ? implode('<br>', $hawbList) : 'N/A';
+                                } else {
+                                    echo strtoupper($hawbNumber);
+                                }
+                            } else {
+                                echo strtoupper($hawbNumber);
+                            }
+                        @endphp
+                    </span>
                 </div>
                 
                 @if(!empty($data['pcs']))
@@ -266,7 +287,7 @@
         @endif
 
         <div class="btn-group">
-            <a href="{{ route('registration-vehicle.index-old') }}" class="btn btn-primary">
+            <a href="{{ route('registration-vehicle.index') }}" class="btn btn-primary">
                 Đăng ký mới
             </a>
             <button onclick="window.history.back()" class="btn btn-secondary">

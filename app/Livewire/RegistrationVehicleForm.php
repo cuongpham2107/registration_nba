@@ -4,9 +4,11 @@ namespace App\Livewire;
 
 use App\Models\RegistrationVehicle;
 use App\Models\User;
+use App\Services\HawbService;
+use Awcodes\TableRepeater\Components\TableRepeater;
+use Awcodes\TableRepeater\Header;
 use Carbon\Carbon;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -15,27 +17,25 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Notifications\Notification;
+use Filament\Support\Enums\Alignment;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
-use Awcodes\TableRepeater\Components\TableRepeater;
-use Awcodes\TableRepeater\Header;
-use Filament\Forms\Components\Actions\Action;
-use Filament\Support\Enums\Alignment;
-use App\Services\HawbService;
+
 class RegistrationVehicleForm extends Component implements HasForms
 {
     use InteractsWithForms;
 
     public ?array $data = [];
-    public ?string $searchMessage = null;
-    public bool $hasSearched = false;
 
     public function mount(): void
     {
         $this->form->fill([
             'expected_in_at' => now()->format('Y-m-d H:i'),
+            'hawbs' => [
+                ['hawb_number' => null, 'pcs' => null],
+            ],
         ]);
-        
+
         // Load data from localStorage if available via JavaScript
         $this->dispatch('load-stored-data');
     }
@@ -43,197 +43,160 @@ class RegistrationVehicleForm extends Component implements HasForms
     public function form(Form $form): Form
     {
         return $form
+            ->extraAttributes(['style' => 'gap: 1rem;'])
+            ->columns(2)
             ->schema([
-                Section::make('Thông tin tài xế và xe')
-                    ->description('Vui lòng điền đầy đủ thông tin tài xế và xe')
-                    ->icon('heroicon-o-user')
-                    ->schema([
-                        TextInput::make('driver_name')
-                            ->label('Tên tài xế')
-                            ->required()
-                            ->maxLength(255)
-                            ->columnSpan([
-                                'sm' => 2, // Mobile: full width
-                                'md' => 1, // Desktop: half width
-                            ]),
-
-                        TextInput::make('driver_id_card')
-                            ->label('Số CCCD/CMND')
-                            ->required()
-                            ->maxLength(255)
-                            ->columnSpan([
-                                'sm' => 1, // Mobile: half width
-                                'md' => 1, // Desktop: half width
-                            ]),
-
-                        TextInput::make('driver_phone')
-                            ->label('Số điện thoại')
-                            ->tel()
-                            ->maxLength(20)
-                            ->columnSpan([
-                                'sm' => 1, // Mobile: half width
-                                'md' => 1, // Desktop: half width
-                            ]),
-
-                        TextInput::make('vehicle_number')
-                            ->label('Biển số xe')
-                            ->required()
-                            ->maxLength(255)
-                            ->columnSpan([
-                                'sm' => 2, // Mobile: full width
-                                'md' => 1, // Desktop: half width
-                            ]),
+                TextInput::make('driver_name')
+                    ->label('Tên tài xế')
+                    ->required()
+                    ->validationMessages([
+                        'required' => 'Tên tài xế không được để trống.',
                     ])
-                    ->columns([
-                        'sm' => 2, // Mobile: 2 columns
-                        'md' => 2, // Desktop: 2 columns
-                    ]),
+                    ->maxLength(255)
+                    ->columnSpan(2),
 
-                Section::make('Thông tin đơn vị và hàng hóa')
-                    ->description('Vui lòng điền đầy đủ thông tin đơn vị và hàng hóa')
-                    ->icon('heroicon-o-truck')
+                TextInput::make('driver_id_card')
+                    ->label('Số CCCD/CMND')
+                    ->required()
+                    ->validationMessages([
+                        'required' => 'Số CCCD/CMND không được để trống.',
+                    ])
+                    ->maxLength(255)
+                    ->columnSpan(1),
+
+                TextInput::make('driver_phone')
+                    ->label('Số điện thoại')
+                    ->tel()
+                    ->maxLength(20)
+                    ->columnSpan(1),
+
+                TextInput::make('vehicle_number')
+                    ->label('Biển số xe')
+                    ->required()
+                    ->validationMessages([
+                        'required' => 'Biển số xe không được để trống.',
+                    ])
+                    ->maxLength(255)
+                    ->columnSpan(2),
+
+                Select::make('name')
+                    ->label('Tên đơn vị')
+                    ->native(false)
+                    ->multiple()
+                    ->options(HawbService::getListAgentApi())
+                    ->columnSpan(2),
+
+                TableRepeater::make('hawbs')
+                    ->label('Danh sách HAWB')
+                    ->headers([
+                        Header::make('hawb_number')->label('Số HAWB'),
+                        Header::make('pcs')->label('Số PCS')->width('120px')->align(Alignment::Center),
+                    ])
                     ->schema([
-                        Select::make('name')
-                            ->label('Tên đơn vị')
-                            ->native(false)
-                            ->options(HawbService::getListAgentApi())
-                            // ->searchable()
-                            ->columnSpan([
-                                'sm' => 2, // Mobile: full width
-                                'md' => 1, // Desktop: half width
-                            ]),
-
-                        TextInput::make('search_hawb')
-                            ->label('Tìm kiếm HAWB')
-                            ->suffixAction(function () {
-                                return Action::make('search-hawb')
-                                    ->icon('heroicon-o-magnifying-glass')
-                                    ->action(function (Get $get) {
-                                        $search = $get('search_hawb') ?? null;
-                                        if ($search) {
-                                            $this->fetchAndBindHawbs($search);
+                        Select::make('hawb_number')
+                            ->label('Số HAWB')
+                            ->required()
+                            ->validationMessages([
+                                'required' => 'Chưa chọn số HAWB hợp lệ.',
+                            ])
+                            ->searchable()
+                            ->getSearchResultsUsing(function (string $search) {
+                                $apiData = HawbService::searchHawbApi($search);
+                                $results = [];
+                                if ($apiData && isset($apiData['hawb']) && is_array($apiData['hawb'])) {
+                                    foreach ($apiData['hawb'] as $item) {
+                                        if (! empty($item['Hawb'])) {
+                                            $results[$item['Hawb']] = $item['Hawb'];
                                         }
-                                    });
+                                    }
+                                }
+
+                                return $results;
                             })
-                            ->helperText(fn (Get $get) => $this->getSearchHelperText($get('search_hawb')))
-                            ->columnSpan([
-                                'sm' => 2, // Mobile: full width
-                                'md' => 1, // Desktop: half width
-                            ]),
+                            ->getOptionLabelUsing(fn (string $value): string => $value)
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (?string $state, callable $set) {
+                                // When a HAWB is selected, fetch its details and set pcs for this repeater row
+                                if (empty($state)) {
+                                    $set('pcs', null);
 
-                        TableRepeater::make('hawbs')
-                            ->label('Danh sách HAWB')
-                            ->columns(1)
-                            ->headers([
-                                Header::make('hawb_number')->label('Số HAWB'),
-                                Header::make('pcs')->label('Số PCS')->width('120px')->align(Alignment::Center),
-                            ])
-                            ->schema([
-                                TextInput::make('hawb_number')
-                                    ->label('Số HAWB')
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->reactive(),
-                                TextInput::make('pcs')
-                                    ->label('Số PCS')
-                                    ->maxLength(255)
-                                    ->numeric()
-                            ])
-                            ->addable(false)
-                            ->reorderable(false)
-                            ->emptyLabel('Chưa có HAWB nào được thêm')
-                            ->minItems(1)
-                            ->columnSpanFull(),
+                                    return;
+                                }
 
-                        DateTimePicker::make('expected_in_at')
-                            ->label('Thời gian vào dự kiến')
-                            ->required()
-                            ->native(false)
-                            ->seconds(false)
-                            ->displayFormat('H:i d/m/Y')
-                            ->columnSpan([
-                                'sm' => 2, // Mobile: full width
-                                'md' => 1, // Desktop: half width
-                            ]),
+                                try {
+                                    $apiData = HawbService::searchHawbApi($state);
+                                    if ($apiData && isset($apiData['hawb']) && is_array($apiData['hawb'])) {
+                                        // Find the exact hawb item
+                                        foreach ($apiData['hawb'] as $item) {
+                                            if (! empty($item['Hawb']) && $item['Hawb'] === $state) {
+                                                $pcs = $item['Pcs'] ?? null;
+                                                // Ensure numeric where possible
+                                                if (is_numeric($pcs)) {
+                                                    $set('pcs', (int) $pcs);
+                                                } else {
+                                                    $set('pcs', $pcs);
+                                                }
+
+                                                return;
+                                            }
+                                        }
+                                    }
+                                    // fallback: clear pcs
+                                    $set('pcs', null);
+                                } catch (\Exception $e) {
+                                    // On error, do not break the form; just clear pcs
+                                    $set('pcs', null);
+                                }
+                            }),
+                        TextInput::make('pcs')
+                            ->label('Số PCS')
+                            ->numeric()
+                            ->minValue(1),
                     ])
-                    ->columns([
-                        'sm' => 2, // Mobile: 2 columns
-                        'md' => 2, // Desktop: 2 columns
-                    ]),
+                    ->reorderable(false)
+                    ->emptyLabel('Chưa có HAWB nào được thêm')
+                    ->addActionLabel('Thêm số HAWB')
+                    ->minItems(1)
+                    ->defaultItems(1)
+                    ->columnSpan(2),
+
+                DateTimePicker::make('expected_in_at')
+                    ->label('Thời gian vào dự kiến')
+                    ->required()
+                    ->native(false)
+                    ->seconds(false)
+                    ->displayFormat('H:i d/m/Y')
+                    ->columnSpan(2),
 
                 Textarea::make('notes')
                     ->label('Ghi chú')
-                    ->rows(3)
+                    ->rows(2)
                     ->maxLength(1000)
-                    ->columnSpanFull(),
+                    ->columnSpan(2),
             ])
             ->statePath('data');
     }
 
-    protected function fetchAndBindHawbs(string $search): void
-    {
-        $this->hasSearched = true;
-        $apiData = HawbService::searchHawbApi($search);
-        
-        if ($apiData) {
-            $newRows = HawbService::processHawbSearchResults($apiData);
-            
-            if (!empty($newRows)) {
-                // Get existing hawbs or initialize empty array
-                $existingHawbs = $this->data['hawbs'] ?? [];
-                
-                $result = HawbService::addHawbsToExisting($existingHawbs, $newRows);
-                
-                // Update the data
-                $this->data['hawbs'] = $result['hawbs'];
-                
-                if ($result['added_count'] > 0) {
-                    $this->searchMessage = "Đã thêm {$result['added_count']} HAWB mới (Tổng: {$result['total_count']})";
-                } else {
-                    $this->searchMessage = 'HAWB đã tồn tại trong danh sách';
-                }
-            } else {
-                $this->searchMessage = 'Mã HAWB sai';
-            }
-        } else {
-            $this->searchMessage = 'Mã HAWB sai';
-        }
-    }
-
-    protected function getSearchHelperText(?string $searchValue): string
-    {
-        if (empty($searchValue)) {
-            return 'Vui lòng nhập mã HAWB để tìm kiếm';
-        }
-
-        if (!$this->hasSearched) {
-            return 'Nhấn nút tìm kiếm để lấy dữ liệu HAWB';
-        }
-
-        return $this->searchMessage ?? 'Nhấn nút tìm kiếm để lấy dữ liệu HAWB';
-    }
-
     public function loadStoredDataFromJs($storedData): void
     {
-        if (!empty($storedData)) {
+        if (! empty($storedData)) {
             // Fill form with stored data (excluding HAWB data)
             $formData = [
                 'driver_name' => $storedData['driver_name'] ?? '',
                 'driver_phone' => $storedData['driver_phone'] ?? '',
                 'driver_id_card' => $storedData['driver_id_card'] ?? '',
                 'vehicle_number' => $storedData['vehicle_number'] ?? '',
-                'name' => $storedData['name'] ?? '',
+                // 'name' => $storedData['name'] ?? '',
+                'name' => null,
                 'notes' => $storedData['notes'] ?? '',
                 'expected_in_at' => now()->format('Y-m-d H:i'),
-                'hawbs' => [], // Always reset HAWB to empty
-                'search_hawb' => '', // Reset search field
+                // Keep default hawbs row - always start fresh with 1 empty row
+                'hawbs' => [
+                    ['hawb_number' => null, 'pcs' => null],
+                ],
             ];
-            
+
             $this->form->fill($formData);
-            
-            // Reset search state
-            $this->searchMessage = null;
-            $this->hasSearched = false;
         }
     }
 
@@ -241,73 +204,101 @@ class RegistrationVehicleForm extends Component implements HasForms
     {
         $data = $this->form->getState();
 
-        // Kiểm tra trùng lặp với điều kiện thời gian 4 tiếng
-        $newExpectedTime = Carbon::parse($data['expected_in_at']);
-
-        $existingRegistration = RegistrationVehicle::where('name', $data['name'])
-            ->where('driver_name', $data['driver_name'])
-            ->where('driver_phone', $data['driver_phone'])
-            ->where('driver_id_card', $data['driver_id_card'])
-            ->where('vehicle_number', $data['vehicle_number'])
-            ->where('expected_in_at', '>=', $newExpectedTime->copy()->subHours(4))
-            ->where('expected_in_at', '<=', $newExpectedTime->copy()->addHours(4))
-            ->orderBy('expected_in_at', 'desc')
-            ->first();
-
-        if ($existingRegistration) {
-            Notification::make()
-                ->title('Lỗi đăng ký')
-                ->body('Đăng ký trước đó thành công rồi phải vào giờ khác (ít nhất cách 4 tiếng).')
-                ->danger()
-                ->duration(5000)
-                ->send();
-            return;
-        }
-        
         // Process data before saving
         $processedData = $data;
-        
+
+        // Convert name array to comma-separated string
+        if (isset($processedData['name']) && is_array($processedData['name'])) {
+            $processedData['name'] = implode(', ', $processedData['name']);
+        }
+
         // Encode hawbs array to JSON for hawb_number field
         if (isset($processedData['hawbs'])) {
             $processedData['hawb_number'] = json_encode($processedData['hawbs']);
             unset($processedData['hawbs']); // Remove hawbs array
         }
-        
+
         // Remove search_hawb field as it's not needed in database
         unset($processedData['search_hawb']);
-        
+
+        // Kiểm tra trùng lặp với điều kiện thời gian cách nhau ít nhất 30 phút
+        $newExpectedTime = Carbon::parse($processedData['expected_in_at']);
+
+        // Decode hawb_number để lấy danh sách HAWB numbers
+        $newHawbs = json_decode($processedData['hawb_number'], true);
+        $newHawbNumbers = [];
+        if (is_array($newHawbs)) {
+            foreach ($newHawbs as $hawb) {
+                if (! empty($hawb['hawb_number'])) {
+                    $newHawbNumbers[] = $hawb['hawb_number'];
+                }
+            }
+        }
+
+        $existingRegistrations = RegistrationVehicle::where('name', $processedData['name'])
+            ->where('driver_name', $processedData['driver_name'])
+            ->where('driver_phone', $processedData['driver_phone'])
+            ->where('driver_id_card', $processedData['driver_id_card'])
+            ->where('vehicle_number', $processedData['vehicle_number'])
+            ->orderBy('expected_in_at', 'desc')
+            ->get();
+
+        foreach ($existingRegistrations as $existingRegistration) {
+            // Decode existing hawb_number
+            $existingHawbs = json_decode($existingRegistration->hawb_number, true);
+            $existingHawbNumbers = [];
+            if (is_array($existingHawbs)) {
+                foreach ($existingHawbs as $hawb) {
+                    if (! empty($hawb['hawb_number'])) {
+                        $existingHawbNumbers[] = $hawb['hawb_number'];
+                    }
+                }
+            }
+
+            // Kiểm tra xem có ít nhất 1 HAWB trùng nhau không (intersection)
+            $duplicateHawbs = array_intersect($newHawbNumbers, $existingHawbNumbers);
+
+            if (! empty($duplicateHawbs)) {
+                $existingTime = Carbon::parse($existingRegistration->expected_in_at);
+                $minutesDifference = $newExpectedTime->diffInMinutes($existingTime, false);
+
+                // Kiểm tra nếu thời gian mới không cách thời gian cũ ít nhất 30 phút
+                if (abs($minutesDifference) < 30) {
+                    $duplicateList = implode(', ', $duplicateHawbs);
+                    Notification::make()
+                        ->title('Lỗi đăng ký')
+                        ->body("Các HAWB sau đã được đăng ký trước đó: {$duplicateList}. Vui lòng đăng ký vào giờ khác (ít nhất cách 30 phút).")
+                        ->danger()
+                        ->color('danger')
+                        ->duration(10000)
+                        ->send();
+
+                    return;
+                }
+            }
+        }
+
         $processedData['status'] = 'none';
         $record = RegistrationVehicle::create($processedData);
 
         // Gửi email và thông báo
         $this->sendEmailAndNotifications($record);
 
-        Notification::make()
-            ->title('Đăng ký thành công!')
-            ->body('Đăng ký xe đã được tạo và gửi email thành công!')
-            ->success()
-            ->duration(5000)
-            ->send();
-
-        // Dispatch event for localStorage saving
+        // Dispatch event for localStorage saving before redirect
         $this->dispatch('registration-success', $data);
 
-        // Reset form - updated to match current structure
-        $this->form->fill([
-            'driver_name' => null,
-            'name' => null,
-            'driver_id_card' => null,
-            'driver_phone' => null,
-            'vehicle_number' => null,
-            'search_hawb' => null,
-            'hawbs' => [],
-            'expected_in_at' => now()->format('Y-m-d H:i'),
-            'notes' => null,
-        ]);
+        // Redirect to success page with registration data
+        $this->redirect(route('registration-vehicle.success'), navigate: true);
 
-        // Reset search state
-        $this->searchMessage = null;
-        $this->hasSearched = false;
+        // Store registration data in session for success page
+        session()->flash('registration_data', [
+            'driver_name' => $record->driver_name,
+            'name' => $record->name,
+            'vehicle_number' => $record->vehicle_number,
+            'hawb_number' => $record->hawb_number,
+            'pcs' => $record->pcs,
+            'expected_in_at' => $record->expected_in_at,
+        ]);
     }
 
     protected function sendEmailAndNotifications(RegistrationVehicle $record): void
@@ -321,15 +312,16 @@ class RegistrationVehicleForm extends Component implements HasForms
 
             if ($approvers->isEmpty()) {
                 Log::warning('No approvers found for vehicle registration');
+
                 return;
             }
 
             $mailSent = false;
             foreach ($approvers as $user) {
                 if ($user->email) {
-                    $mail = (new \App\Services\MailService())->sendMailWithTemplate(
+                    $mail = (new \App\Services\MailService)->sendMailWithTemplate(
                         $user->email,
-                        'Đăng ký xe khai thác: ' . $record->driver_name . ' | ' . $record->vehicle_number . ' | ' . date('Y-m-d H:i:s'),
+                        'Đăng ký xe khai thác: '.$record->driver_name.' | '.$record->vehicle_number.' | '.date('Y-m-d H:i:s'),
                         'template-mail.registration-vehicle',
                         ['registration' => $record]
                     );
@@ -354,7 +346,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Failed to send notifications: ' . $e->getMessage());
+            Log::error('Failed to send notifications: '.$e->getMessage());
         }
     }
 

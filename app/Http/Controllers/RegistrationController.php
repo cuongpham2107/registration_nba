@@ -262,13 +262,33 @@ class RegistrationController extends Controller
             }
 
             // Tạo bản ghi mới trong transaction
+            
+            // Format HAWB number - check if it's JSON array
+            $hawbDisplay = $registration->hawb_number ?? '';
+            if (is_string($hawbDisplay) && (str_starts_with(trim($hawbDisplay), '[') || str_starts_with(trim($hawbDisplay), '{'))) {
+                $decoded = json_decode($hawbDisplay, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $hawbList = [];
+                    foreach ($decoded as $item) {
+                        if (is_array($item) && isset($item['hawb_number'])) {
+                            $hawb = strtoupper($item['hawb_number']);
+                            if (isset($item['pcs']) && !empty($item['pcs'])) {
+                                $hawb .= ' (' . $item['pcs'] . ' PCS)';
+                            }
+                            $hawbList[] = $hawb;
+                        }
+                    }
+                    $hawbDisplay = !empty($hawbList) ? implode(', ', $hawbList) : $hawbDisplay;
+                }
+            }
+            
             $record = RegisterDirectly::create([
                 'name' => $registration->driver_name . ' | ' . $registration->name,
                 'papers' => $registration->driver_id_card ?? '',
                 'address' => '',
                 'bks' => $registration->vehicle_number ?? '',
                 'contact_person' => '',
-                'job' => 'Số HAWB: ' . ($registration->hawb_number ?? '') .
+                'job' => 'Số HAWB: ' . $hawbDisplay .
                     ($registration->notes ? ' | Ghi chú: ' . $registration->notes : ''),
                 'start_date' => $startDate,
                 'end_date' => null,
