@@ -99,7 +99,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->label('Danh sách HAWB')
                     ->headers([
                         Header::make('hawb_number')->label('Số HAWB'),
-                        Header::make('pcs')->label('Số PCS')->width('120px')->align(Alignment::Center),
+                        Header::make('pcs')->label('Số PCS')->width('100px')->align(Alignment::Center),
                     ])
                     ->schema([
                         AutocompleteHawb::make('hawb_number')

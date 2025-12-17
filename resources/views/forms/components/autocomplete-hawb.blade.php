@@ -170,7 +170,7 @@
                         'bg-primary-50 dark:bg-primary-900': index === selectedIndex,
                         'hover:bg-gray-50 dark:hover:bg-gray-700': index !== selectedIndex
                     }"
-                    class="px-4 py-3 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                    class="px-2 py-3 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
                 >
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="result.hawb"></span>
