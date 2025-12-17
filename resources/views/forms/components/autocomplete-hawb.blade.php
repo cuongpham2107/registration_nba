@@ -66,7 +66,7 @@
                 // Debounce: wait 500ms after user stops typing
                 this.searchTimeout = setTimeout(() => {
                     this.searchHawb(value);
-                }, 500);
+                }, 1000);
             },
             
             handleKeydown(event) {

@@ -260,11 +260,11 @@ class RegistrationVehicleResource extends Resource
                     ->copyMessage('Đã sao chép số HAWB vào clipboard')
                     ->copyMessageDuration(1500)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('pcs')
-                    ->label('Số kiện')
-                    ->alignment(Alignment::Center)
-                    ->searchable()
-                    ->toggleable(),
+                // Tables\Columns\TextColumn::make('pcs')
+                //     ->label('Số kiện')
+                //     ->alignment(Alignment::Center)
+                //     ->searchable()
+                //     ->toggleable(),
                 Tables\Columns\TextColumn::make('expected_in_at')
                     ->label('Thời gian vào dự kiến')
                     ->dateTime('d/m/Y H:i')
