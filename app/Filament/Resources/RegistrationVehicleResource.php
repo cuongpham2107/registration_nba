@@ -210,7 +210,10 @@ class RegistrationVehicleResource extends Resource
 
                 Tables\Columns\TextColumn::make('driver_name')
                     ->label('Tên tài xế')
-                    ->searchable(),
+                    ->searchable()
+                    ->formatStateUsing(fn (string $state): string =>
+                        mb_convert_case($state, MB_CASE_TITLE, "UTF-8")
+                    ),
 
                 Tables\Columns\TextColumn::make('driver_phone')
                     ->label('Số điện thoại')

@@ -193,7 +193,8 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('name')
                     ->label('Họ và tên')
                     ->formatStateUsing(
-                        fn (RegisterDirectly $record): string => isset(explode('|', $record->name)[0]) ? trim(explode('|', $record->name)[0]) : $record->name
+                        fn (RegisterDirectly $record): string => isset(explode('|', $record->name)[0]) ? trim(explode('|', mb_convert_case($record->name, MB_CASE_TITLE, "UTF-8"))[0]) : mb_convert_case($record->name, MB_CASE_TITLE, "UTF-8")
+                        
                     )
                     ->description(function (RegisterDirectly $record): string {
                         $parts = explode('|', $record->name);
