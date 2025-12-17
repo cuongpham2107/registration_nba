@@ -32,12 +32,12 @@ Route::get('test', function(){
 });
 
 // Route cũ với blade template thuần
-Route::get('/dang-ky-xe-khai-thac', function(){
+Route::get('/dang-ky-xe-khai-thac-old', function(){
     return view('registration_vehicle.index');
 })->name('registration-vehicle.index-old');
 
 // Route mới với Filament Livewire
-Route::get('/dang-ky-xe-khai-thac-old', \App\Livewire\RegistrationVehicleForm::class)->name('registration-vehicle.index');
+Route::get('/dang-ky-xe-khai-thac', \App\Livewire\RegistrationVehicleForm::class)->name('registration-vehicle.index');
 
 Route::post('/registration-vehicle', [RegistrationController::class, 'storeVehicle'])->name('registration-vehicle.store');
 

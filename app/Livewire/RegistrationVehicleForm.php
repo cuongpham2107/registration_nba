@@ -96,7 +96,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->columnSpan(2),
 
                 TableRepeater::make('hawbs')
-                    ->label('Danh sách HAWB')
+                    ->label(new \Illuminate\Support\HtmlString('Danh sách HAWB <span class="italic text-gray-500">(Nhập 5 số cuối của số hawb.)</span>'))
                     ->headers([
                         Header::make('hawb_number')->label('Số HAWB'),
                         Header::make('pcs')->label('Số PCS')->width('100px')->align(Alignment::Center),
@@ -282,7 +282,7 @@ class RegistrationVehicleForm extends Component implements HasForms
         $record = RegistrationVehicle::create($processedData);
 
         // Gửi email và thông báo
-        $this->sendEmailAndNotifications($record);
+        // $this->sendEmailAndNotifications($record);
 
         // Dispatch event for localStorage saving before redirect
         $this->dispatch('registration-success', $data);
