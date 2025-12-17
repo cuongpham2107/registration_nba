@@ -138,7 +138,7 @@
                 x-model="state"
                 x-on:input="handleInput"
                 x-on:keydown="handleKeydown"
-                x-on:focus="if (state && state.length >= 2) searchHawb(state)"
+                x-on:focus="if (state && state.length >= 4) searchHawb(state)"
                 placeholder="Nhập số HAWB..."
                 {{ $attributes->merge($getExtraInputAttributes()) }}
             />

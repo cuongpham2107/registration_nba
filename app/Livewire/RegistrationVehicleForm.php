@@ -278,7 +278,7 @@ class RegistrationVehicleForm extends Component implements HasForms
             }
         }
 
-        $processedData['status'] = 'none';
+        $processedData['status'] = 'sent';
         $record = RegistrationVehicle::create($processedData);
 
         // Gửi email và thông báo
