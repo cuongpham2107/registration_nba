@@ -2,7 +2,7 @@
     <div class="max-w-3xl mx-auto">
         <div class="bg-[#fbfbfbf6] rounded-2xl shadow-2xl overflow-hidden">
             <!-- Header -->
-            <div class=" px-1 py-1 text-center">
+            <div class=" px-1 pt-2 text-center">
                 <div class="flex justify-center mb-3">
                     <img src="{{ asset('images/ASG.png') }}" alt="ASG Logo" class="h-8 w-24">
                 </div>
