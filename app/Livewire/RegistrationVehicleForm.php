@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\RegistrationVehicle;
 use App\Models\User;
 use App\Services\HawbService;
+use App\Forms\Components\AutocompleteHawb;
 use Awcodes\TableRepeater\Components\TableRepeater;
 use Awcodes\TableRepeater\Header;
 use Carbon\Carbon;
@@ -52,6 +53,9 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->validationMessages([
                         'required' => 'Tên tài xế không được để trống.',
                     ])
+                    ->extraAttributes([
+                        'class' => '!bg-gray-50'
+                        ])
                     ->maxLength(255)
                     ->columnSpan(2),
 
@@ -61,18 +65,21 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->validationMessages([
                         'required' => 'Số CCCD/CMND không được để trống.',
                     ])
+                    ->extraAttributes(['class' => '!bg-gray-50'])
                     ->maxLength(255)
                     ->columnSpan(1),
 
                 TextInput::make('driver_phone')
                     ->label('Số điện thoại')
                     ->tel()
+                    ->extraAttributes(['class' => '!bg-gray-50'])
                     ->maxLength(20)
                     ->columnSpan(1),
 
                 TextInput::make('vehicle_number')
                     ->label('Biển số xe')
                     ->required()
+                    ->extraAttributes(['class' => '!bg-gray-50'])
                     ->validationMessages([
                         'required' => 'Biển số xe không được để trống.',
                     ])
@@ -83,6 +90,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->label('Tên đơn vị')
                     ->native(false)
                     ->multiple()
+                    ->extraAttributes(['class' => '!bg-gray-50'])
                     ->options(HawbService::getListAgentApi())
                     ->columnSpan(2),
 
@@ -93,33 +101,18 @@ class RegistrationVehicleForm extends Component implements HasForms
                         Header::make('pcs')->label('Số PCS')->width('120px')->align(Alignment::Center),
                     ])
                     ->schema([
-                        Select::make('hawb_number')
+                        AutocompleteHawb::make('hawb_number')
                             ->label('Số HAWB')
                             ->required()
                             ->validationMessages([
                                 'required' => 'Chưa chọn số HAWB hợp lệ.',
                             ])
-                            ->searchable()
-                            ->getSearchResultsUsing(function (string $search) {
-                                $apiData = HawbService::searchHawbApi($search);
-                                $results = [];
-                                if ($apiData && isset($apiData['hawb']) && is_array($apiData['hawb'])) {
-                                    foreach ($apiData['hawb'] as $item) {
-                                        if (! empty($item['Hawb'])) {
-                                            $results[$item['Hawb']] = $item['Hawb'];
-                                        }
-                                    }
-                                }
-
-                                return $results;
-                            })
-                            ->getOptionLabelUsing(fn (string $value): string => $value)
+                            ->extraAttributes(['class' => '!bg-gray-50 rounded-lg'])
                             ->live(onBlur: true)
                             ->afterStateUpdated(function (?string $state, callable $set) {
-                                // When a HAWB is selected, fetch its details and set pcs for this repeater row
+                                // When a HAWB is selected, fetch its details and set pcs
                                 if (empty($state)) {
                                     $set('pcs', null);
-
                                     return;
                                 }
 
@@ -136,7 +129,6 @@ class RegistrationVehicleForm extends Component implements HasForms
                                                 } else {
                                                     $set('pcs', $pcs);
                                                 }
-
                                                 return;
                                             }
                                         }
@@ -148,8 +140,10 @@ class RegistrationVehicleForm extends Component implements HasForms
                                     $set('pcs', null);
                                 }
                             }),
+                        
                         TextInput::make('pcs')
                             ->label('Số PCS')
+                            ->extraAttributes(['class' => '!bg-gray-50'])
                             ->numeric()
                             ->minValue(1),
                     ])
@@ -163,7 +157,8 @@ class RegistrationVehicleForm extends Component implements HasForms
                 DateTimePicker::make('expected_in_at')
                     ->label('Thời gian vào dự kiến')
                     ->required()
-                    ->native(false)
+                    ->native(true)
+                    ->extraAttributes(['class' => '!bg-gray-50'])
                     ->seconds(false)
                     ->displayFormat('H:i d/m/Y')
                     ->columnSpan(2),
@@ -171,6 +166,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                 Textarea::make('notes')
                     ->label('Ghi chú')
                     ->rows(2)
+                    ->extraAttributes(['class' => '!bg-gray-50'])
                     ->maxLength(1000)
                     ->columnSpan(2),
             ])

@@ -1,16 +1,16 @@
-<div class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-700 py-3 px-2 sm:px-3 lg:px-4">
+<div class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-200 py-1 px-1 sm:px-3 lg:px-4 flex items-center justify-center">
     <div class="max-w-3xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div class="bg-[#fbfbfbf6] rounded-2xl shadow-2xl overflow-hidden">
             <!-- Header -->
-            <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-1 py-2 text-center">
-                <div class="flex justify-center mb-4">
+            <div class=" px-1 py-1 text-center">
+                <div class="flex justify-center mb-3">
                     <img src="{{ asset('images/ASG.png') }}" alt="ASG Logo" class="h-8 w-24">
                 </div>
                 <h1 class="text-xl font-bold mb-2">Đăng ký xe khai thác</h1>
             </div>
 
             <!-- Form Content -->
-            <div class="px-1 py-2">
+            <div class="px-3 py-2">
                 <form wire:submit="create">
                     {{ $this->form }}
                     <div class="flex gap-4" style="margin-top: 16px;">
@@ -34,7 +34,7 @@
                         
                         <a 
                             href="javascript:history.back()"
-                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg shadow hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-center"
+                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg shadow hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-center border-[1.5px] border-gray-400"
                             style="background: #f3f4f6; color: #374151; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;"
                             onmouseover="this.style.background='#e5e7eb'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.15)'"
                             onmouseout="this.style.background='#f3f4f6'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)'"
