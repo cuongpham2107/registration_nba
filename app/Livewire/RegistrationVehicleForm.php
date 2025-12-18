@@ -98,7 +98,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->columnSpan(2),
 
                 TableRepeater::make('hawbs')
-                    ->label(new \Illuminate\Support\HtmlString('Danh sách HAWB <span class="italic text-gray-500">(Nhập 5 số cuối của số hawb.)</span>'))
+                    ->label(new \Illuminate\Support\HtmlString('Danh sách HAWB <br><span class="text-[10px] italic text-blue-600">(Nhập 5 số cuối của số hawb. Sau đó chọn số Hawb từ danh sách gợi ý)</span>'))
                     ->headers([
                         Header::make('hawb_number')->label('Số HAWB'),
                         Header::make('pcs')->label('Số PCS')->width('100px')->align(Alignment::Center),
