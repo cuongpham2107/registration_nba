@@ -112,6 +112,40 @@ class RegistrationVehicleForm extends Component implements HasForms
                             ])
                             ->extraAttributes(['class' => '!bg-gray-100 rounded-lg'])
                             ->live(onBlur: true)
+                            ->rules([
+                                function () {
+                                    return function (string $attribute, $value, \Closure $fail) {
+                                        if (empty($value)) {
+                                            $fail('Vui lòng chọn một HAWB từ danh sách.');
+                                            return;
+                                        }
+
+                                        // Kiểm tra xem HAWB có tồn tại trong API không
+                                        try {
+                                            $apiData = HawbService::searchHawbApi($value);
+                                            if (!$apiData || !isset($apiData['hawb']) || !is_array($apiData['hawb'])) {
+                                                $fail('HAWB này không tồn tại trong hệ thống. Vui lòng chọn từ danh sách gợi ý.');
+                                                return;
+                                            }
+
+                                            // Kiểm tra xem có HAWB nào khớp chính xác không
+                                            $found = false;
+                                            foreach ($apiData['hawb'] as $item) {
+                                                if (!empty($item['Hawb']) && $item['Hawb'] === $value) {
+                                                    $found = true;
+                                                    break;
+                                                }
+                                            }
+
+                                            if (!$found) {
+                                                $fail('HAWB này không tồn tại trong hệ thống. Vui lòng chọn từ danh sách gợi ý.');
+                                            }
+                                        } catch (\Exception $e) {
+                                            $fail('Không thể xác thực HAWB. Vui lòng thử lại.');
+                                        }
+                                    };
+                                },
+                            ])
                             ->afterStateUpdated(function (?string $state, callable $set) {
                                 // When a HAWB is selected, fetch its details and set pcs
                                 if (empty($state)) {
@@ -120,19 +154,21 @@ class RegistrationVehicleForm extends Component implements HasForms
                                 }
 
                                 try {
-                                    $apiData = HawbService::searchHawbApi($state);
-                                    if ($apiData && isset($apiData['hawb']) && is_array($apiData['hawb'])) {
-                                        // Find the exact hawb item
-                                        foreach ($apiData['hawb'] as $item) {
-                                            if (! empty($item['Hawb']) && $item['Hawb'] === $state) {
-                                                $pcs = $item['Pcs'] ?? null;
-                                                // Ensure numeric where possible
-                                                if (is_numeric($pcs)) {
-                                                    $set('pcs', (int) $pcs);
-                                                } else {
-                                                    $set('pcs', $pcs);
+                                    if(strlen($state) >= 5){
+                                       $apiData = HawbService::searchHawbApi($state);
+                                        if ($apiData && isset($apiData['hawb']) && is_array($apiData['hawb'])) {
+                                            // Find the exact hawb item
+                                            foreach ($apiData['hawb'] as $item) {
+                                                if (! empty($item['Hawb']) && $item['Hawb'] === $state) {
+                                                    $pcs = $item['Pcs'] ?? null;
+                                                    // Ensure numeric where possible
+                                                    if (is_numeric($pcs)) {
+                                                        $set('pcs', (int) $pcs);
+                                                    } else {
+                                                        $set('pcs', $pcs);
+                                                    }
+                                                    return;
                                                 }
-                                                return;
                                             }
                                         }
                                     }

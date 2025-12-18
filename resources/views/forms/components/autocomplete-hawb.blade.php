@@ -51,12 +51,18 @@
                 this.searchResults = [];
                 this.selectedIndex = -1;
                 
+                // Mark as valid selection
+                this.$el.setAttribute('data-valid-selection', 'true');
+                
                 // Trigger Livewire update to set PCS
                 $wire.set('{{ $statePath }}', hawb);
             },
             
             handleInput(event) {
                 const value = event.target.value;
+                
+                // Mark as invalid selection when user types manually
+                this.$el.removeAttribute('data-valid-selection');
                 
                 // Clear previous timeout
                 if (this.searchTimeout) {
@@ -139,6 +145,7 @@
                 x-on:input="handleInput"
                 x-on:keydown="handleKeydown"
                 x-on:focus="if (state && state.length >= 4) searchHawb(state)"
+                x-on:paste="$nextTick(() => { $el.removeAttribute('data-valid-selection'); })"
                 placeholder="Nhập số HAWB..."
                 {{ $attributes->merge($getExtraInputAttributes()) }}
             />
