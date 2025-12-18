@@ -138,9 +138,11 @@ class RegistrationVehicleForm extends Component implements HasForms
                                     }
                                     // fallback: clear pcs
                                     $set('pcs', null);
+                                    $set('hawb_number', null);
                                 } catch (\Exception $e) {
                                     // On error, do not break the form; just clear pcs
                                     $set('pcs', null);
+                                    $set('hawb_number', null);
                                 }
                             }),
                         
