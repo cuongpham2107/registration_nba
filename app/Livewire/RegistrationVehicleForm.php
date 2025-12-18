@@ -95,6 +95,9 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->extraAttributes(['class' => '!bg-gray-100'])
                     ->options(HawbService::getListAgentApi())
                     ->required()
+                    ->validationMessages([
+                        'required' => 'Tên đơn vị không được để trống.',
+                    ])
                     ->columnSpan(2),
 
                 TableRepeater::make('hawbs')

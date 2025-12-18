@@ -164,3 +164,9 @@ table.fi-ta-table tbody {
 .dark .fi-ta-content::-webkit-scrollbar-thumb:hover {
     background: #6b7280 !important;
 }
+
+.fi-fo-field-wrp-error-message{
+    color: #dc2626 !important;
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+}
