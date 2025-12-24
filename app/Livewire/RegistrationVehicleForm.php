@@ -170,6 +170,11 @@ class RegistrationVehicleForm extends Component implements HasForms
                                                     } else {
                                                         $set('pcs', $pcs);
                                                     }
+                                                    // Clear previous validation errors for HAWB fields
+                                                    if (method_exists($this, 'resetValidation')) {
+                                                        // reset only hawb_number validation(s) under the form state
+                                                        $this->resetValidation(['data.hawbs.*.hawb_number']);
+                                                    }
                                                     return;
                                                 }
                                             }
