@@ -21,6 +21,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Support\Enums\MaxWidth;
 use Guava\Tutorials\TutorialsPlugin;
 use Filament\FontProviders\LocalFontProvider;
+use WatheqAlshowaiter\FilamentStickyTableHeader\StickyTableHeaderPlugin;
 
 
 class AdminPanelProvider extends PanelProvider
@@ -69,6 +70,7 @@ class AdminPanelProvider extends PanelProvider
                         'sm' => 2,
                     ]),
                 TutorialsPlugin::make(),
+                 StickyTableHeaderPlugin::make(),
             ])
             ->widgets([
                 Widgets\AccountWidget::class,
