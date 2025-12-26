@@ -70,7 +70,7 @@ class AdminPanelProvider extends PanelProvider
                         'sm' => 2,
                     ]),
                 TutorialsPlugin::make(),
-                 StickyTableHeaderPlugin::make(),
+                //  StickyTableHeaderPlugin::make(),
             ])
             ->widgets([
                 Widgets\AccountWidget::class,
