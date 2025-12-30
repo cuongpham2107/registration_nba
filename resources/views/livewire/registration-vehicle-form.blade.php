@@ -1,6 +1,6 @@
-<div class="min-h-screen bg-gradient-to-br from-blue-500 to-blue-200 py-1 px-1 sm:px-3 lg:px-4 flex items-center justify-center">
+<div class="min-h-screen bg-[#5287ad] py-1 px-1 sm:px-3 lg:px-4 flex items-center justify-center">
     <div class="max-w-3xl mx-auto">
-        <div class="bg-[#fbfbfbf6] rounded-2xl shadow-2xl overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
             <!-- Header -->
             <div class=" px-1 pt-2 text-center">
                 <div class="flex justify-center mb-3">

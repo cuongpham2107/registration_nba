@@ -45,7 +45,7 @@ class RegistrationVehicleForm extends Component implements HasForms
     public function form(Form $form): Form
     {
         return $form
-            ->extraAttributes(['style' => 'gap: 0.5rem;'])
+            ->extraAttributes(['style' => 'gap: 0.5rem;', 'class' => 'bg-white'])
             ->columns(2)
             ->schema([
                 TextInput::make('driver_name')
@@ -56,7 +56,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ])
                     ->extraAttributes([
                         'class' => '!bg-gray-100'
-                        ])
+                    ])
                     ->maxLength(255)
                     ->columnSpan(2),
 
