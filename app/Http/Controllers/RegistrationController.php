@@ -22,7 +22,6 @@ class RegistrationController extends Controller
         $job_title_manager = $request->query('job_title_manager');
         $id = Crypt::decryptString($id);
         $registration = Registration::with('customers')->where('id', $id)->first();
-
         // Kiểm tra xem đã được xử lý chưa
         if ($registration->type !== null) {
             $status = "Lỗi";
@@ -149,6 +148,7 @@ class RegistrationController extends Controller
 
     public function createRegistrationRirectly(Registration $registration)
     {
+        
         $startDate = Carbon::parse($registration->start_date, 'Asia/Ho_Chi_Minh');
         $endDate = Carbon::parse($registration->end_date, 'Asia/Ho_Chi_Minh');
 
@@ -184,7 +184,7 @@ class RegistrationController extends Controller
                     'name' => $customer->name . '|' . $registration->name,
                     'papers' => $customer->papers,
                     'address' => '',
-                    'bks' => $customer->license_plate ?? '',
+                    'bks' => $customer->license_plate ? $customer->license_plate : $registration->bks ?? '',
                     'contact_person' => '',
                     'job' => $registration->purpose,
                     'start_date' => $startOfDay,
@@ -201,7 +201,7 @@ class RegistrationController extends Controller
                         'name' => $customer->name . '|' . $registration->name,
                         'papers' => $customer->papers,
                         'address' => '',
-                        'bks' => $customer->license_plate ?? '',
+                        'bks' => $customer->license_plate ? $customer->license_plate : $registration->bks ?? '',
                         'contact_person' => '',
                         'job' => $registration->purpose,
                         'start_date' => $startOfDay,

@@ -76,7 +76,7 @@ class GiveCardAction
                     ])->columns(2)
             ])
             ->action(function (array $data, RegisterDirectly $record): void {
-                try {
+                // try {
                     DB::transaction(function () use ($data, $record) {
                         // Update record status and actual_date_in
                         $record->status = 'coming_in';
@@ -90,10 +90,14 @@ class GiveCardAction
                         // Assign card to record
                         $record->card_id = $card->id;
                         
-                        // Update registration vehicle status
-                        $record->registrationVehicle->status = 'entering';
-                        $record->registrationVehicle->save();
-                        
+                        // Update registration vehicle status (guard and update safely)
+                        if ($record->relationLoaded('registrationVehicle') || $record->registrationVehicle) {
+                            $registrationVehicle = $record->registrationVehicle;
+                            if ($registrationVehicle instanceof Model) {
+                                $registrationVehicle->status = 'entering';
+                                $registrationVehicle->save();
+                            }
+                        }
                         // Save record
                         $record->save();
                     });
@@ -103,13 +107,13 @@ class GiveCardAction
                         ->body('Đã chuyển trạng thái cho khách vào')
                         ->success()
                         ->send();
-                } catch (\Exception $e) {
-                    Notification::make()
-                        ->title('Thất bại')
-                        ->body('Lỗi: ' . $e->getMessage())
-                        ->danger()
-                        ->send();
-                }
+                // } catch (\Exception $e) {
+                //     Notification::make()
+                //         ->title('Thất bại')
+                //         ->body('Lỗi: ' . $e->getMessage())
+                //         ->danger()
+                //         ->send();
+                // }
             })
             ->modalCancelAction(fn (StaticAction $action) => $action
                 ->label('Hủy')
