@@ -47,9 +47,14 @@ class ReturnCardAction
                         // Update card status to inactive
                         $record->card->update(['status' => 'inactive']);
                         
-                        // Update registration vehicle status
-                        $record->registrationVehicle->status = 'exited';
-                        $record->registrationVehicle->save();
+                        // Update registration vehicle status (guard and update safely)
+                        if ($record->relationLoaded('registrationVehicle') || $record->registrationVehicle) {
+                            $registrationVehicle = $record->registrationVehicle;
+                            if ($registrationVehicle instanceof \Illuminate\Database\Eloquent\Model) {
+                                $registrationVehicle->status = 'exited';
+                                $registrationVehicle->save();
+                            }
+                        }
                         
                         // Update record - remove card_id and set status to came_out
                         $record->update([
