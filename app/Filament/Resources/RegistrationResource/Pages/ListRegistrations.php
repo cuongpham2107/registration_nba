@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\RegistrationResource\Pages;
 
 use Closure;
+use Filament\Notifications\Notification;
 use Filament\Support\Enums\MaxWidth;
 use App\Filament\Resources\RegistrationResource;
 use Filament\Actions;
@@ -35,12 +36,16 @@ class ListRegistrations extends ListRecords
                 ->icon('heroicon-o-plus')
                 ->modalWidth(MaxWidth::SixExtraLarge)
                 ->modalHeading('Đăng ký khách mới')
+                // Only visible if user has an approver
+                ->visible(fn () => Auth::user() && Auth::user()->approver)
                 ->mutateFormDataUsing(function (array $data): array {
-                    $data['user_id'] = Auth::user()->id;
+                    $user = Auth::user();
+                    if ($user && $user->approver) {
+                        $data['user_id'] = $user->id;
+                        $data['approver_id'] = $user->approver->id;
+                    }
                     return $data;
                 }),
-
-           
         ];
     }
     protected function getTableRecordActionUsing(): ?Closure

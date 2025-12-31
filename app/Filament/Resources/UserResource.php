@@ -106,6 +106,21 @@ class UserResource extends Resource implements HasShieldPermissions
                                 'md' => 2,
                                 'lg' => 2,
                             ]),
+                        Forms\Components\Select::make('approver_id')
+                            ->label('Người phê duyệt')
+                            ->relationship(
+                                name: 'approver', 
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn (Builder $query) => $query->whereHas('roles', function (Builder $query) {
+                                    $query->where('name', 'approver');
+                                }))
+                            ->searchable()
+                            ->preload()
+                            ->columnSpan([
+                                'sm' => 1,
+                                'md' => 2,
+                                'lg' => 2,
+                            ]),
                     ])
                     ->columnSpan(2),
                 Forms\Components\Grid::make(1)

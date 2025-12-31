@@ -91,7 +91,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ->columnSpan([
                         'sm' => 1,
                         'md' => 1,
-                        'lg' => 2,
+                        'lg' => 3,
                     ]),
                 Forms\Components\DateTimePicker::make('end_date')
                     ->displayFormat('d/m/Y h:i')
@@ -120,23 +120,26 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ->columnSpan([
                         'sm' => 1,
                         'md' => 1,
-                        'lg' => 2,
+                        'lg' => 3,
                     ]),
-                Forms\Components\Select::make('approver_id')
-                    ->label('Người phê duyệt')
-                    ->relationship('approver', 'name', function ($query) {
-                        $query->whereHas('roles', function ($q) {
-                            $q->where('name', 'approver');
-                        });
-                    })
-                    ->searchable()
-                    ->preload()
-                    ->required()
-                    ->columnSpan([
-                        'sm' => 1,
-                        'md' => 2,
-                        'lg' => 2,
-                    ]),
+                // Forms\Components\Select::make('approver_id')
+                //     ->label('Người phê duyệt')
+                //     ->relationship('approver', 'name', function ($query) {
+                //         $query->whereHas('roles', function ($q) {
+                //             $q->where('name', 'approver');
+                //         });
+                //     })
+                //     ->default(auth()->id())
+                //     ->hidden()
+                //     ->dehydrated()
+                //     ->searchable()
+                //     ->preload()
+                //     ->required()
+                //     ->columnSpan([
+                //         'sm' => 1,
+                //         'md' => 2,
+                //         'lg' => 2,
+                //     ]),
                 Forms\Components\Textarea::make('asset')
                     ->label('Tài sản')
                     ->rows(2)

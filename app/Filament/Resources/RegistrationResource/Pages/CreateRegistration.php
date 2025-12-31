@@ -12,10 +12,5 @@ class CreateRegistration extends CreateRecord
     protected static string $resource = RegistrationResource::class;
 
     
-    // protected function mutateFormDataBeforeCreate(array $data): array
-    // {
-    //     $data['user_id'] = Auth::user()->id;
-    //     dd($data);
-    //     return $data;
-    // }
+    
 }
