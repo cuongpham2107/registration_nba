@@ -36,8 +36,8 @@ class ListRegistrations extends ListRecords
                 ->icon('heroicon-o-plus')
                 ->modalWidth(MaxWidth::SixExtraLarge)
                 ->modalHeading('Đăng ký khách mới')
-                // Only visible if user has an approver
-                ->visible(fn () => Auth::user() && Auth::user()->approver)
+                // Only disabled if user has an approver
+                ->disabled(fn () => Auth::user() && !Auth::user()->approver)
                 ->mutateFormDataUsing(function (array $data): array {
                     $user = Auth::user();
                     if ($user && $user->approver) {

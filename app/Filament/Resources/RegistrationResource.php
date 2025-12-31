@@ -41,6 +41,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
     protected static ?string $navigationIcon = 'heroicon-o-user-plus';
     protected static ?string $navigationLabel = 'Đăng ký khách';
      protected static ?string $modelLabel = 'Đăng ký khách';
+     
     protected static ?string $recordTitleAttribute = 'name';
     protected static ?int $navigationSort = 1;
     public static function form(Form $form): Form
