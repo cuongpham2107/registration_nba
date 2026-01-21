@@ -38,7 +38,6 @@ class GiveCardAction
                         Forms\Components\TextInput::make('bks')
                             ->label('Biển số xe')
                             ->default(fn(RegisterDirectly $record) => $record->bks)
-                            ->required()
                             ->disabled()
                             ->columnSpanFull(),
                         Forms\Components\Select::make('id')
