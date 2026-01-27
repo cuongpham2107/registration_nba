@@ -21,7 +21,7 @@ class ReturnCardAction
             ->modalIcon('heroicon-o-arrow-uturn-up')
             ->modalHeading(function (RegisterDirectly $record) {
                     if($record->type === 'vehicle') {
-                        return 'Xe ra: ' . $record->bks;
+                        return 'Xe ra: ' . $record->bks. ' | Họ tên: ' . $record->name;
                     } else {
                         return 'Người ra: ' . $record->name . ' | CMND: ' . $record->papers;
                     }

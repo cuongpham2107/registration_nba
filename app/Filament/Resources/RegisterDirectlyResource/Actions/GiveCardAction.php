@@ -35,6 +35,11 @@ class GiveCardAction
             ->form([
                 Fieldset::make('Lựa chọn')
                     ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Họ và tên')
+                            ->default(fn(RegisterDirectly $record) => $record->name)
+                            ->disabled()
+                            ->columnSpanFull(),
                         Forms\Components\TextInput::make('bks')
                             ->label('Biển số xe')
                             ->default(fn(RegisterDirectly $record) => $record->bks)
