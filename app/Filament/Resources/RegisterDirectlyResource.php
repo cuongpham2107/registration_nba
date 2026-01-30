@@ -216,7 +216,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('areas')
                     ->label('Khu vực')
                     ->formatStateUsing(function (string $state): string {
-                        $area = Area::where('code', $state)->first();
+                        $area = Area::query()->where('code', $state)->first();
 
                         return $area ? $area->name : '';
                     })

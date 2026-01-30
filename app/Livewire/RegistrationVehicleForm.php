@@ -2,13 +2,14 @@
 
 namespace App\Livewire;
 
+use App\Forms\Components\AutocompleteHawb;
 use App\Models\RegistrationVehicle;
 use App\Models\User;
 use App\Services\HawbService;
-use App\Forms\Components\AutocompleteHawb;
 use Awcodes\TableRepeater\Components\TableRepeater;
 use Awcodes\TableRepeater\Header;
 use Carbon\Carbon;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -16,9 +17,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
-use Filament\Forms\Components\Actions\Action;
-use Filament\Support\Enums\ActionSize;
 use Filament\Notifications\Notification;
+use Filament\Support\Enums\ActionSize;
 use Filament\Support\Enums\Alignment;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
@@ -28,6 +28,93 @@ class RegistrationVehicleForm extends Component implements HasForms
     use InteractsWithForms;
 
     public ?array $data = [];
+
+    public bool $isListRegistered = false;
+
+    public string $searchDriver = '';
+
+    // Hold registrations to display in the view
+    public array $registrations = [];
+
+    public function showRegisteredList(): void
+    {
+        $this->isListRegistered = ! $this->isListRegistered;
+
+        if ($this->isListRegistered) {
+            $this->loadRegistrations();
+        } else {
+            $this->registrations = [];
+        }
+    }
+
+    public function applySearch(): void
+    {
+        $this->isListRegistered = true;
+        $this->loadRegistrations();
+    }
+
+    public function updatedSearchDriver(): void
+    {
+        $this->loadRegistrations();
+    }
+
+    private function loadRegistrations(): void
+    {
+        $query = RegistrationVehicle::orderBy('created_at', 'desc');
+
+        if (! empty($this->searchDriver)) {
+            $query->where('driver_name', 'like', '%'.$this->searchDriver.'%');
+        }
+
+        $rows = $query->limit(20)->get();
+
+        $this->registrations = $rows->map(function (RegistrationVehicle $r) {
+            // Decode hawb list if present
+            $hawbList = [];
+            if (! empty($r->hawb_number)) {
+                $decoded = json_decode($r->hawb_number, true);
+                if (is_array($decoded)) {
+                    foreach ($decoded as $item) {
+                        if (! empty($item['hawb_number'])) {
+                            $hawbList[] = $item['hawb_number'];
+                        }
+                    }
+                }
+            }
+
+            // Map status to label and color classes (approximate Filament badge colors)
+            $statusLabel = match ($r->status) {
+                'none' => 'Chưa gửi',
+                'sent' => 'Cần duyệt',
+                'approve' => 'Đã phê duyệt',
+                'entering' => 'Đang vào',
+                'exited' => 'Đã ra',
+                'reject' => 'Từ chối',
+                default => $r->status,
+            };
+
+            $statusColorClass = match ($r->status) {
+                'none' => 'bg-gray-100 text-gray-700',
+                'sent' => 'bg-yellow-100 text-yellow-800',
+                'approve' => 'bg-green-100 text-green-800',
+                'entering' => 'bg-indigo-100 text-indigo-800',
+                'exited' => 'bg-blue-100 text-blue-800',
+                'reject' => 'bg-red-100 text-red-800',
+                default => 'bg-gray-100 text-gray-700',
+            };
+
+            return [
+                'id' => $r->id,
+                'driver_name' => $r->driver_name,
+                'vehicle_number' => $r->vehicle_number,
+                'hawbs' => $hawbList,
+                'expected_in_at' => $r->expected_in_at ? $r->expected_in_at->format('d/m/Y H:i') : null,
+                'status' => $r->status,
+                'status_label' => $statusLabel,
+                'status_classes' => $statusColorClass,
+            ];
+        })->toArray();
+    }
 
     public function mount(): void
     {
@@ -55,7 +142,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                         'required' => 'Tên tài xế không được để trống.',
                     ])
                     ->extraAttributes([
-                        'class' => '!bg-gray-100'
+                        'class' => '!bg-gray-100',
                     ])
                     ->maxLength(255)
                     ->columnSpan(2),
@@ -120,27 +207,29 @@ class RegistrationVehicleForm extends Component implements HasForms
                                     return function (string $attribute, $value, \Closure $fail) {
                                         if (empty($value)) {
                                             $fail('Vui lòng chọn một HAWB từ danh sách.');
+
                                             return;
                                         }
 
                                         // Kiểm tra xem HAWB có tồn tại trong API không
                                         try {
                                             $apiData = HawbService::searchHawbApi($value);
-                                            if (!$apiData || !isset($apiData['hawb']) || !is_array($apiData['hawb'])) {
+                                            if (! $apiData || ! isset($apiData['hawb']) || ! is_array($apiData['hawb'])) {
                                                 $fail('HAWB này không tồn tại trong hệ thống. Vui lòng chọn từ danh sách gợi ý.');
+
                                                 return;
                                             }
 
                                             // Kiểm tra xem có HAWB nào khớp chính xác không
                                             $found = false;
                                             foreach ($apiData['hawb'] as $item) {
-                                                if (!empty($item['Hawb']) && $item['Hawb'] === $value) {
+                                                if (! empty($item['Hawb']) && $item['Hawb'] === $value) {
                                                     $found = true;
                                                     break;
                                                 }
                                             }
 
-                                            if (!$found) {
+                                            if (! $found) {
                                                 $fail('HAWB này không tồn tại trong hệ thống. Vui lòng chọn từ danh sách gợi ý.');
                                             }
                                         } catch (\Exception $e) {
@@ -153,12 +242,13 @@ class RegistrationVehicleForm extends Component implements HasForms
                                 // When a HAWB is selected, fetch its details and set pcs
                                 if (empty($state)) {
                                     $set('pcs', null);
+
                                     return;
                                 }
 
                                 try {
-                                    if(strlen($state) >= 5){
-                                       $apiData = HawbService::searchHawbApi($state);
+                                    if (strlen($state) >= 5) {
+                                        $apiData = HawbService::searchHawbApi($state);
                                         if ($apiData && isset($apiData['hawb']) && is_array($apiData['hawb'])) {
                                             // Find the exact hawb item
                                             foreach ($apiData['hawb'] as $item) {
@@ -175,6 +265,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                                                         // reset only hawb_number validation(s) under the form state
                                                         $this->resetValidation(['data.hawbs.*.hawb_number']);
                                                     }
+
                                                     return;
                                                 }
                                             }
@@ -189,7 +280,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                                     // $set('hawb_number', null);
                                 }
                             }),
-                        
+
                         TextInput::make('pcs')
                             ->label('Số PCS')
                             ->extraAttributes(['class' => '!bg-gray-100'])
@@ -198,9 +289,9 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ])
                     ->reorderable(false)
                     ->emptyLabel('Chưa có HAWB nào được thêm')
-                    ->addAction(callback: function(Action $action) {
+                    ->addAction(callback: function (Action $action) {
                         return $action->label('Thêm HAWB Mới')->icon('heroicon-o-plus')->size(ActionSize::ExtraSmall)
-                        ->extraAttributes(['class' => '-mt-2']);
+                            ->extraAttributes(['class' => '-mt-2']);
                     })
                     ->minItems(1)
                     ->defaultItems(1)
