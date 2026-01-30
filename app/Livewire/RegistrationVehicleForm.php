@@ -85,7 +85,7 @@ class RegistrationVehicleForm extends Component implements HasForms
             // Map status to label and color classes (approximate Filament badge colors)
             $statusLabel = match ($r->status) {
                 'none' => 'Chưa gửi',
-                'sent' => 'Cần duyệt',
+                'sent' => 'Chờ phê duyệt',
                 'approve' => 'Đã phê duyệt',
                 'entering' => 'Đang vào',
                 'exited' => 'Đã ra',
