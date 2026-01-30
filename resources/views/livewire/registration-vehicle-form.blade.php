@@ -1,6 +1,6 @@
 <div class="min-h-screen bg-[#5287ad] py-1 px-1 sm:px-3 lg:px-4 flex items-center justify-center">
-    <div class="max-w-3xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col h-screen justify-between" >
+    <div class="max-w-md mx-auto">
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col w-full h-screen justify-between" >
             <!-- Header -->
             <div>
                 <div class=" px-1 pt-2 text-center">
@@ -81,7 +81,7 @@
                                  <input 
                                      type="text" 
                                      wire:model.live.debounce.500ms="searchDriver" 
-                                     placeholder="Tìm tên tài xế (tự động lọc)..." 
+                                     placeholder="Tìm tên tài xế hoặc biển số xe." 
                                      class="block w-full pl-10 pr-3 py-2 border border-blue-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
                                  >
                                  <div wire:loading wire:target="searchDriver" class="absolute top-1/2 right-3 -translate-y-1/2">

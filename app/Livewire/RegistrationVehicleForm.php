@@ -60,13 +60,22 @@ class RegistrationVehicleForm extends Component implements HasForms
 
     private function loadRegistrations(): void
     {
-        $query = RegistrationVehicle::orderBy('created_at', 'desc');
+        $query = RegistrationVehicle::whereDate('created_at', now()->toDateString())
+            ->whereIn('status', ['sent', 'approve'])
+            ->orderByRaw("CASE 
+                WHEN status = 'approve' THEN 1 
+                WHEN status = 'sent' THEN 2
+            END ASC")
+            ->orderBy('created_at', 'desc');
 
         if (! empty($this->searchDriver)) {
-            $query->where('driver_name', 'like', '%'.$this->searchDriver.'%');
+            $query->where(function ($q) {
+                $q->where('driver_name', 'like', '%'.$this->searchDriver.'%')
+                ->orWhere('vehicle_number', 'like', '%'.$this->searchDriver.'%');
+            });
         }
 
-        $rows = $query->limit(20)->get();
+        $rows = $query->limit(50)->get();
 
         $this->registrations = $rows->map(function (RegistrationVehicle $r) {
             // Decode hawb list if present
