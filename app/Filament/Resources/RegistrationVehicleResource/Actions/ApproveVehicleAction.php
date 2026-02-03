@@ -29,7 +29,7 @@ class ApproveVehicleAction
                 }
 
                 // Ẩn nếu user không phải approve_vehicle
-                if (!$user || !$user->hasRole('approve_vehicle')) {
+                if (!$user || !$user->hasRole('approve_vehicle') && !$user->hasRole('super_admin')) {
                     return true;
                 }
 

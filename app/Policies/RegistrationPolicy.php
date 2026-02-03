@@ -15,7 +15,7 @@ class RegistrationPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->checkPermissionTo('view_any_registration');
+        return $user->can('view_any_registration');
     }
 
     /**
@@ -23,7 +23,7 @@ class RegistrationPolicy
      */
     public function view(User $user, Registration $registration): bool
     {
-        return $user->checkPermissionTo('view_registration');
+        return $user->can('view_registration');
     }
 
     /**
@@ -31,7 +31,7 @@ class RegistrationPolicy
      */
     public function create(User $user): bool
     {
-        return $user->checkPermissionTo('create_registration');
+        return $user->can('create_registration');
     }
 
     /**
@@ -39,7 +39,7 @@ class RegistrationPolicy
      */
     public function update(User $user, Registration $registration): bool
     {
-        return $user->checkPermissionTo('update_registration');
+        return $user->can('update_registration');
     }
 
     /**
@@ -47,7 +47,7 @@ class RegistrationPolicy
      */
     public function delete(User $user, Registration $registration): bool
     {
-        return $user->checkPermissionTo('delete_registration');
+        return $user->can('delete_registration');
     }
 
     /**
@@ -55,7 +55,7 @@ class RegistrationPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->checkPermissionTo('delete_any_registration');
+        return $user->can('delete_any_registration');
     }
 
     /**
@@ -63,7 +63,7 @@ class RegistrationPolicy
      */
     public function forceDelete(User $user, Registration $registration): bool
     {
-        return $user->checkPermissionTo('force_delete_registration');
+        return $user->can('{{ ForceDelete }}');
     }
 
     /**
@@ -71,7 +71,7 @@ class RegistrationPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->checkPermissionTo('force_delete_any_registration');
+        return $user->can('{{ ForceDeleteAny }}');
     }
 
     /**
@@ -79,7 +79,7 @@ class RegistrationPolicy
      */
     public function restore(User $user, Registration $registration): bool
     {
-        return $user->checkPermissionTo('restore_registration');
+        return $user->can('{{ Restore }}');
     }
 
     /**
@@ -87,7 +87,7 @@ class RegistrationPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->checkPermissionTo('restore_any_registration');
+        return $user->can('{{ RestoreAny }}');
     }
 
     /**
@@ -95,7 +95,7 @@ class RegistrationPolicy
      */
     public function replicate(User $user, Registration $registration): bool
     {
-        return $user->checkPermissionTo('replicate_registration');
+        return $user->can('{{ Replicate }}');
     }
 
     /**
@@ -103,6 +103,6 @@ class RegistrationPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->checkPermissionTo('reorder_registration');
+        return $user->can('{{ Reorder }}');
     }
 }

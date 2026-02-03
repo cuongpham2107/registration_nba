@@ -15,7 +15,7 @@ class RegisterDirectlyPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->checkPermissionTo('view_any_register::directly');
+        return $user->can('view_any_register::directly');
     }
 
     /**
@@ -23,7 +23,7 @@ class RegisterDirectlyPolicy
      */
     public function view(User $user, RegisterDirectly $registerDirectly): bool
     {
-        return $user->checkPermissionTo('view_register::directly');
+        return $user->can('view_register::directly');
     }
 
     /**
@@ -31,7 +31,7 @@ class RegisterDirectlyPolicy
      */
     public function create(User $user): bool
     {
-        return $user->checkPermissionTo('create_register::directly');
+        return $user->can('create_register::directly');
     }
 
     /**
@@ -39,7 +39,7 @@ class RegisterDirectlyPolicy
      */
     public function update(User $user, RegisterDirectly $registerDirectly): bool
     {
-        return $user->checkPermissionTo('update_register::directly');
+        return $user->can('update_register::directly');
     }
 
     /**
@@ -47,7 +47,7 @@ class RegisterDirectlyPolicy
      */
     public function delete(User $user, RegisterDirectly $registerDirectly): bool
     {
-        return $user->checkPermissionTo('delete_register::directly');
+        return $user->can('delete_register::directly');
     }
 
     /**
@@ -55,7 +55,7 @@ class RegisterDirectlyPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->checkPermissionTo('delete_any_register::directly');
+        return $user->can('delete_any_register::directly');
     }
 
     /**
@@ -63,7 +63,7 @@ class RegisterDirectlyPolicy
      */
     public function forceDelete(User $user, RegisterDirectly $registerDirectly): bool
     {
-        return $user->checkPermissionTo('force_delete_register::directly');
+        return $user->can('{{ ForceDelete }}');
     }
 
     /**
@@ -71,7 +71,7 @@ class RegisterDirectlyPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->checkPermissionTo('force_delete_any_register::directly');
+        return $user->can('{{ ForceDeleteAny }}');
     }
 
     /**
@@ -79,7 +79,7 @@ class RegisterDirectlyPolicy
      */
     public function restore(User $user, RegisterDirectly $registerDirectly): bool
     {
-        return $user->checkPermissionTo('restore_register::directly');
+        return $user->can('{{ Restore }}');
     }
 
     /**
@@ -87,7 +87,7 @@ class RegisterDirectlyPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->checkPermissionTo('restore_any_register::directly');
+        return $user->can('{{ RestoreAny }}');
     }
 
     /**
@@ -95,7 +95,7 @@ class RegisterDirectlyPolicy
      */
     public function replicate(User $user, RegisterDirectly $registerDirectly): bool
     {
-        return $user->checkPermissionTo('replicate_register::directly');
+        return $user->can('{{ Replicate }}');
     }
 
     /**
@@ -103,6 +103,6 @@ class RegisterDirectlyPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->checkPermissionTo('reorder_register::directly');
+        return $user->can('{{ Reorder }}');
     }
 }

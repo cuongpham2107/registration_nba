@@ -45,3 +45,7 @@ Route::post('/registration-vehicle', [RegistrationController::class, 'storeVehic
 Route::get('/registration-vehicle/success', function(){
     return view('registration_vehicle.success');
 })->name('registration-vehicle.success');
+
+// Invoice download route
+Route::get('/invoice/download/{registerDirectly}', [App\Http\Controllers\DownloadInvoiceController::class, 'download'])
+    ->name('invoice.download');

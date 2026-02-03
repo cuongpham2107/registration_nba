@@ -183,7 +183,13 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ])
                     ->maxLength(255)
                     ->columnSpan(2),
-
+                Select::make('price_list_id')
+                    ->label('Loại xe, trọng tải')
+                    ->options(\App\Models\PriceList::pluck('vehicle_type', 'id'))
+                    ->required()
+                    ->extraAttributes(['class' => '!bg-gray-100'])
+                    ->columnSpan(2)
+                    ->native(false),
                 Select::make('name')
                     ->label('Tên đơn vị')
                     ->native(false)

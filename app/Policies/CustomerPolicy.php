@@ -15,7 +15,7 @@ class CustomerPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->checkPermissionTo('view_any_customer');
+        return $user->can('view_any_customer');
     }
 
     /**
@@ -23,7 +23,7 @@ class CustomerPolicy
      */
     public function view(User $user, Customer $customer): bool
     {
-        return $user->checkPermissionTo('view_customer');
+        return $user->can('view_customer');
     }
 
     /**
@@ -31,7 +31,7 @@ class CustomerPolicy
      */
     public function create(User $user): bool
     {
-        return $user->checkPermissionTo('create_customer');
+        return $user->can('create_customer');
     }
 
     /**
@@ -39,7 +39,7 @@ class CustomerPolicy
      */
     public function update(User $user, Customer $customer): bool
     {
-        return $user->checkPermissionTo('update_customer');
+        return $user->can('update_customer');
     }
 
     /**
@@ -47,7 +47,7 @@ class CustomerPolicy
      */
     public function delete(User $user, Customer $customer): bool
     {
-        return $user->checkPermissionTo('delete_customer');
+        return $user->can('delete_customer');
     }
 
     /**
@@ -55,7 +55,7 @@ class CustomerPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->checkPermissionTo('delete_any_customer');
+        return $user->can('delete_any_customer');
     }
 
     /**
@@ -63,7 +63,7 @@ class CustomerPolicy
      */
     public function forceDelete(User $user, Customer $customer): bool
     {
-        return $user->checkPermissionTo('force_delete_customer');
+        return $user->can('{{ ForceDelete }}');
     }
 
     /**
@@ -71,7 +71,7 @@ class CustomerPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->checkPermissionTo('force_delete_any_customer');
+        return $user->can('{{ ForceDeleteAny }}');
     }
 
     /**
@@ -79,7 +79,7 @@ class CustomerPolicy
      */
     public function restore(User $user, Customer $customer): bool
     {
-        return $user->checkPermissionTo('restore_customer');
+        return $user->can('{{ Restore }}');
     }
 
     /**
@@ -87,7 +87,7 @@ class CustomerPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->checkPermissionTo('restore_any_customer');
+        return $user->can('{{ RestoreAny }}');
     }
 
     /**
@@ -95,7 +95,7 @@ class CustomerPolicy
      */
     public function replicate(User $user, Customer $customer): bool
     {
-        return $user->checkPermissionTo('replicate_customer');
+        return $user->can('{{ Replicate }}');
     }
 
     /**
@@ -103,6 +103,6 @@ class CustomerPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->checkPermissionTo('reorder_customer');
+        return $user->can('{{ Reorder }}');
     }
 }

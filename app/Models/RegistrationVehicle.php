@@ -29,4 +29,9 @@ class RegistrationVehicle extends Model
     {
         return $this->belongsTo(RegisterDirectly::class, 'id_registration_directly');
     }
+
+    public function priceList()
+    {
+        return $this->belongsTo(PriceList::class, 'price_list_id');
+    }
 }

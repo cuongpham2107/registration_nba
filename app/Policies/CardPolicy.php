@@ -15,7 +15,7 @@ class CardPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->checkPermissionTo('view_any_card');
+        return $user->can('view_any_card');
     }
 
     /**
@@ -23,7 +23,7 @@ class CardPolicy
      */
     public function view(User $user, Card $card): bool
     {
-        return $user->checkPermissionTo('view_card');
+        return $user->can('view_card');
     }
 
     /**
@@ -31,7 +31,7 @@ class CardPolicy
      */
     public function create(User $user): bool
     {
-        return $user->checkPermissionTo('create_card');
+        return $user->can('create_card');
     }
 
     /**
@@ -39,7 +39,7 @@ class CardPolicy
      */
     public function update(User $user, Card $card): bool
     {
-        return $user->checkPermissionTo('update_card');
+        return $user->can('update_card');
     }
 
     /**
@@ -47,7 +47,7 @@ class CardPolicy
      */
     public function delete(User $user, Card $card): bool
     {
-        return $user->checkPermissionTo('delete_card');
+        return $user->can('delete_card');
     }
 
     /**
@@ -55,7 +55,7 @@ class CardPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->checkPermissionTo('delete_any_card');
+        return $user->can('delete_any_card');
     }
 
     /**
@@ -63,7 +63,7 @@ class CardPolicy
      */
     public function forceDelete(User $user, Card $card): bool
     {
-        return $user->checkPermissionTo('force_delete_card');
+        return $user->can('{{ ForceDelete }}');
     }
 
     /**
@@ -71,7 +71,7 @@ class CardPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->checkPermissionTo('force_delete_any_card');
+        return $user->can('{{ ForceDeleteAny }}');
     }
 
     /**
@@ -79,7 +79,7 @@ class CardPolicy
      */
     public function restore(User $user, Card $card): bool
     {
-        return $user->checkPermissionTo('restore_card');
+        return $user->can('{{ Restore }}');
     }
 
     /**
@@ -87,7 +87,7 @@ class CardPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->checkPermissionTo('restore_any_card');
+        return $user->can('{{ RestoreAny }}');
     }
 
     /**
@@ -95,7 +95,7 @@ class CardPolicy
      */
     public function replicate(User $user, Card $card): bool
     {
-        return $user->checkPermissionTo('replicate_card');
+        return $user->can('{{ Replicate }}');
     }
 
     /**
@@ -103,6 +103,6 @@ class CardPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->checkPermissionTo('reorder_card');
+        return $user->can('{{ Reorder }}');
     }
 }

@@ -216,6 +216,9 @@ class RegistrationVehicleResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->label('Tên đơn vị')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('priceList.ticket_code')
+                    ->label('Loại xe, trọng tải')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('hawb_number')
                     ->label('Số Hawb')
                     ->formatStateUsing(function (?string $state): \Illuminate\Support\HtmlString {
