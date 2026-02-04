@@ -1,5 +1,5 @@
 <div class="min-h-screen bg-[#5287ad] py-1 px-1 sm:px-3 lg:px-4 flex items-center justify-center">
-    <div class="max-w-md mx-auto">
+    <div class="max-w-md w-full">
         <div class="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col w-full h-screen justify-between" >
             <!-- Header -->
             <div>
