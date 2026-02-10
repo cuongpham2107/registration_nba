@@ -1,5 +1,5 @@
 <div class="min-h-screen bg-[#5287ad] py-1 px-1 sm:px-3 lg:px-4 flex items-center justify-center">
-    <div class="max-w-md w-full">
+    <div class="max-w-md mx-auto">
         <div class="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col w-full h-screen justify-between" >
             <!-- Header -->
             <div>
@@ -7,15 +7,15 @@
                     <div class="flex justify-center mb-3">
                         <img src="{{ asset('images/ASG.png') }}" alt="ASG Logo" class="h-8 w-24">
                     </div>
-                    <h1 class="text-xl font-bold">Đăng ký xe khai thác</h1>
+                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Đăng ký xe khai thác</h1>
                 </div>
                 <div class="text-end">
                      @if (!$isListRegistered)
-                    <a href="#" wire:click.prevent="showRegisteredList" class=" text-blue-600 hover:underline italic cursor-pointer text-xs font-semibold px-2 rounded-lg">
+                    <a href="#" wire:click.prevent="showRegisteredList" class=" text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline italic cursor-pointer text-xs font-semibold px-2 rounded-lg">
                         Kiểm tra đăng ký
                     </a>
                      @else
-                     <a href="#" wire:click.prevent="showRegisteredList" class=" text-blue-600 hover:underline italic cursor-pointer text-xs font-semibold px-2 rounded-lg">
+                     <a href="#" wire:click.prevent="showRegisteredList" class=" text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline italic cursor-pointer text-xs font-semibold px-2 rounded-lg">
                         Quay lại đăng ký
                     </a>
                     @endif
@@ -67,14 +67,14 @@
                  <div class="px-3 py-2 flex flex-col min-h-screen" >
                      <div class="flex-shrink-0">
                          <div class="flex items-center justify-between mb-4">
-                             <h2 class="text-lg font-semibold">Danh sách đăng ký</h2>
+                             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Danh sách đăng ký</h2>
                          </div>
 
                          <!-- Search Bar -->
                          <div class="mb-4">
                              <div class="relative">
                                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                     <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                     <svg class="h-4 w-4 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                      </svg>
                                  </div>
@@ -82,7 +82,7 @@
                                      type="text" 
                                      wire:model.live.debounce.500ms="searchDriver" 
                                      placeholder="Tìm tên tài xế hoặc biển số xe." 
-                                     class="block w-full pl-10 pr-3 py-2 border border-blue-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
+                                     class="block w-full pl-10 pr-3 py-2 border border-blue-200 dark:border-gray-600 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                                  >
                                  <div wire:loading wire:target="searchDriver" class="absolute top-1/2 right-3 -translate-y-1/2">
                                      <svg class="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -98,8 +98,8 @@
                      <div class="flex-1 flex flex-col min-h-0">
                          <!-- Loading indicator for the list -->
                          <div wire:loading.flex wire:target="searchDriver" class="flex-1 items-center justify-center py-10">
-                             <div class="inline-flex items-center px-4 py-2 leading-6 text-sm text-black transition ease-in-out duration-150 cursor-not-allowed">
-                                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                             <div class="inline-flex items-center px-4 py-2 leading-6 text-sm text-black dark:text-white transition ease-in-out duration-150 cursor-not-allowed">
+                                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-black dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                  </svg>
@@ -110,24 +110,24 @@
                          <div wire:loading.remove wire:target="searchDriver" class="flex-1 flex flex-col">
                              @if(empty($registrations))
                                  <div class="flex-1 flex items-center justify-center py-10">
-                                     <p class="text-sm text-gray-500 italic">Không có đăng ký nào.</p>
+                                     <p class="text-sm text-gray-500 dark:text-gray-400 italic">Không có đăng ký nào.</p>
                                  </div>
                              @else
                                  <div class="space-y-3">
-                                     <ul class="divide-y divide-gray-100">
+                                     <ul class="divide-y divide-gray-100 dark:divide-gray-700">
                                          @foreach($registrations as $reg)
                                              <li class="py-3">
-                                                 <div class="bg-white shadow-sm rounded-xl p-3 hover:shadow-md transition-shadow border border-gray-200">
+                                                 <div class="bg-white dark:bg-gray-700 shadow-sm rounded-xl p-3 hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-600">
                                                      <div class="flex items-start justify-between gap-3">
                                                          <div class="flex-1 min-w-0">
-                                                             <p class="text-sm font-semibold text-gray-900 truncate">{{ $reg['driver_name'] ?? '-' }}</p>
-                                                             <p class="text-xs text-gray-500 mt-0.5 truncate">{{ $reg['vehicle_number'] ?? '-' }}</p>
+                                                             <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ $reg['driver_name'] ?? '-' }}</p>
+                                                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{{ $reg['vehicle_number'] ?? '-' }}</p>
 
                                                              @if(!empty($reg['hawbs']))
                                                                  <div class="mt-2">
                                                                      <div class="flex gap-2 overflow-x-hidden" style="max-width:18rem; -webkit-overflow-scrolling: touch;">
                                                                          @foreach($reg['hawbs'] as $hawb)
-                                                                             <span class="flex-shrink-0 text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">{{ $hawb }}</span>
+                                                                             <span class="flex-shrink-0 text-xs bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-2 py-0.5 rounded-full">{{ $hawb }}</span>
                                                                          @endforeach
                                                                      </div>
                                                                  </div>
@@ -135,7 +135,7 @@
                                                          </div>
 
                                                          <div class="flex-shrink-0 text-right">
-                                                             <p class="text-xs text-gray-500">{{ $reg['expected_in_at'] ?? '' }}</p>
+                                                             <p class="text-xs text-gray-500 dark:text-gray-400">{{ $reg['expected_in_at'] ?? '' }}</p>
                                                              <div class="mt-2">
                                                                  <span class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium {{ $reg['status_classes'] ?? '' }}">{{ $reg['status_label'] ?? $reg['status'] ?? '' }}</span>
                                                              </div>
@@ -154,8 +154,8 @@
          </div>
 
             <!-- Footer -->
-            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 ">
-                <p class="text-center text-sm text-gray-600">
+            <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600 ">
+                <p class="text-center text-sm text-gray-600 dark:text-gray-300">
                     © {{ date('Y') }} ASGL - Hệ thống đăng ký xe khai thác
                 </p>
             </div>

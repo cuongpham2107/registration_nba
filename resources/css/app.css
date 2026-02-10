@@ -2,3 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 @tailwind variants;
+
+
+.table-repeater-header-column{
+    background-color: #f3f4f6; /* bg-gray-100 */
+    color: #111827; /* text-gray-900 */
+    border-color: #e5e7eb; /* border-gray-200 */
+}
+
+.dark .table-repeater-header-column{
+    background-color: #374151; /* dark:bg-gray-700 */
+    color: #ffffff; /* dark:text-white */
+    border-color: #4b5563; /* dark:border-gray-600 */
+}
