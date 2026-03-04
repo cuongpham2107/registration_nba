@@ -23,9 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        URL::forceScheme('https');
-        if (config('app.url')) {
-            URL::forceRootUrl(config('app.url'));
+        if (config('app.env') === 'production' || request()->isSecure()) {
+            URL::forceScheme('https');
         }
 
         Lang::addNamespace('filament-panels', resource_path('lang/vendor/filament-panels'));
