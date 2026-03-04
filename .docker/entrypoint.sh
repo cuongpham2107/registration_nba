@@ -8,8 +8,8 @@ chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 # Chạy migrations nếu cần (bỏ comment nếu muốn tự động chạy)
 # php artisan migrate --force
 
-# Clear cache
-php artisan cache:clear
+# Clear and Recache
+php artisan optimize:clear
 php artisan config:cache
 php artisan view:cache
 php artisan route:cache
