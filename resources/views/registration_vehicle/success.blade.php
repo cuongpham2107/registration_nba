@@ -218,7 +218,7 @@
     <div class="success-container">
         <div class="success-icon">✓</div>
         
-        <h1>Gửi thành công!</h1>
+        <h1>Gửi đăng ký thành công, vui lòng chờ phê duyệt!</h1>
         
         <p class="success-message">
             Đăng ký xe khai thác đã được gửi thành công.<br>

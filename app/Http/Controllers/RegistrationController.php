@@ -9,6 +9,7 @@ use App\Models\RegisterDirectly;
 use App\Models\Registration;
 use App\Models\RegistrationVehicle;
 use App\Services\HawbService;
+use App\Services\RegistrationService;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -29,7 +30,7 @@ class RegistrationController extends Controller
             return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
         }
 
-        $this->createRegistrationRirectly($registration);
+        (new RegistrationService())->createRegistrationDirectly($registration);
         $registration->type = 'browse';
         $registration->type_date = now();
         $registration->save();

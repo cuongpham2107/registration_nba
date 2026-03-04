@@ -72,4 +72,10 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(User::class, 'approver_id');
     }
+
+    // BelongsToMany: Chọn nhiều approver qua pivot table user_approvers
+    public function approvers()
+    {
+        return $this->belongsToMany(User::class, 'user_approvers', 'user_id', 'approver_id');
+    }
 }

@@ -6,6 +6,7 @@ use Closure;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\MaxWidth;
 use App\Filament\Resources\RegistrationResource;
+use App\Services\RegistrationService;
 use Filament\Actions;
 use Filament\Resources\Components\Tab;
 use Illuminate\Database\Eloquent\Builder;
@@ -36,15 +37,44 @@ class ListRegistrations extends ListRecords
                 ->icon('heroicon-o-plus')
                 ->modalWidth(MaxWidth::SixExtraLarge)
                 ->modalHeading('Đăng ký khách mới')
-                // Only disabled if user has an approver
-                ->disabled(fn () => Auth::user() && !Auth::user()->approver)
                 ->mutateFormDataUsing(function (array $data): array {
                     $user = Auth::user();
-                    if ($user && $user->approver) {
+                    if ($user) {
                         $data['user_id'] = $user->id;
-                        $data['approver_id'] = $user->approver->id;
+                        // Nếu là approver thì gắn approver_id = chính tài khoản đó
+                        if ($user->hasRole('approver')) {
+                            $data['approver_id'] = $user->id;
+                        }
+                        // Không phải approver thì chỉ gắn user_id, không set approver_id
                     }
                     return $data;
+                })
+                ->after(function (Registration $record): void {
+                    $user = Auth::user();
+                    // Nếu là approver: tạo bản ghi trực tiếp và duyệt luôn
+                    if ($user && $user->hasRole('approver')) {
+                        dd(1);
+                        try {
+                            (new RegistrationService())->createRegistrationDirectly($record);
+                            $record->type = 'browse';
+                            $record->type_date = now();
+                            $record->status = 'sent';
+                            $record->save();
+
+                            Notification::make()
+                                ->title('Đăng ký thành công')
+                                ->success()
+                                ->body('Đăng ký đã được tạo và phê duyệt tự động.')
+                                ->send();
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::error('Auto approve failed: ' . $e->getMessage());
+                            Notification::make()
+                                ->title('Lỗi tạo bản ghi')
+                                ->danger()
+                                ->body('Đăng ký đã tạo nhưng không thể phê duyệt tự động: ' . $e->getMessage())
+                                ->send();
+                        }
+                    }
                 }),
         ];
     }
@@ -56,39 +86,5 @@ class ListRegistrations extends ListRecords
     {
         return 'Danh sách đăng ký khách';
     }
-    // public function getTabs(): array
-    // {
-    //     return [
-    //         'all' => Tab::make()
-    //             ->label('Tất cả')
-    //             ->icon('heroicon-o-bars-4')
-    //             ->badge(Registration::query()->count())
-    //             ->badgeColor('success'),
-    //         'sent' => Tab::make()
-    //             ->label('Đã gửi')
-    //             ->icon('heroicon-o-bolt-slash')
-    //             ->badgeColor('success')
-    //             ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'sent')),
-    //         'not_yet_sent' => Tab::make()
-    //             ->label('Chưa gửi')
-    //             ->icon('heroicon-o-bolt')
-    //             ->badgeColor('danger')
-    //             ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'not_yet_sent')),
-    //         'browse' => Tab::make()
-    //             ->label('Duyệt')
-    //             ->icon('heroicon-o-check')
-    //             ->badgeColor('success')
-    //             ->modifyQueryUsing(fn (Builder $query) => $query->where('type', 'browse')),
-    //         'refuse' => Tab::make()
-    //             ->label('Từ chối')
-    //             ->icon('heroicon-o-x-mark')
-    //             ->badgeColor('danger')
-    //             ->modifyQueryUsing(fn (Builder $query) => $query->where('type', 'refuse')),
-    //     ];
-    // }
-    // public function getDefaultActiveTab(): string | int | null
-    // {
-    //     return 'all';
-    // }
   
 }

@@ -106,14 +106,16 @@ class UserResource extends Resource implements HasShieldPermissions
                                 'md' => 2,
                                 'lg' => 2,
                             ]),
-                        Forms\Components\Select::make('approver_id')
+                        Forms\Components\Select::make('approvers')
                             ->label('Người phê duyệt')
                             ->relationship(
-                                name: 'approver', 
+                                name: 'approvers',
                                 titleAttribute: 'name',
                                 modifyQueryUsing: fn (Builder $query) => $query->whereHas('roles', function (Builder $query) {
                                     $query->where('name', 'approver');
-                                }))
+                                })
+                            )
+                            ->multiple()
                             ->searchable()
                             ->preload()
                             ->columnSpan([
@@ -195,6 +197,7 @@ class UserResource extends Resource implements HasShieldPermissions
                 // User thường chỉ thấy của mình (người tạo)
                 return $query->where('id', $user->id);
             })
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])

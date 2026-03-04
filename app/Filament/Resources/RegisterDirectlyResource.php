@@ -318,6 +318,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
             ], layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(1)
             ->deferLoading()
+            ->paginated([10, 25, 50, 100])
             ->defaultPaginationPageOption(25)
             ->actions([
                 GiveCardAction::make(),
