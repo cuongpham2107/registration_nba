@@ -15,8 +15,8 @@ class HawbService
     {
         return Cache::remember('asgl_api_token', 3600, function () {
             try {
-                $login = env('ASGL_API_LOGIN', 'ASGL-ĐKK');
-                $password = env('ASGL_API_PASSWORD', 'Asgl@1909');
+                $login = env('ASG_API_LOGIN', 'ASG-ĐKK');
+                $password = env('ASG_API_PASSWORD', 'Asgl@1909');
 
                 $response = Http::timeout(10)->post('https://id.asgl.net.vn/api/auth/login', [
                     'login' => $login,

@@ -175,7 +175,7 @@
         </div>
         
         <div class="footer">
-            <p>© {{ date('Y') }} ASGL - Hệ thống đăng ký khách</p>
+            <p>© {{ date('Y') }} ASG - Hệ thống đăng ký khách</p>
         </div>
     </div>
 </body>

@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="favicon" content="{{ asset('images/ASG.png') }}">
-    <title>Đăng ký thành công - ASGL</title>
+    <title>Đăng ký thành công - ASG</title>
     <style>
         * {
             margin: 0;
@@ -296,7 +296,7 @@
         </div>
 
         <div class="footer">
-            <p>© {{ date('Y') }} ASGL - Hệ thống đăng ký xe khai thác</p>
+            <p>© {{ date('Y') }} ASG - Hệ thống đăng ký xe khai thác</p>
             <p>Mọi thắc mắc vui lòng liên hệ bộ phận hỗ trợ</p>
         </div>
     </div>

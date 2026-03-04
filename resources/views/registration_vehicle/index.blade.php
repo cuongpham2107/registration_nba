@@ -514,7 +514,7 @@
         </form>
 
         <div class="footer">
-            <p>© {{ date('Y') }} ASGL - Hệ thống đăng ký xe khai thác</p>
+            <p>© {{ date('Y') }} ASG - Hệ thống đăng ký xe khai thác</p>
         </div>
     </div>
 

@@ -156,7 +156,7 @@
             <!-- Footer -->
             <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600 ">
                 <p class="text-center text-sm text-gray-600 dark:text-gray-300">
-                    © {{ date('Y') }} ASGL - Hệ thống đăng ký xe khai thác
+                    © {{ date('Y') }} ASG - Hệ thống đăng ký xe khai thác
                 </p>
             </div>
         </div>

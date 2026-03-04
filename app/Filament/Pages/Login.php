@@ -47,12 +47,12 @@ class Login extends SimplePage
         $this->form->fill();
     }
     /**
-     * Ghi đè phần login để login bằng api của ASGL
+     * Ghi đè phần login để login bằng api của ASG
      * @return LoginResponse|null
      */
     public function authenticate(): ?LoginResponse
     {
-        //Check nếu login bằng tài khoảnt trong database đúng thì tiếp tục nếu không thì login bằng api của ASGL
+        //Check nếu login bằng tài khoảnt trong database đúng thì tiếp tục nếu không thì login bằng api của ASG
 
 
         try {
@@ -75,7 +75,7 @@ class Login extends SimplePage
             }
             $userResponse = $loginAsgl->json()['data']['user'];
 
-            // Tìm user dựa trên asgl_id (unique identifier từ ASGL)
+            // Tìm user dựa trên asgl_id (unique identifier từ ASG)
             // Nếu không tìm thấy thì tìm theo username
             $user = User::where('asgl_id', $userResponse['id'])
                 ->orWhere('username', $userResponse['username'])

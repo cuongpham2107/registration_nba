@@ -73,7 +73,7 @@ class UserResource extends Resource implements HasShieldPermissions
                                 'lg' => 2,
                             ]),
                             Forms\Components\TextInput::make('asgl_id')
-                            ->label('Mã nhân viên ASGL')
+                            ->label('Mã nhân viên ASG')
                             ->columnSpan([
                                 'sm' => 1,
                                 'md' => 1,
