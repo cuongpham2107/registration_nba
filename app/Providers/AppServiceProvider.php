@@ -23,10 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (config('app.env') === 'production' || request()->isSecure()) {
+        if (config('app.env') !== 'local') {
             URL::forceScheme('https');
         }
-        
+
         Lang::addNamespace('filament-panels', resource_path('lang/vendor/filament-panels'));
         FilamentAsset::register([
             Css::make('custom', asset(path: 'css/filament/custom.css?version=12312')),
