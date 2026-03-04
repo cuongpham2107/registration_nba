@@ -23,8 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (config('app.env') !== 'local') {
-            URL::forceScheme('https');
+        URL::forceScheme('https');
+        if (config('app.url')) {
+            URL::forceRootUrl(config('app.url'));
         }
 
         Lang::addNamespace('filament-panels', resource_path('lang/vendor/filament-panels'));
