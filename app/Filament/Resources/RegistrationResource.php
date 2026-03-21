@@ -344,7 +344,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                 default => '',
             })
             ->defaultSort('created_at', 'desc')
-            ->paginated([10, 25, 50, 100, 'all'])
+            ->paginated([10, 25, 50, 100])
             ->defaultPaginationPageOption(25)
             ->modifyQueryUsing(function ($query) {
                 $user = auth()->user();
