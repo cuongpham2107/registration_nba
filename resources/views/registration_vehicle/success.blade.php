@@ -221,7 +221,7 @@
         <h1>Gửi thành công!</h1>
         
         <p class="success-message">
-            Đăng ký xe khai thác đã được gửi thành công.<br>
+            Đăng ký xe kiểm hoá đã được gửi thành công.<br>
             Vui lòng chờ phê duyệt từ bộ phận có thẩm quyền.
         </p>
 
@@ -296,7 +296,7 @@
         </div>
 
         <div class="footer">
-            <p>© {{ date('Y') }} ASGL - Hệ thống đăng ký xe khai thác</p>
+            <p>© {{ date('Y') }} ASGL - Hệ thống đăng ký khách</p>
             <p>Mọi thắc mắc vui lòng liên hệ bộ phận hỗ trợ</p>
         </div>
     </div>

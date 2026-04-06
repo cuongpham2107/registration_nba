@@ -71,7 +71,7 @@ class RegistrationVehicleForm extends Component implements HasForms
         if (! empty($this->searchDriver)) {
             $query->where(function ($q) {
                 $q->where('driver_name', 'like', '%'.$this->searchDriver.'%')
-                ->orWhere('vehicle_number', 'like', '%'.$this->searchDriver.'%');
+                    ->orWhere('vehicle_number', 'like', '%'.$this->searchDriver.'%');
             });
         }
 
@@ -202,115 +202,115 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ])
                     ->columnSpan(2),
 
-                TableRepeater::make('hawbs')
-                    ->label(new \Illuminate\Support\HtmlString('Danh sách HAWB <br><span class="text-[10px] italic text-blue-600">(Nhập 5 số cuối của số hawb. Sau đó chọn số Hawb từ danh sách gợi ý)</span>'))
-                    ->headers([
-                        Header::make('hawb_number')->label('Số HAWB'),
-                        Header::make('pcs')->label('Số PCS')->width('100px')->align(Alignment::Center),
-                    ])
-                    ->schema([
-                        AutocompleteHawb::make('hawb_number')
-                            ->label('Số HAWB')
-                            ->required()
-                            ->validationMessages([
-                                'required' => 'Chưa chọn số HAWB hợp lệ.',
-                            ])
-                            ->extraAttributes(['class' => '!bg-gray-100 rounded-lg'])
-                            ->live(onBlur: true)
-                            ->rules([
-                                function () {
-                                    return function (string $attribute, $value, \Closure $fail) {
-                                        if (empty($value)) {
-                                            $fail('Vui lòng chọn một HAWB từ danh sách.');
+                // TableRepeater::make('hawbs')
+                //     ->label(new \Illuminate\Support\HtmlString('Danh sách HAWB <br><span class="text-[10px] italic text-blue-600">(Nhập 5 số cuối của số hawb. Sau đó chọn số Hawb từ danh sách gợi ý)</span>'))
+                //     ->headers([
+                //         Header::make('hawb_number')->label('Số HAWB'),
+                //         Header::make('pcs')->label('Số PCS')->width('100px')->align(Alignment::Center),
+                //     ])
+                //     ->schema([
+                //         AutocompleteHawb::make('hawb_number')
+                //             ->label('Số HAWB')
+                //             ->required()
+                //             ->validationMessages([
+                //                 'required' => 'Chưa chọn số HAWB hợp lệ.',
+                //             ])
+                //             ->extraAttributes(['class' => '!bg-gray-100 rounded-lg'])
+                //             ->live(onBlur: true)
+                //             ->rules([
+                //                 function () {
+                //                     return function (string $attribute, $value, \Closure $fail) {
+                //                         if (empty($value)) {
+                //                             $fail('Vui lòng chọn một HAWB từ danh sách.');
 
-                                            return;
-                                        }
+                //                             return;
+                //                         }
 
-                                        // Kiểm tra xem HAWB có tồn tại trong API không
-                                        try {
-                                            $apiData = HawbService::searchHawbApi($value);
-                                            if (! $apiData || ! isset($apiData['hawb']) || ! is_array($apiData['hawb'])) {
-                                                $fail('HAWB này không tồn tại trong hệ thống. Vui lòng chọn từ danh sách gợi ý.');
+                //                         // Kiểm tra xem HAWB có tồn tại trong API không
+                //                         try {
+                //                             $apiData = HawbService::searchHawbApi($value);
+                //                             if (! $apiData || ! isset($apiData['hawb']) || ! is_array($apiData['hawb'])) {
+                //                                 $fail('HAWB này không tồn tại trong hệ thống. Vui lòng chọn từ danh sách gợi ý.');
 
-                                                return;
-                                            }
+                //                                 return;
+                //                             }
 
-                                            // Kiểm tra xem có HAWB nào khớp chính xác không
-                                            $found = false;
-                                            foreach ($apiData['hawb'] as $item) {
-                                                if (! empty($item['Hawb']) && $item['Hawb'] === $value) {
-                                                    $found = true;
-                                                    break;
-                                                }
-                                            }
+                //                             // Kiểm tra xem có HAWB nào khớp chính xác không
+                //                             $found = false;
+                //                             foreach ($apiData['hawb'] as $item) {
+                //                                 if (! empty($item['Hawb']) && $item['Hawb'] === $value) {
+                //                                     $found = true;
+                //                                     break;
+                //                                 }
+                //                             }
 
-                                            if (! $found) {
-                                                $fail('HAWB này không tồn tại trong hệ thống. Vui lòng chọn từ danh sách gợi ý.');
-                                            }
-                                        } catch (\Exception $e) {
-                                            $fail('Không thể xác thực HAWB. Vui lòng thử lại.');
-                                        }
-                                    };
-                                },
-                            ])
-                            ->afterStateUpdated(function (?string $state, callable $set) {
-                                // When a HAWB is selected, fetch its details and set pcs
-                                if (empty($state)) {
-                                    $set('pcs', null);
+                //                             if (! $found) {
+                //                                 $fail('HAWB này không tồn tại trong hệ thống. Vui lòng chọn từ danh sách gợi ý.');
+                //                             }
+                //                         } catch (\Exception $e) {
+                //                             $fail('Không thể xác thực HAWB. Vui lòng thử lại.');
+                //                         }
+                //                     };
+                //                 },
+                //             ])
+                //             ->afterStateUpdated(function (?string $state, callable $set) {
+                //                 // When a HAWB is selected, fetch its details and set pcs
+                //                 if (empty($state)) {
+                //                     $set('pcs', null);
 
-                                    return;
-                                }
+                //                     return;
+                //                 }
 
-                                try {
-                                    if (strlen($state) >= 5) {
-                                        $apiData = HawbService::searchHawbApi($state);
-                                        if ($apiData && isset($apiData['hawb']) && is_array($apiData['hawb'])) {
-                                            // Find the exact hawb item
-                                            foreach ($apiData['hawb'] as $item) {
-                                                if (! empty($item['Hawb']) && $item['Hawb'] === $state) {
-                                                    $pcs = $item['Pcs'] ?? null;
-                                                    // Ensure numeric where possible
-                                                    if (is_numeric($pcs)) {
-                                                        $set('pcs', (int) $pcs);
-                                                    } else {
-                                                        $set('pcs', $pcs);
-                                                    }
-                                                    // Clear previous validation errors for HAWB fields
-                                                    if (method_exists($this, 'resetValidation')) {
-                                                        // reset only hawb_number validation(s) under the form state
-                                                        $this->resetValidation(['data.hawbs.*.hawb_number']);
-                                                    }
+                //                 try {
+                //                     if (strlen($state) >= 5) {
+                //                         $apiData = HawbService::searchHawbApi($state);
+                //                         if ($apiData && isset($apiData['hawb']) && is_array($apiData['hawb'])) {
+                //                             // Find the exact hawb item
+                //                             foreach ($apiData['hawb'] as $item) {
+                //                                 if (! empty($item['Hawb']) && $item['Hawb'] === $state) {
+                //                                     $pcs = $item['Pcs'] ?? null;
+                //                                     // Ensure numeric where possible
+                //                                     if (is_numeric($pcs)) {
+                //                                         $set('pcs', (int) $pcs);
+                //                                     } else {
+                //                                         $set('pcs', $pcs);
+                //                                     }
+                //                                     // Clear previous validation errors for HAWB fields
+                //                                     if (method_exists($this, 'resetValidation')) {
+                //                                         // reset only hawb_number validation(s) under the form state
+                //                                         $this->resetValidation(['data.hawbs.*.hawb_number']);
+                //                                     }
 
-                                                    return;
-                                                }
-                                            }
-                                        }
-                                    }
-                                    // fallback: clear pcs
-                                    $set('pcs', null);
-                                    // $set('hawb_number', null);
-                                } catch (\Exception $e) {
-                                    // On error, do not break the form; just clear pcs
-                                    $set('pcs', null);
-                                    // $set('hawb_number', null);
-                                }
-                            }),
+                //                                     return;
+                //                                 }
+                //                             }
+                //                         }
+                //                     }
+                //                     // fallback: clear pcs
+                //                     $set('pcs', null);
+                //                     // $set('hawb_number', null);
+                //                 } catch (\Exception $e) {
+                //                     // On error, do not break the form; just clear pcs
+                //                     $set('pcs', null);
+                //                     // $set('hawb_number', null);
+                //                 }
+                //             }),
 
-                        TextInput::make('pcs')
-                            ->label('Số PCS')
-                            ->extraAttributes(['class' => '!bg-gray-100'])
-                            ->numeric()
-                            ->minValue(1),
-                    ])
-                    ->reorderable(false)
-                    ->emptyLabel('Chưa có HAWB nào được thêm')
-                    ->addAction(callback: function (Action $action) {
-                        return $action->label('Thêm HAWB Mới')->icon('heroicon-o-plus')->size(ActionSize::ExtraSmall)
-                            ->extraAttributes(['class' => '-mt-2']);
-                    })
-                    ->minItems(1)
-                    ->defaultItems(1)
-                    ->columnSpan(2),
+                //         TextInput::make('pcs')
+                //             ->label('Số PCS')
+                //             ->extraAttributes(['class' => '!bg-gray-100'])
+                //             ->numeric()
+                //             ->minValue(1),
+                //     ])
+                //     ->reorderable(false)
+                //     ->emptyLabel('Chưa có HAWB nào được thêm')
+                //     ->addAction(callback: function (Action $action) {
+                //         return $action->label('Thêm HAWB Mới')->icon('heroicon-o-plus')->size(ActionSize::ExtraSmall)
+                //             ->extraAttributes(['class' => '-mt-2']);
+                //     })
+                //     ->minItems(1)
+                //     ->defaultItems(1)
+                //     ->columnSpan(2),
 
                 DateTimePicker::make('expected_in_at')
                     ->label('Thời gian vào dự kiến')
@@ -475,7 +475,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                 if ($user->email) {
                     $mail = (new \App\Services\MailService)->sendMailWithTemplate(
                         $user->email,
-                        'Đăng ký xe khai thác: '.$record->driver_name.' | '.$record->vehicle_number.' | '.date('Y-m-d H:i:s'),
+                        'Đăng ký xe kiểm hoá: '.$record->driver_name.' | '.$record->vehicle_number.' | '.date('Y-m-d H:i:s'),
                         'template-mail.registration-vehicle',
                         ['registration' => $record]
                     );
@@ -493,7 +493,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                 $approveVehicleUsers = User::role('approve_vehicle')->get();
                 foreach ($approveVehicleUsers as $user) {
                     Notification::make()
-                        ->title('Đăng ký xe khai thác mới')
+                        ->title('Đăng ký xe kiểm hoá mới')
                         ->success()
                         ->body("Đăng ký xe {$record->vehicle_number} - Tài xế: {$record->driver_name} cần phê duyệt.")
                         ->sendToDatabase($user);

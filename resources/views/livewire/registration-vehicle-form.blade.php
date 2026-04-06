@@ -7,7 +7,7 @@
                     <div class="flex justify-center mb-3">
                         <img src="{{ asset('images/ASG.png') }}" alt="ASG Logo" class="h-8 w-24">
                     </div>
-                    <h1 class="text-xl font-bold">Đăng ký xe khai thác</h1>
+                    <h1 class="text-xl font-bold">Đăng ký xe kiểm hoá</h1>
                 </div>
                 <div class="text-end">
                      @if (!$isListRegistered)
@@ -156,7 +156,7 @@
             <!-- Footer -->
             <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 ">
                 <p class="text-center text-sm text-gray-600">
-                    © {{ date('Y') }} ASGL - Hệ thống đăng ký xe khai thác
+                    © {{ date('Y') }} ASGL - Hệ thống đăng ký xe kiểm hoá
                 </p>
             </div>
         </div>

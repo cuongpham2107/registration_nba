@@ -8,29 +8,28 @@ use App\Filament\Resources\RegistrationVehicleResource\Actions\CancelApproveVehi
 use App\Filament\Resources\RegistrationVehicleResource\Filters\RegistrationVehicleFilter;
 use App\Filament\Resources\RegistrationVehicleResource\Pages;
 use App\Models\RegistrationVehicle;
+use App\Services\HawbService;
+use Awcodes\TableRepeater\Components\TableRepeater;
+use Awcodes\TableRepeater\Header;
 use Filament\Actions\Exports\Models\Export;
 use Filament\Forms;
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
-use App\Services\HawbService;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\ActionSize;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
-use Awcodes\TableRepeater\Components\TableRepeater;
-use Awcodes\TableRepeater\Header;
-use Filament\Forms\Components\TextInput;
-
 
 class RegistrationVehicleResource extends Resource
 {
     protected static ?string $model = RegistrationVehicle::class;
 
-    protected static ?string $modelLabel = 'Đăng ký xe khai thác';
+    protected static ?string $modelLabel = 'Đăng ký xe kiểm hoá ';
 
-    protected static ?string $navigationLabel = 'Đăng ký xe khai thác';
+    protected static ?string $navigationLabel = 'Đăng ký xe kiểm hoá ';
 
     protected static ?string $navigationIcon = 'heroicon-o-truck';
 
@@ -68,7 +67,7 @@ class RegistrationVehicleResource extends Resource
                         ->multiple()
                         ->afterStateHydrated(function ($component, $state) {
                             // Convert comma-separated string back to array for editing
-                            if (is_string($state) && !empty($state)) {
+                            if (is_string($state) && ! empty($state)) {
                                 $array = array_map('trim', explode(',', $state));
                                 $component->state($array);
                             }
@@ -78,12 +77,13 @@ class RegistrationVehicleResource extends Resource
                             if (is_array($state)) {
                                 return implode(', ', $state);
                             }
+
                             return $state;
                         }),
 
                     Forms\Components\Toggle::make('is_priority')
                         ->label('Ưu tiên')
-                        ->helperText('Đánh dấu nếu đăng ký xe khai thác này là ưu tiên')
+                        ->helperText('Đánh dấu nếu Đăng ký xe kiểm hoá  này là ưu tiên')
                         ->onIcon('heroicon-o-arrow-up')
                         ->offIcon('heroicon-o-arrow-down')
                         ->inline(false),
@@ -93,60 +93,60 @@ class RegistrationVehicleResource extends Resource
                     // Forms\Components\TextInput::make('pcs')
                     //     ->label('Số kiện')
                     //     ->disabled(),
-                        // ->helperText('Danh sách số HAWB đã thêm sẽ hiển thị bên dưới'),
+                    // ->helperText('Danh sách số HAWB đã thêm sẽ hiển thị bên dưới'),
                     Forms\Components\Hidden::make('hawb_number')
                         ->dehydrated(true),
-                    TableRepeater::make('hawbs')
-                            ->label('Danh sách HAWB')
-                            ->columns(1)
-                            ->headers([
-                                Header::make('hawb_number')->label('Số HAWB'),
-                                Header::make('pcs')->label('Số PCS')->width('80px')->align(Alignment::Center),
-                            ])
-                            ->schema([
-                                TextInput::make('hawb_number')
-                                    ->label('Số HAWB')
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->reactive(),
-                                TextInput::make('pcs')
-                                    ->label('Số PCS')
-                                    ->maxLength(255)
-                            ])
-                            ->afterStateHydrated(function (TableRepeater $component, $state, $record) {
-                                // Get data from the hidden hawb_number field instead
-                                if ($record && $record->hawb_number) {
-                                    $hawbData = $record->hawb_number;
-                                    if (is_string($hawbData)) {
-                                        try {
-                                            $decoded = json_decode($hawbData, true, 512, JSON_THROW_ON_ERROR);
-                                            if (is_array($decoded)) {
-                                                $component->state($decoded);
-                                                return;
-                                            }
-                                        } catch (\JsonException $e) {
-                                            // If JSON decode fails, set empty array
-                                        }
-                                    }
-                                }
-                                $component->state([]);
-                            })
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                // Update the hidden hawb_number field when TableRepeater changes
-                                if (is_array($state)) {
-                                    $filtered = array_filter($state, function($item) {
-                                        return is_array($item) && !empty($item['hawb_number']);
-                                    });
-                                    $set('hawb_number', !empty($filtered) ? json_encode(array_values($filtered)) : null);
-                                }
-                            })
-                            ->dehydrated(false) // Don't save this field directly
-                            ->addActionLabel('Thêm số HAWB')
-                            ->addable(false)
-                            ->reorderable(false)
-                            ->emptyLabel('Chưa có HAWB nào được thêm')
-                            ->minItems(0)
-                            ->columnSpanFull(),
+                    // TableRepeater::make('hawbs')
+                    //         ->label('Danh sách HAWB')
+                    //         ->columns(1)
+                    //         ->headers([
+                    //             Header::make('hawb_number')->label('Số HAWB'),
+                    //             Header::make('pcs')->label('Số PCS')->width('80px')->align(Alignment::Center),
+                    //         ])
+                    //         ->schema([
+                    //             TextInput::make('hawb_number')
+                    //                 ->label('Số HAWB')
+                    //                 ->required()
+                    //                 ->maxLength(255)
+                    //                 ->reactive(),
+                    //             TextInput::make('pcs')
+                    //                 ->label('Số PCS')
+                    //                 ->maxLength(255)
+                    //         ])
+                    //         ->afterStateHydrated(function (TableRepeater $component, $state, $record) {
+                    //             // Get data from the hidden hawb_number field instead
+                    //             if ($record && $record->hawb_number) {
+                    //                 $hawbData = $record->hawb_number;
+                    //                 if (is_string($hawbData)) {
+                    //                     try {
+                    //                         $decoded = json_decode($hawbData, true, 512, JSON_THROW_ON_ERROR);
+                    //                         if (is_array($decoded)) {
+                    //                             $component->state($decoded);
+                    //                             return;
+                    //                         }
+                    //                     } catch (\JsonException $e) {
+                    //                         // If JSON decode fails, set empty array
+                    //                     }
+                    //                 }
+                    //             }
+                    //             $component->state([]);
+                    //         })
+                    //         ->afterStateUpdated(function ($state, Forms\Set $set) {
+                    //             // Update the hidden hawb_number field when TableRepeater changes
+                    //             if (is_array($state)) {
+                    //                 $filtered = array_filter($state, function($item) {
+                    //                     return is_array($item) && !empty($item['hawb_number']);
+                    //                 });
+                    //                 $set('hawb_number', !empty($filtered) ? json_encode(array_values($filtered)) : null);
+                    //             }
+                    //         })
+                    //         ->dehydrated(false) // Don't save this field directly
+                    //         ->addActionLabel('Thêm số HAWB')
+                    //         ->addable(false)
+                    //         ->reorderable(false)
+                    //         ->emptyLabel('Chưa có HAWB nào được thêm')
+                    //         ->minItems(0)
+                    //         ->columnSpanFull(),
                     Forms\Components\DateTimePicker::make('expected_in_at')
                         ->label('Thời gian vào dự kiến')
                         ->seconds(false)
@@ -191,16 +191,15 @@ class RegistrationVehicleResource extends Resource
 
                 return '';
             })
-            ->emptyStateHeading('Không có đăng ký xe khai thác nào')
+            ->emptyStateHeading('Không có Đăng ký xe kiểm hoá  nào')
             ->emptyStateIcon('heroicon-o-truck')
-            ->emptyStateDescription('Hiện tại chưa có đăng ký xe khai thác nào được tạo. Vui lòng nhấn nút "Thêm đăng ký xe" để tạo mới.')
+            ->emptyStateDescription('Hiện tại chưa có Đăng ký xe kiểm hoá  nào được tạo. Vui lòng nhấn nút "Thêm đăng ký xe" để tạo mới.')
             ->columns([
 
                 Tables\Columns\TextColumn::make('driver_name')
                     ->label('Tên tài xế')
                     ->searchable()
-                    ->formatStateUsing(fn (string $state): string =>
-                        mb_convert_case($state, MB_CASE_TITLE, "UTF-8")
+                    ->formatStateUsing(fn (string $state): string => mb_convert_case($state, MB_CASE_TITLE, 'UTF-8')
                     ),
 
                 Tables\Columns\TextColumn::make('driver_phone')
@@ -225,40 +224,40 @@ class RegistrationVehicleResource extends Resource
                         if (empty($state)) {
                             return new \Illuminate\Support\HtmlString('');
                         }
-                        
+
                         // If it's already a plain string (not JSON), return as is but uppercase
-                        if (!str_starts_with(trim($state), '[') && !str_starts_with(trim($state), '{')) {
-                            return new \Illuminate\Support\HtmlString('<div>' . strtoupper($state) . '</div>');
+                        if (! str_starts_with(trim($state), '[') && ! str_starts_with(trim($state), '{')) {
+                            return new \Illuminate\Support\HtmlString('<div>'.strtoupper($state).'</div>');
                         }
-                        
+
                         // Try to decode JSON
                         $decoded = json_decode($state, true);
-                        
+
                         // If JSON decode failed or result is not an array, return original value but uppercase
-                        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
-                            return new \Illuminate\Support\HtmlString('<div>' . strtoupper($state) . '</div>');
+                        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
+                            return new \Illuminate\Support\HtmlString('<div>'.strtoupper($state).'</div>');
                         }
-                        
+
                         // Format the HAWB list - each item on a new line
                         $hawbs = [];
                         foreach ($decoded as $item) {
                             // Ensure $item is an array and has required fields
-                            if (is_array($item) && isset($item['hawb_number']) && !empty($item['hawb_number'])) {
+                            if (is_array($item) && isset($item['hawb_number']) && ! empty($item['hawb_number'])) {
                                 $hawb = strtoupper($item['hawb_number']);
-                                if (isset($item['pcs']) && !empty($item['pcs'])) {
-                                    $hawb .= ' <span style="color: #6b7280; font-size: 0.875em;">(' . $item['pcs'] . ' PCS)</span>';
+                                if (isset($item['pcs']) && ! empty($item['pcs'])) {
+                                    $hawb .= ' <span style="color: #6b7280; font-size: 0.875em;">('.$item['pcs'].' PCS)</span>';
                                 }
-                                $hawbs[] = '<div style="padding: 2px 0;">' . $hawb . '</div>';
+                                $hawbs[] = '<div style="padding: 2px 0;">'.$hawb.'</div>';
                             }
                         }
-                        
-                        if (!empty($hawbs)) {
+
+                        if (! empty($hawbs)) {
                             return new \Illuminate\Support\HtmlString(implode('', $hawbs));
                         }
-                        
-                        return new \Illuminate\Support\HtmlString('<div>' . strtoupper($state) . '</div>');
+
+                        return new \Illuminate\Support\HtmlString('<div>'.strtoupper($state).'</div>');
                     })
-                    ->html()    
+                    ->html()
                     ->copyable()
                     ->copyMessage('Đã sao chép số HAWB vào clipboard')
                     ->copyMessageDuration(1500)
@@ -304,7 +303,7 @@ class RegistrationVehicleResource extends Resource
                     ->onIcon('heroicon-o-arrow-up')
                     ->offIcon('heroicon-o-arrow-down')
                     ->beforeStateUpdated(function ($record, $state) {
-                        if($record->status === 'approve' && $record->registerDirectly !== null) {
+                        if ($record->status === 'approve' && $record->registerDirectly !== null) {
                             $record->registerDirectly->is_priority = $state;
                             $record->registerDirectly->save();
                         }
@@ -367,10 +366,10 @@ class RegistrationVehicleResource extends Resource
                 Tables\Actions\DeleteBulkAction::make(),
                 Tables\Actions\ExportBulkAction::make()
                     ->label('Xuất Excel')
-                    ->modalHeading('Xuất Excel đăng ký xe khai thác')
+                    ->modalHeading('Xuất Excel Đăng ký xe kiểm hoá ')
                     ->icon('heroicon-o-inbox-arrow-down')
                     ->color('success')
-                    ->fileName(fn (Export $export): string => "Danh sách đăng ký xe khai thác-{$export->getKey()}.csv")
+                    ->fileName(fn (Export $export): string => "Danh sách Đăng ký xe kiểm hoá -{$export->getKey()}.csv")
                     ->exporter(RegistrationVehicleExporter::class),
             ]);
     }

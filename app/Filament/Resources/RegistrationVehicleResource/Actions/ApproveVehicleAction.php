@@ -47,7 +47,7 @@ class ApproveVehicleAction
                         ->required(),
                     Forms\Components\Toggle::make('is_priority')
                         ->label('Ưu tiên')
-                        ->helperText('Đánh dấu nếu đăng ký xe khai thác này là ưu tiên')
+                        ->helperText('Đánh dấu nếu Đăng ký xe kiểm hoá  này là ưu tiên')
                         ->onIcon('heroicon-o-arrow-up')
                         ->offIcon('heroicon-o-arrow-down')
                         ->inline(false)
@@ -92,7 +92,7 @@ class ApproveVehicleAction
                     // Gửi thông báo đến từng user có role "protect"
                     foreach ($protectUsers as $user) {
                         Notification::make()
-                            ->title('Đăng ký xe khai thác mới')
+                            ->title('Đăng ký xe kiểm hoá  mới')
                             ->success()
                             ->body("Đăng ký xe {$record->vehicle_number} - Tài xế: {$record->driver_name} đã được phê duyệt.")
                             ->broadcast($user);

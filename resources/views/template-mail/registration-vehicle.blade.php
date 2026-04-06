@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="favicon" content="{{ asset('images/ASG.png') }}">
 
-    <title>Thông tin đăng ký xe khai thác</title>
+    <title>Thông tin đăng ký xe kiểm hoá</title>
     <style>
         table {
             width: 100%;
@@ -37,7 +37,7 @@
     <div style="max-width: 480px; margin: 40px auto; background: #fff; border-radius: 18px; box-shadow: 0 8px 32px rgba(102,126,234,0.12); padding: 32px 24px;">
         <div style="text-align:center; margin-bottom: 24px;">
             <div style="margin-top:12px;">
-                <h2 style="font-size: 24px; color: #2d3748; font-weight: 700; margin-bottom: 4px;">Thông tin đăng ký xe khai thác</h2>
+                <h2 style="font-size: 24px; color: #2d3748; font-weight: 700; margin-bottom: 4px;">Thông tin đăng ký xe kiểm hoá</h2>
                 <div style="font-size: 14px; color: #718096;">Vui lòng kiểm tra và xác nhận thông tin bên dưới</div>
             </div>
         </div>

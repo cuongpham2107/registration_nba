@@ -380,7 +380,7 @@ class RegistrationController extends Controller
                     if ($user->email) {
                         $mail = (new \App\Services\MailService())->sendMailWithTemplate(
                             $user->email,
-                            'Đăng ký xe khai thác: ' . $record->driver_name . ' | ' . $record->vehicle_number . ' | ' . date('Y-m-d H:i:s'),
+                            'Đăng ký xe kiểm hoá: ' . $record->driver_name . ' | ' . $record->vehicle_number . ' | ' . date('Y-m-d H:i:s'),
                             'template-mail.registration-vehicle',
                             ['registration' => $record]
                         );
@@ -400,7 +400,7 @@ class RegistrationController extends Controller
 
                         foreach ($approveVehicleUsers as $user) {
                             Notification::make()
-                                ->title('Đăng ký xe khai thác mới')
+                                ->title('Đăng ký xe kiểm hoá mới')
                                 ->success()
                                 ->body("Đăng ký xe {$record->vehicle_number} - Tài xế: {$record->driver_name} cần phê duyệt.")
                                 ->broadcast($user);

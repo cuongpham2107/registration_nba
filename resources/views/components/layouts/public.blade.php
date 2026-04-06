@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" href="{{ asset('images/ASG.png') }}">
-    <title>{{ $title ?? 'Đăng ký xe khai thác' }}</title>
+    <title>{{ $title ?? 'Đăng ký xe kiểm hoá' }}</title>
     
     @filamentStyles
     @vite('resources/css/app.css')

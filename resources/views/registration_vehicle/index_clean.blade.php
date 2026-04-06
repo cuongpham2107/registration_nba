@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="favicon" content="{{ asset('images/ASG.png') }}">
-    <title>Đăng ký xe khai thác</title>
+    <title>Đăng ký xe kiểm hoá </title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         * {
@@ -333,7 +333,7 @@
             <div class="icon">
                 <img style="width: 70px;" src="{{ asset('images/ASG.png') }}" alt="">
             </div>
-            <h1>Đăng ký xe khai thác</h1>
+            <h1>Đăng ký xe kiểm hoá</h1>
             <p class="subtitle">Điền thông tin bên dưới</p>
         </div>
 
@@ -469,7 +469,7 @@
         </form>
 
         <div class="footer">
-            <p>© {{ date('Y') }} ASGL - Hệ thống đăng ký xe khai thác</p>
+            <p>© {{ date('Y') }} ASGL - Hệ thống đăng ký xe kiểm hoá</p>
         </div>
     </div>
 

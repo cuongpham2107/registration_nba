@@ -3,13 +3,13 @@
 namespace App\Filament\Resources\RegistrationVehicleResource\Pages;
 
 use App\Filament\Resources\RegistrationVehicleResource;
+use App\Models\RegistrationVehicle;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
-use App\Models\RegistrationVehicle;
-use Livewire\Attributes\On;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Builder;
+use Livewire\Attributes\On;
 
 class ListRegistrationVehicles extends ListRecords
 {
@@ -29,39 +29,41 @@ class ListRegistrationVehicles extends ListRecords
     protected function applyFiltersToTableQuery(Builder $query): Builder
     {
         $query = parent::applyFiltersToTableQuery($query);
-        
+
         // Lấy filter data
         $filterData = $this->tableFilters['vehicle_filter'] ?? [];
         $isPriorityEnabled = $filterData['is_priority'] ?? false;
-        
+
         // Xóa order by cũ và thêm order mới
         $query->getQuery()->orders = null;
-        
+
         // Nếu filter is_priority được bật, sắp xếp theo is_priority trước, sau đó expected_in_at
         if ($isPriorityEnabled === true) {
             $query->orderByRaw('is_priority DESC, expected_in_at DESC');
         } else {
             $query->orderBy('sort', 'asc');
         }
-        
+
         return $query;
     }
 
     public function getHeading(): string
     {
-        return 'Danh sách đăng ký xe khai thác';
+        return 'Danh sách Đăng ký xe kiểm hoá ';
     }
+
     protected function getHeaderActions(): array
     {
         return [
             // Actions\CreateAction::make()
             //     ->label('Thêm đăng ký xe')
-            //     ->modalHeading('Thêm đăng ký xe khai thác')
+            //     ->modalHeading('Thêm Đăng ký xe kiểm hoá ')
         ];
     }
+
     public function reorderTable(array $order): void
     {
-        if (!$this->getTable()->isReorderable()) {
+        if (! $this->getTable()->isReorderable()) {
             return;
         }
 
@@ -116,7 +118,7 @@ class ListRegistrationVehicles extends ListRecords
                     ->broadcast($user);
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Broadcast notification failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Broadcast notification failed: '.$e->getMessage());
         }
 
     }

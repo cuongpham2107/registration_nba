@@ -14,7 +14,7 @@
                     window.Echo.private('App.Models.User.' + userId)
                         .notification((notification) => {
                             
-                            if (notification.title && notification.title.includes('Đăng ký xe khai thác mới')) {
+                            if (notification.title && notification.title.includes('Đăng ký xe kiểm hoá mới')) {
                                 // Dispatch custom event to refresh the vehicle table
                                 window.Livewire.dispatch('refresh-vehicle-table');
                             }
