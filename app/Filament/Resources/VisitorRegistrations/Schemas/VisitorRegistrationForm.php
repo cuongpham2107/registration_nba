@@ -8,6 +8,9 @@ use Carbon\Carbon;
 use Closure;
 use Filament\Forms;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Repeater\TableColumn;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
@@ -32,22 +35,22 @@ class VisitorRegistrationForm
     {
         return Tab::make('Đăng ký khách')
             ->schema([
-                Forms\Components\TextInput::make('name')
+                TextInput::make('name')
                     ->label('Đơn vị khách')
                     ->required()
                     ->columnSpan([
                         'sm' => 1,
                         'md' => 2,
-                        'lg' => 3,
+                        'lg' => 6,
                     ]),
-                Forms\Components\TextInput::make('bks')
-                    ->prefixIcon('heroicon-o-truck')
-                    ->label('BKS ô tô')
-                    ->columnSpan([
-                        'sm' => 1,
-                        'md' => 2,
-                        'lg' => 3,
-                    ]),
+                // TextInput::make('bks')
+                //     ->prefixIcon('heroicon-o-truck')
+                //     ->label('BKS ô tô')
+                //     ->columnSpan([
+                //         'sm' => 1,
+                //         'md' => 2,
+                //         'lg' => 3,
+                //     ]),
                 Forms\Components\Textarea::make('purpose')
                     ->label('Mục đích')
                     ->required()
@@ -60,6 +63,7 @@ class VisitorRegistrationForm
                     ->displayFormat('d/m/Y h:i')
                     ->locale('vi')
                     ->seconds(false)
+                    ->native(false)
                     ->label('Giờ vào dự kiến')
                     ->required()
                     ->columnSpan([
@@ -71,6 +75,7 @@ class VisitorRegistrationForm
                     ->displayFormat('d/m/Y h:i')
                     ->locale('vi')
                     ->seconds(false)
+                    ->native(false)
                     ->label('Giờ ra dự kiến')
                     ->required()
                     ->rules([
@@ -125,30 +130,48 @@ class VisitorRegistrationForm
             ->schema([
                 Repeater::make('customers')
                     ->table([
-
+                        TableColumn::make('Tên khách')
+                            ->width('200px'),
+                        TableColumn::make('Số giấy tờ')
+                            ->width('150px'),
+                        TableColumn::make('Loại giấy tờ')
+                            ->width('150px'),
+                        TableColumn::make('Biển số')
+                            ->width('150px'),
+                        TableColumn::make('Khu vực')
+                            ->width('250px'),
+                        TableColumn::make('Loại phương tiện')
+                            ->width('250px'),
+                        TableColumn::make('Ghi chú')
+                            ->width('150px'),
                     ])
                     ->relationship()
-                    ->label('')
+                    ->label('Khách')
+                    ->compact()
                     ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label('Tên khách')
+                        TextInput::make('name')
                             ->required(),
-                        Forms\Components\TextInput::make('papers')
-                            ->label('Số giấy tờ')
+                        TextInput::make('papers')
                             ->required(),
-                        Forms\Components\TextInput::make('type')
-                            ->label('Loại giấy tờ')
+                        TextInput::make('type')
                             ->required(),
-                        Forms\Components\Select::make('areas')
-                            ->label('Khu vực')
+                        TextInput::make('license_plate'),
+                        Select::make('areas')
                             ->multiple()
                             ->options(Area::all()->pluck('name', 'code'))
                             ->searchable()
                             ->preload(),
-                        Forms\Components\TextInput::make('license_plate')
-                            ->label('Biển số'),
-                        Forms\Components\TextInput::make('note')
-                            ->label('Ghi chú'),
+                        Select::make('vehicle_type')
+                            ->options([
+                                '1' => 'Xe đạp, Xe đạp điện, Xe máy, Xe máy điện',
+                                '2' => 'Ô tô đến 9 chỗ, xe tải đến 1.5 tấn, xe 3 bánh và xe bán tải',
+                                '3' => 'Xe ô tô 10-16 chỗ, xe tải lớn hơn 1.5 tấn đến 3.5 tấn',
+                                '4' => 'Xe ô tô từ 17-27 chỗ, xe tải lớn hơn 3.5 tấn đến 7 tấn',
+                                '5' => 'Xe ô tô từ 30 chỗ trở lên, xe tải trên 7 tấn, xe container, xe kéo rơ moóc',
+                            ])
+                            ->searchable()
+                            ->preload(),
+                        TextInput::make('note'),
                     ])
                     ->defaultItems(1)
                     ->columns(6),

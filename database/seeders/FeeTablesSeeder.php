@@ -63,7 +63,7 @@ class FeeTablesSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'vehicle_type' => 'Xe ô tô 10-26 chỗ, xe tải lớn hơn 1.5 tấn đến 3.5 tấn',
+                'vehicle_type' => 'Xe ô tô 10-16 chỗ, xe tải lớn hơn 1.5 tấn đến 3.5 tấn',
                 'morning_fee' => 41000,
                 'afternoon_fee' => 41000,
                 'full_day_fee' => 82000,

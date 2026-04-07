@@ -169,56 +169,21 @@ class RegistrationController extends Controller
             $startOfDay = $currentDate->isSameDay($startDate) ? $startDate->copy() : $currentDate->copy()->startOfDay();
             $endOfDay = $currentDate->isSameDay($endDate) ? $endDate->copy() : $currentDate->copy()->endOfDay();
 
-            // Nếu không có khách, tạo bản ghi với thông tin đơn vị
-            if ($customers->count() == 0) {
-                RegistrationEntry::create([
-                    'name' => $registration->name,
-                    'papers' => '',
-                    'address' => '',
-                    'bks' => $registration->bks ?? '',
-                    'contact_person' => '',
-                    'job' => $registration->purpose,
-                    'start_date' => $startOfDay,
-                    'end_date' => $endOfDay,
-                    'type' => 'passenger',
-                    'areas' => '',
-                    'status' => 'none',
-                ]);
-            }
-            // Nếu có 1 khách, tạo 1 bản ghi với thông tin khách đó
-            elseif ($customers->count() == 1) {
-                $customer = $customers->first();
+            foreach ($customers as $customer) {
                 RegistrationEntry::create([
                     'name' => $customer->name.'|'.$registration->name,
                     'papers' => $customer->papers,
                     'address' => '',
-                    'bks' => $customer->license_plate ? $customer->license_plate : $registration->bks ?? '',
-                    'contact_person' => '',
+                    'bks' => $customer->license_plate ? $customer->license_plate : '',
+                    'id_customer' => $customer->id,
                     'job' => $registration->purpose,
                     'start_date' => $startOfDay,
                     'end_date' => $endOfDay,
                     'type' => 'passenger',
                     'areas' => $customer->areas,
+                    'id_visitor_registration' => $registration->id,
                     'status' => 'none',
                 ]);
-            }
-            // Nếu có nhiều khách, tạo nhiều bản ghi
-            else {
-                foreach ($customers as $customer) {
-                    RegistrationEntry::create([
-                        'name' => $customer->name.'|'.$registration->name,
-                        'papers' => $customer->papers,
-                        'address' => '',
-                        'bks' => $customer->license_plate ? $customer->license_plate : $registration->bks ?? '',
-                        'contact_person' => '',
-                        'job' => $registration->purpose,
-                        'start_date' => $startOfDay,
-                        'end_date' => $endOfDay,
-                        'type' => 'passenger',
-                        'areas' => $customer->areas,
-                        'status' => 'none',
-                    ]);
-                }
             }
 
             // Chuyển sang ngày tiếp theo

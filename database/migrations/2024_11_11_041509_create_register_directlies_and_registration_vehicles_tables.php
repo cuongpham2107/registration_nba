@@ -50,6 +50,8 @@ return new class extends Migration
                 ->constrained('visitor_registrations')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
+            $table->unsignedBigInteger('gathering_point_fee_id')->nullable();
+            $table->unsignedBigInteger('visitor_vehicle_fee_id')->nullable();
             $table->timestamps();
         });
 
@@ -86,7 +88,8 @@ return new class extends Migration
             $table->string('papers')->nullable();
             $table->string('address')->nullable();
             $table->string('bks')->nullable();
-            $table->string('contact_person')->nullable();
+            $table->foreignId('id_customer')->nullable()->constrained('customers')
+                ->onDelete('set null');
             $table->text('job')->nullable();
             $table->foreignId('card_id')
                 ->nullable()
@@ -96,6 +99,10 @@ return new class extends Migration
             $table->foreignId('id_vehicle_registration')
                 ->nullable()
                 ->constrained('vehicle_registrations')
+                ->onDelete('set null');
+            $table->foreignId('id_visitor_registration')
+                ->nullable()
+                ->constrained('visitor_registrations')
                 ->onDelete('set null');
             $table->dateTime('start_date');
             $table->dateTime('end_date')->nullable();

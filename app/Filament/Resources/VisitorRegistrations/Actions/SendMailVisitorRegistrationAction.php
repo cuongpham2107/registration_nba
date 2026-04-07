@@ -60,7 +60,7 @@ class SendMailVisitorRegistrationAction
 
                         return;
                     }
-
+                    // đang làm đến đây
                     $customers = Customer::where('visitor_registration_id', $record->id)->get();
 
                     // Gửi email

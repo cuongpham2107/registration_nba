@@ -18,10 +18,9 @@ class ListVisitorRegistrations extends ListRecords
             CreateAction::make()
                 ->label('Đăng ký khách mới')
                 ->icon('heroicon-o-plus')
-                ->modalWidth(Width::SixExtraLarge)
+                ->hidden(fn () => Auth::user() ? ! Auth::user()->hasRole('panel_user') : true)
+                ->modalWidth(Width::ScreenTwoExtraLarge)
                 ->modalHeading('Đăng ký khách mới')
-                // Only disabled if user has an approver
-                ->disabled(fn () => Auth::user() && ! Auth::user()->approver)
                 ->mutateDataUsing(function (array $data): array {
                     $user = Auth::user();
                     if ($user && $user->approver) {
