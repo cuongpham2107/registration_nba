@@ -27,12 +27,12 @@ class UserResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return __('filament-shield::filament-shield.nav.group') ?? '';
+        return 'Quản lý tài khoản';
     }
 
     public static function getNavigationLabel(): string
     {
-        return __(key: 'filament-panels::pages/users/navigation.label') ?? '';
+        return 'Người dùng';
     }
 
     public static function form(Schema $schema): Schema
