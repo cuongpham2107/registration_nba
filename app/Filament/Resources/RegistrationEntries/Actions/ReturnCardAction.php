@@ -5,6 +5,7 @@ namespace App\Filament\Resources\RegistrationEntries\Actions;
 use App\Http\Controllers\DownloadInvoiceController;
 use App\Models\Invoice;
 use App\Models\RegistrationEntry;
+use App\Support\FeeCalculator;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -68,7 +69,7 @@ class ReturnCardAction
 
                         $normalizedBks = Invoice::normalizeLicensePlate($record->bks);
 
-                        $feeAmount = $controller->calculateFeePublic($record);
+                        $feeAmount = (int) (FeeCalculator::forRegistrationEntry($record)['total'] ?? 0);
 
                         $existingInvoice = $record->invoice;
                         $invoiceData = [

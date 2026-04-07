@@ -41,6 +41,7 @@ class RegistrationEntriesTable
             ->filters(self::getFilters(), layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(1)
             ->deferLoading()
+            ->deferFilters(false)
             ->defaultPaginationPageOption(25)
             ->recordActions(self::getRecordActions(), position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions(self::getToolbarActions());
@@ -114,6 +115,7 @@ class RegistrationEntriesTable
             TextColumn::make('start_date')
                 ->label('Giờ vào dự kiến')
                 ->dateTime('d/m/Y H:i')
+                ->icon('heroicon-s-calendar-days')
                 ->sortable()
                 ->alignment(Alignment::Center)
                 ->toggleable(),
@@ -121,10 +123,12 @@ class RegistrationEntriesTable
                 TextColumn::make('actual_date_in')
                     ->label('Giờ vào thực tế')
                     ->dateTime('d/m/Y H:i')
+                    ->icon('heroicon-s-calendar-days')
                     ->toggleable(),
                 TextColumn::make('actual_date_out')
                     ->label('Giờ ra thực tế')
                     ->dateTime('d/m/Y H:i')
+                    ->icon('heroicon-s-calendar-days')
                     ->alignment(Alignment::Center)
                     ->toggleable(),
             ])->alignment(Alignment::Center)->wrapHeader(),

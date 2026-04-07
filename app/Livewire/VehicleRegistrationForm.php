@@ -2,11 +2,15 @@
 
 namespace App\Livewire;
 
+use App\Models\Company;
 use App\Models\GatheringPointFee;
 use App\Models\LiftingServiceFee;
 use App\Models\User;
 use App\Models\VehicleRegistration;
 use App\Services\MailService;
+use Closure;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -20,8 +24,9 @@ use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
-class VehicleRegistrationForm extends Component implements HasSchemas
+class VehicleRegistrationForm extends Component implements HasActions, HasSchemas
 {
+    use InteractsWithActions;
     use InteractsWithSchemas;
 
     public ?array $data = [];
@@ -122,8 +127,9 @@ class VehicleRegistrationForm extends Component implements HasSchemas
     public function form(Schema $schema): Schema
     {
         return $schema
+            ->record(new VehicleRegistration)
             ->extraAttributes(['style' => 'gap: 1rem;', 'class' => 'bg-white'])
-            ->columns(2)
+            ->columns(6)
             ->components([
                 TextInput::make('driver_name')
                     ->label('Tên tài xế')
@@ -135,7 +141,7 @@ class VehicleRegistrationForm extends Component implements HasSchemas
                         'class' => '!bg-gray-100',
                     ])
                     ->maxLength(255)
-                    ->columnSpan(2),
+                    ->columnSpanFull(),
 
                 TextInput::make('driver_id_card')
                     ->label('Số CCCD/CMND')
@@ -145,7 +151,7 @@ class VehicleRegistrationForm extends Component implements HasSchemas
                     ])
                     ->extraAttributes(['class' => '!bg-gray-100'])
                     ->maxLength(255)
-                    ->columnSpan(1),
+                    ->columnSpan(3),
 
                 TextInput::make('driver_phone')
                     ->label('Số điện thoại')
@@ -153,7 +159,10 @@ class VehicleRegistrationForm extends Component implements HasSchemas
                     ->extraAttributes(['class' => '!bg-gray-100'])
                     ->maxLength(20)
                     ->required()
-                    ->columnSpan(1),
+                    ->validationMessages([
+                        'required' => 'Số điện thoại không được để trống.',
+                    ])
+                    ->columnSpan(3),
 
                 TextInput::make('vehicle_number')
                     ->label('Biển số xe')
@@ -163,7 +172,7 @@ class VehicleRegistrationForm extends Component implements HasSchemas
                         'required' => 'Biển số xe không được để trống.',
                     ])
                     ->maxLength(255)
-                    ->columnSpan(2),
+                    ->columnSpanFull(),
                 DateTimePicker::make('expected_in_at')
                     ->label('Thời gian vào dự kiến')
                     ->required()
@@ -171,33 +180,170 @@ class VehicleRegistrationForm extends Component implements HasSchemas
                     ->extraAttributes(['class' => '!bg-gray-100'])
                     ->seconds(false)
                     ->displayFormat('H:i d/m/Y')
-                    ->columnSpan(2),
+                    ->validationMessages([
+                        'required' => 'Thời gian vào dự kiến không được để trống.',
+                    ])
+                    ->columnSpanFull(),
                 Select::make('gathering_point_fee_id')
                     ->label('Loại xe, trọng tải (Biểu phí địa điểm tập trung)')
                     ->options(GatheringPointFee::where('is_active', true)->pluck('vehicle_type', 'id'))
                     ->required()
                     ->native(false)
-                    ->columnSpan(2),
+                    ->searchable()
+                    ->preload()
+                    ->validationMessages([
+                        'required' => 'Vui lòng chọn loại xe / trọng tải.',
+                    ])
+                    ->columnSpanFull(),
                 Toggle::make('has_lifting_service')
                     ->label('Có sử dụng dịch vụ nâng hạ không?')
                     ->onIcon('heroicon-o-check')
                     ->offIcon('heroicon-o-x-mark')
                     ->onColor('success')
-                    ->inline(false)
-                    ->columnSpan(2)
-                    ->live(),
+                    ->inline(true)
+                    ->columnSpanFull()
+                    ->live()
+                    ->afterStateUpdated(function ($state, callable $set): void {
+                        if ($state !== true) {
+                            $set('lifting_service_fee_id', null);
+                            $set('count_package', null);
+                        }
+                    }),
                 Select::make('lifting_service_fee_id')
                     ->label('Loại dịch vụ nâng hạ')
                     ->options(LiftingServiceFee::where('is_active', true)->pluck('service_name', 'id'))
                     ->visible(fn (Get $get): bool => $get('has_lifting_service') === true)
                     ->native(false)
+                    ->required(fn (Get $get): bool => $get('has_lifting_service') === true)
+                    ->live()
+                    ->reactive()
+                    ->searchable()
+                    ->preload()
+                    ->validationMessages([
+                        'required' => 'Vui lòng chọn loại dịch vụ nâng hạ.',
+                    ])
+                    ->afterStateUpdated(function ($state, callable $set): void {
+                        // Reset dependent field when changing fee type.
+                        $set('count_package', null);
+                    })
+                    ->columnSpan(function (Get $get): int {
+                        $liftingServiceFee = LiftingServiceFee::query()
+                            ->select(['id', 'weight_category'])
+                            ->find($get('lifting_service_fee_id'));
+
+                        if ($liftingServiceFee?->weight_category === 'under_2_tons') {
+                            return 4;
+                        }
+
+                        return 6;
+                    }),
+                TextInput::make('count_package')
+                    ->label('Số kiện')
+                    ->required()
+                    ->validationMessages([
+                        'required' => 'Số kiện không được để trống.',
+                    ])
+                    ->extraAttributes(['class' => '!bg-gray-100'])
+                    ->maxLength(255)
+                    ->visible(function (Get $get): bool {
+                        $liftingServiceFee = LiftingServiceFee::query()
+                            ->select(['id', 'weight_category'])
+                            ->find($get('lifting_service_fee_id'));
+
+                        return $liftingServiceFee?->weight_category === 'under_2_tons';
+                    })
                     ->columnSpan(2),
+
+                Toggle::make('wants_invoice')
+                    ->label('Có xuất hoá đơn hay không?')
+                    ->onIcon('heroicon-o-check')
+                    ->offIcon('heroicon-o-x-mark')
+                    ->onColor('success')
+                    ->inline(true)
+                    ->columnSpanFull()
+                    ->live()
+                    ->afterStateUpdated(function ($state, callable $set): void {
+                        if ($state !== true) {
+                            $set('company_id', null);
+                        }
+                    }),
+
+                Select::make('company_id')
+                    ->label('Chọn công ty')
+                    ->relationship(name: 'company', titleAttribute: 'name')
+                    ->searchable()
+                    ->native(false)
+                    ->preload()
+                    ->visible(fn (Get $get): bool => $get('wants_invoice') === true)
+                    ->required(fn (Get $get): bool => $get('wants_invoice') === true)
+                    ->rules([
+                        fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
+                            // When user wants an invoice, company must be selected/created.
+                            if ($get('wants_invoice') === true && blank($value)) {
+                                $fail('Vui lòng chọn hoặc tạo công ty để xuất hoá đơn.');
+                            }
+
+                            // Defensive: when user doesn't want invoice, company should not be set.
+                            if ($get('wants_invoice') !== true && filled($value)) {
+                                $fail('Không thể chọn công ty khi không xuất hoá đơn.');
+                            }
+                        },
+                    ])
+                    ->validationMessages([
+                        'required' => 'Vui lòng chọn hoặc tạo công ty để xuất hoá đơn.',
+                    ])
+                    ->createOptionForm([
+                        TextInput::make('name')
+                            ->label('Tên công ty')
+                            ->required(),
+                        TextInput::make('tax_code')
+                            ->label('Mã số thuế'),
+                        TextInput::make('email')
+                            ->label('Email')
+                            ->email(),
+                        TextInput::make('phone')
+                            ->label('Số điện thoại'),
+                        TextInput::make('address')
+                            ->label('Địa chỉ'),
+                    ])
+                    ->editOptionForm([
+                        TextInput::make('name')
+                            ->label('Tên công ty')
+                            ->required(),
+                        TextInput::make('tax_code')
+                            ->label('Mã số thuế'),
+                        TextInput::make('email')
+                            ->label('Email')
+                            ->email(),
+                        TextInput::make('phone')
+                            ->label('Số điện thoại'),
+                        TextInput::make('address')
+                            ->label('Địa chỉ'),
+                    ])
+                    ->helperText(function (Get $get): ?string {
+                        $company = Company::query()
+                            ->select(['id', 'name', 'tax_code', 'email', 'phone', 'address'])
+                            ->find($get('company_id'));
+
+                        if (! $company) {
+                            return 'Chọn hoặc tạo công ty để xuất hoá đơn.';
+                        }
+                        $lines = [];
+                        $lines[] = 'Tên: '.$company->name;
+
+                        if (filled($company->tax_code)) {
+                            $lines[] = ' | Mã số thuế: '.$company->tax_code;
+                        }
+
+                        return implode("\n", $lines);
+                    })
+                    ->columnSpanFull(),
                 Textarea::make('notes')
                     ->label('Ghi chú')
                     ->rows(2)
                     ->extraAttributes(['class' => '!bg-gray-100'])
                     ->maxLength(1000)
-                    ->columnSpan(2),
+                    ->columnSpanFull(),
             ])
             ->statePath('data');
     }
@@ -238,13 +384,33 @@ class VehicleRegistrationForm extends Component implements HasSchemas
         // Remove has_lifting_service toggle - it's only for UI, not saved to DB
         unset($processedData['has_lifting_service']);
 
+        // Invoice fields are UI-only; handled separately
+        $wantsInvoice = (bool) ($data['wants_invoice'] ?? false);
+        $companyId = $data['company_id'] ?? null;
+
+        unset(
+            $processedData['wants_invoice'],
+            $processedData['company_id'],
+        );
+
         // If has_lifting_service was not checked, remove lifting_service_fee_id
         if (empty($data['has_lifting_service'])) {
             $processedData['lifting_service_fee_id'] = null;
         }
 
+        // Persist company selection only when invoice is requested.
+        // Note: company_id lives on vehicle_registrations in the master-company (belongsTo) design.
+        if ($wantsInvoice) {
+            $processedData['company_id'] = $companyId;
+        } else {
+            $processedData['company_id'] = null;
+        }
+
         $processedData['status'] = 'sent';
         $record = VehicleRegistration::create($processedData);
+
+        // In the master-company design (belongsTo), company_id is saved on vehicle_registrations.
+        // No extra snapshot creation is needed.
 
         // Dispatch event for localStorage saving before redirect
         $this->dispatch('registration-success', $data);

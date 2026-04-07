@@ -1,4 +1,4 @@
-<div class="filament-table-header px-6 py-3">
+<div class="filament-table-header px-6 pt-2">
     @php
         $records = $this->getTableRecords();
     @endphp

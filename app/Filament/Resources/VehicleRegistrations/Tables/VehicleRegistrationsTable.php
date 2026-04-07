@@ -35,6 +35,7 @@ class VehicleRegistrationsTable
             ->emptyStateDescription('Hiện tại chưa có Đăng ký xe kiểm hoá nào được tạo. Vui lòng nhấn nút "Thêm đăng ký xe" để tạo mới.')
             ->columns(self::getColumns())
             ->defaultSort('sort', 'asc')
+            ->deferFilters(false)
             ->filters(self::getFilters(), layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(1)
             ->modifyQueryUsing(fn ($query) => self::modifyQuery($query))
@@ -185,6 +186,7 @@ class VehicleRegistrationsTable
                     ->mutateRecordDataUsing(
                         function (array $data, Model $record): array {
                             $data['has_lifting_service'] = $record->lifting_service_fee_id !== null;
+                            $data['wants_invoice'] = $record->company_id !== null;
 
                             return $data;
                         }
@@ -192,6 +194,7 @@ class VehicleRegistrationsTable
                     ->mutateDataUsing(
                         function (array $data, Model $record): array {
                             unset($data['has_lifting_service']);
+                            unset($data['wants_invoice']);
 
                             return $data;
                         }

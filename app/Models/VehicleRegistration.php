@@ -38,4 +38,9 @@ class VehicleRegistration extends Model
     {
         return $this->belongsTo(LiftingServiceFee::class);
     }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 }

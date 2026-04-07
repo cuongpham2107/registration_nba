@@ -65,8 +65,14 @@ return new class extends Migration
             $table->integer('sort')->nullable();
             $table->unsignedBigInteger('gathering_point_fee_id')->nullable();
             $table->unsignedBigInteger('lifting_service_fee_id')->nullable();
+            $table->foreignId('company_id')
+                ->nullable()
+                ->constrained('companies')
+                ->nullOnDelete();
+            $table->integer('count_package')->nullable();
             $table->dateTime('expected_in_at');
-            $table->enum('status', ['none', 'sent', 'approve', 'reject'])->default('none');
+            // Keep statuses aligned with guard workflow actions (e.g. GiveCardAction sets "entering").
+            $table->enum('status', ['none', 'sent', 'approve', 'entering', 'exited', 'reject'])->default('none');
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->dateTime('approved_at')->nullable();
             $table->text('notes')->nullable();
@@ -117,21 +123,23 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop circular FK first
-        Schema::table('vehicle_registrations', function (Blueprint $table) {
-            $table->dropForeign(['id_registration_entry']);
-        });
+        // Drop circular FK first (guarded: may not exist depending on migration history)
+        try {
+            Schema::table('vehicle_registrations', function (Blueprint $table) {
+                $table->dropForeign(['id_registration_entry']);
+            });
+        } catch (Throwable $e) {
+            // ignore
+        }
 
-        // Drop FKs from vehicle_registrations to fee tables
-        Schema::table('vehicle_registrations', function (Blueprint $table) {
-            $table->dropForeign(['gathering_point_fee_id']);
-            $table->dropForeign(['lifting_service_fee_id']);
-        });
-
-        // Drop FK from registration_entries to vehicle_registrations
-        Schema::table('registration_entries', function (Blueprint $table) {
-            $table->dropForeign(['id_vehicle_registration']);
-        });
+        // Drop FK from registration_entries to vehicle_registrations (guarded)
+        try {
+            Schema::table('registration_entries', function (Blueprint $table) {
+                $table->dropForeign(['id_vehicle_registration']);
+            });
+        } catch (Throwable $e) {
+            // ignore
+        }
 
         Schema::dropIfExists('vehicle_registrations');
         Schema::dropIfExists('registration_entries');

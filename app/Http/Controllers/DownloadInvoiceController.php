@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\RegistrationEntry;
+use App\Support\FeeCalculator;
 use Carbon\Carbon;
 
 use function Spatie\LaravelPdf\Support\pdf;
@@ -23,14 +24,18 @@ class DownloadInvoiceController extends Controller
 
         $payload = [
             'record' => $record,
+            'company' => $record->vehicleRegistration?->company,
             'vehicle_number' => $record->bks,
+            'vehicle_weight' => $record->vehicleRegistration?->gatheringPointFee?->vehicle_type,
             'customer_name' => $record->name,
             'entry_time' => $record->actual_date_in,
             'exit_time' => $record->actual_date_out ?? now(),
             'total_hours' => $this->calculateDisplayHours($record->actual_date_in, $record->actual_date_out ?? now()),
             'total_minutes' => (int) $this->calculateMinutes($record->actual_date_in, $record->actual_date_out ?? now()),
             'remaining_minutes' => (int) $this->calculateRemainingMinutes($record->actual_date_in, $record->actual_date_out ?? now()),
-            'fee' => $this->calculateFee($record),
+            // Backward compatible: `fee` is the total.
+            'fee_breakdown' => FeeCalculator::forRegistrationEntry($record),
+            'fee' => (int) (FeeCalculator::forRegistrationEntry($record)['total'] ?? 0),
             'logo' => public_path('images/ASG.png'),
         ];
 
@@ -82,7 +87,7 @@ class DownloadInvoiceController extends Controller
 
     private function calculateRemainingMinutes($entryTime, $exitTime)
     {
-    return (int) $this->calculateMinutes($entryTime, $exitTime) % 60;
+        return (int) $this->calculateMinutes($entryTime, $exitTime) % 60;
     }
 
     /**
@@ -92,7 +97,7 @@ class DownloadInvoiceController extends Controller
      */
     private function calculateDisplayHours($entryTime, $exitTime)
     {
-    $totalMinutes = (int) $this->calculateMinutes($entryTime, $exitTime);
+        $totalMinutes = (int) $this->calculateMinutes($entryTime, $exitTime);
 
         if ($totalMinutes < 60) {
             return round($totalMinutes / 60, 1);
@@ -103,35 +108,7 @@ class DownloadInvoiceController extends Controller
 
     private function calculateFee(RegistrationEntry $record)
     {
-        // NOTE: Project currently doesn't include a PriceList model/table.
-        // Fee is calculated from VehicleRegistration -> GatheringPointFee.
-
-        $vehicleRegistration = $record->vehicleRegistration;
-        if (! $vehicleRegistration) {
-            return 0;
-        }
-
-        $fee = $vehicleRegistration->gatheringPointFee;
-        if (! $fee) {
-            return 0;
-        }
-
-        $exitTime = $record->actual_date_out ?? now();
-        $totalMinutes = $this->calculateMinutes($record->actual_date_in, $exitTime);
-
-        // Rough mapping (can be adjusted):
-        // - <= 4 hours: charge half-day
-        // - <= 8 hours: charge full-day
-        // - > 8 hours : charge night fee
-        if ($totalMinutes <= 240) {
-            return (int) ($fee->morning_fee ?? 0);
-        }
-
-        if ($totalMinutes <= 480) {
-            return (int) ($fee->full_day_fee ?? 0);
-        }
-
-        return (int) ($fee->night_fee ?? 0);
+        return (int) (FeeCalculator::forRegistrationEntry($record)['total'] ?? 0);
     }
 
     // Public method để gọi từ bên ngoài

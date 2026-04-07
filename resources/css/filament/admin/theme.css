@@ -6,7 +6,7 @@
     & > thead {
         & > tr {
             &.fi-ta-table-head-groups-row {
-                background-color: #4f39f7 !important;
+                background-color: var(--color-primary-600);
             }
         }
     }
@@ -17,10 +17,12 @@
 .fi-ta-table {
     & > thead {
         & > tr {
-            background-color: #4f39f7 !important;
+            background-color: var(--color-primary-600);
         }
     }
 }
 .fi-ta-header-cell {
-    color: white !important;
+    color: oklch(1 0 0);
+    border-inline-end-style: var(--tw-border-style);
+    border-inline-end-width: 1px;
 }

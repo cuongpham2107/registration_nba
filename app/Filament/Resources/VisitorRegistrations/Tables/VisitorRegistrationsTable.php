@@ -45,6 +45,7 @@ class VisitorRegistrationsTable
             ->defaultSort('created_at', 'desc')
             ->paginated([10, 25, 50, 100])
             ->defaultPaginationPageOption(25)
+            ->deferFilters(false)
             ->modifyQueryUsing(fn ($query) => self::modifyQuery($query))
             ->filters(self::getFilters(), layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(1)

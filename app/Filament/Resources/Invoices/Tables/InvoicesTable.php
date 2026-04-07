@@ -69,6 +69,29 @@ class InvoicesTable
                     'Trả tiền cho bảo vệ' => 'success',
                     default => 'gray'
                 }),
+            TextColumn::make('registrationEntry.vehicleRegistration.company')
+                ->label('Có xuất hóa đơn không?')
+                ->badge()
+                ->formatStateUsing(fn ($state) => $state ? 'Có' : 'Không')
+                ->alignCenter(),
+            TextColumn::make('payment_method')
+                ->label('Phương thức thanh toán')
+                ->badge()
+                ->color(fn ($state) => match ($state) {
+                    'Trả tiền cho bảo vệ' => 'success',
+                    default => 'gray'
+                }),
+            IconColumn::make('is_paid')
+                ->label('Đã thanh toán')
+                ->icon(fn ($state) => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
+                ->alignCenter(),
+            TextColumn::make('payment_method')
+                ->label('Phương thức thanh toán')
+                ->badge()
+                ->color(fn ($state) => match ($state) {
+                    'Trả tiền cho bảo vệ' => 'success',
+                    default => 'gray'
+                }),
             TextColumn::make('paid_at')
                 ->label('Thời gian thanh toán')
                 ->dateTime('d/m/Y H:i')
@@ -120,12 +143,15 @@ class InvoicesTable
     {
         return [
             Action::make('download_pdf')
-                ->label('Xem hóa đơn')
+                ->label('Xem HĐ')
+                ->button()
                 ->icon('heroicon-o-eye')
                 ->url(fn ($record) => $record->file_path ? Storage::url($record->file_path) : null)
                 ->openUrlInNewTab()
                 ->visible(fn ($record) => $record->file_path && Storage::disk('public')->exists($record->file_path)),
             EditAction::make()
+                ->label('Sửa')
+                ->button()
                 ->modalHeading('Chỉnh sửa hóa đơn')
                 ->modalDescription('Nhập thông tin hóa đơn cần chỉnh sửa'),
         ];
