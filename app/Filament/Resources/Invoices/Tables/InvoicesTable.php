@@ -62,25 +62,11 @@ class InvoicesTable
                 ->falseIcon('heroicon-o-x-circle')
                 ->trueColor('success')
                 ->falseColor('danger'),
-            TextColumn::make('payment_method')
-                ->label('Phương thức thanh toán')
-                ->badge()
-                ->color(fn ($state) => match ($state) {
-                    'Trả tiền cho bảo vệ' => 'success',
-                    default => 'gray'
-                }),
             TextColumn::make('registrationEntry.vehicleRegistration.company')
                 ->label('Có xuất hóa đơn không?')
                 ->badge()
                 ->formatStateUsing(fn ($state) => $state ? 'Có' : 'Không')
                 ->alignCenter(),
-            TextColumn::make('payment_method')
-                ->label('Phương thức thanh toán')
-                ->badge()
-                ->color(fn ($state) => match ($state) {
-                    'Trả tiền cho bảo vệ' => 'success',
-                    default => 'gray'
-                }),
             IconColumn::make('is_paid')
                 ->label('Đã thanh toán')
                 ->icon(fn ($state) => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
@@ -91,7 +77,8 @@ class InvoicesTable
                 ->color(fn ($state) => match ($state) {
                     'Trả tiền cho bảo vệ' => 'success',
                     default => 'gray'
-                }),
+                })
+                ->alignCenter(),
             TextColumn::make('paid_at')
                 ->label('Thời gian thanh toán')
                 ->dateTime('d/m/Y H:i')
