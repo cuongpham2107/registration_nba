@@ -3,20 +3,18 @@
 namespace App\Services;
 
 use Exception;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class MailService
 {
-
     /**
      * Gửi email thông thường
      *
-     * @param string $to Email người nhận
-     * @param string $subject Tiêu đề email
-     * @param string $content Nội dung email
-     * @param array $attachments Danh sách file đính kèm
-     * @return bool
+     * @param  string  $to  Email người nhận
+     * @param  string  $subject  Tiêu đề email
+     * @param  string  $content  Nội dung email
+     * @param  array  $attachments  Danh sách file đính kèm
      */
     public function sendMail(string $to, string $subject, string $content, array $attachments = []): bool
     {
@@ -27,7 +25,7 @@ class MailService
                     ->html($content);
 
                 // Thêm file đính kèm nếu có
-                if (!empty($attachments)) {
+                if (! empty($attachments)) {
                     foreach ($attachments as $attachment) {
                         $message->attach($attachment);
                     }
@@ -36,7 +34,8 @@ class MailService
 
             return true;
         } catch (Exception $e) {
-            Log::error('Error sending email: ' . $e->getMessage());
+            Log::error('Error sending email: '.$e->getMessage());
+
             return false;
         }
     }
@@ -44,12 +43,11 @@ class MailService
     /**
      * Gửi email với template blade
      *
-     * @param string $to Email người nhận
-     * @param string $subject Tiêu đề email
-     * @param string $template Tên template blade
-     * @param array $data Dữ liệu truyền vào template
-     * @param array $attachments Danh sách file đính kèm
-     * @return bool
+     * @param  string  $to  Email người nhận
+     * @param  string  $subject  Tiêu đề email
+     * @param  string  $template  Tên template blade
+     * @param  array  $data  Dữ liệu truyền vào template
+     * @param  array  $attachments  Danh sách file đính kèm
      */
     public function sendMailWithTemplate(string $to, string $subject, string $template, array $data = [], array $attachments = []): bool
     {
@@ -59,7 +57,7 @@ class MailService
                     ->subject($subject);
 
                 // Thêm file đính kèm nếu có
-                if (!empty($attachments)) {
+                if (! empty($attachments)) {
                     foreach ($attachments as $attachment) {
                         $message->attach($attachment);
                     }
@@ -68,7 +66,8 @@ class MailService
 
             return true;
         } catch (Exception $e) {
-            Log::error('Error sending email with template: ' . $e->getMessage());
+            Log::error('Error sending email with template: '.$e->getMessage());
+
             return false;
         }
     }
@@ -76,11 +75,10 @@ class MailService
     /**
      * Gửi email với nhiều người nhận
      *
-     * @param array $recipients Danh sách email người nhận
-     * @param string $subject Tiêu đề email
-     * @param string $content Nội dung email
-     * @param array $attachments Danh sách file đính kèm
-     * @return bool
+     * @param  array  $recipients  Danh sách email người nhận
+     * @param  string  $subject  Tiêu đề email
+     * @param  string  $content  Nội dung email
+     * @param  array  $attachments  Danh sách file đính kèm
      */
     public function sendBulkMail(array $recipients, string $subject, string $content, array $attachments = []): bool
     {
@@ -91,7 +89,7 @@ class MailService
                         ->subject($subject)
                         ->html($content);
 
-                    if (!empty($attachments)) {
+                    if (! empty($attachments)) {
                         foreach ($attachments as $attachment) {
                             $message->attach($attachment);
                         }
@@ -101,7 +99,8 @@ class MailService
 
             return true;
         } catch (Exception $e) {
-            Log::error('Error sending bulk email: ' . $e->getMessage());
+            Log::error('Error sending bulk email: '.$e->getMessage());
+
             return false;
         }
     }

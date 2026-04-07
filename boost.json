@@ -1,0 +1,20 @@
+{
+    "agents": [
+        "opencode"
+    ],
+    "guidelines": true,
+    "mcp": true,
+    "nightwatch_mcp": false,
+    "packages": [
+        "filament/filament",
+        "spatie/laravel-pdf",
+        "barryvdh/laravel-debugbar"
+    ],
+    "sail": false,
+    "skills": [
+        "laravel-best-practices",
+        "tailwindcss-development",
+        "laravel-pdf",
+        "debug-using-debugbar"
+    ]
+}

@@ -247,39 +247,6 @@
                 </div>
                 
                 <div class="detail-row">
-                    <span class="detail-label">Số HAWB:</span>
-                    <span class="detail-value" style="text-align: right; display: block;">
-                        @php
-                            $hawbNumber = $data['hawb_number'] ?? 'N/A';
-                            // Try to decode JSON if it's a JSON string
-                            if (is_string($hawbNumber) && (str_starts_with(trim($hawbNumber), '[') || str_starts_with(trim($hawbNumber), '{'))) {
-                                $decoded = json_decode($hawbNumber, true);
-                                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                                    $hawbList = [];
-                                    foreach ($decoded as $item) {
-                                        if (is_array($item) && isset($item['hawb_number'])) {
-                                            $hawbList[] = strtoupper($item['hawb_number']);
-                                        }
-                                    }
-                                    echo !empty($hawbList) ? implode('<br>', $hawbList) : 'N/A';
-                                } else {
-                                    echo strtoupper($hawbNumber);
-                                }
-                            } else {
-                                echo strtoupper($hawbNumber);
-                            }
-                        @endphp
-                    </span>
-                </div>
-                
-                @if(!empty($data['pcs']))
-                <div class="detail-row">
-                    <span class="detail-label">Số kiện:</span>
-                    <span class="detail-value">{{ $data['pcs'] }} kiện</span>
-                </div>
-                @endif
-                
-                <div class="detail-row">
                     <span class="detail-label">Thời gian vào dự kiến:</span>
                     <span class="detail-value">{{ \Carbon\Carbon::parse($data['expected_in_at'])->format('d/m/Y H:i') }}</span>
                 </div>

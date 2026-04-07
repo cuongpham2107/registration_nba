@@ -2,140 +2,157 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RegisterDirectly;
+use App\Models\RegistrationEntry;
+use Carbon\Carbon;
+
 use function Spatie\LaravelPdf\Support\pdf;
-use Illuminate\Support\Facades\Storage;
 
 class DownloadInvoiceController extends Controller
 {
-    public function generateInvoice(RegisterDirectly $record)
+    public function generateInvoice(RegistrationEntry $record)
     {
         // Tạo tên file unique
-        $filename = 'invoice_' . $record->id . '_' . time() . '.pdf';
-        $filePath = 'invoices/' . $filename;
-        
+        $filename = 'invoice_'.$record->id.'_'.time().'.pdf';
+        $filePath = 'invoices/'.$filename;
+
         // Đảm bảo thư mục tồn tại
         $directory = storage_path('app/public/invoices');
-        if (!file_exists($directory)) {
+        if (! file_exists($directory)) {
             mkdir($directory, 0755, true);
         }
-        
+
+        $payload = [
+            'record' => $record,
+            'vehicle_number' => $record->bks,
+            'customer_name' => $record->name,
+            'entry_time' => $record->actual_date_in,
+            'exit_time' => $record->actual_date_out ?? now(),
+            'total_hours' => $this->calculateDisplayHours($record->actual_date_in, $record->actual_date_out ?? now()),
+            'total_minutes' => (int) $this->calculateMinutes($record->actual_date_in, $record->actual_date_out ?? now()),
+            'remaining_minutes' => (int) $this->calculateRemainingMinutes($record->actual_date_in, $record->actual_date_out ?? now()),
+            'fee' => $this->calculateFee($record),
+            'logo' => public_path('images/ASG.png'),
+        ];
+
         try {
-            // Tạo PDF từ view invoice và lưu trực tiếp với cấu hình Node.js
-            pdf('invoices.invoice', [
-                'record' => $record,
-                'vehicle_number' => $record->bks,
-                'customer_name' => $record->name,
-                'entry_time' => $record->actual_date_in,
-                'exit_time' => $record->actual_date_out ?? now(),
-                'total_hours' => $this->calculateHours($record->actual_date_in, $record->actual_date_out ?? now()),
-                'total_minutes' => $this->calculateMinutes($record->actual_date_in, $record->actual_date_out ?? now()),
-                'remaining_minutes' => $this->calculateMinutes($record->actual_date_in, $record->actual_date_out ?? now()) % 60,
-                'fee' => $this->calculateFee($record),
-                'logo' => public_path('images/ASG.png'),
-            ])
-            ->headerHtml('')
-            ->footerHtml('')
-            ->margins(0, 0, 0, 0)
-            ->format('A4')
-            ->save(storage_path('app/public/' . $filePath));
-            
+            pdf('invoices.invoice', $payload)
+                ->headerHtml('')
+                ->footerHtml('')
+                ->margins(0, 0, 0, 0)
+                ->format('A4')
+                ->save(storage_path('app/public/'.$filePath));
+
             return $filePath;
-        } catch (\Exception $e) {
-            // Nếu PDF generation thất bại, fallback tạo file HTML
-            $html = view('invoices.invoice', [
-                'record' => $record,
-                'vehicle_number' => $record->bks,
-                'customer_name' => $record->name,
-                'entry_time' => $record->actual_date_in,
-                'exit_time' => $record->actual_date_out ?? now(),
-                'total_hours' => $this->calculateHours($record->actual_date_in, $record->actual_date_out ?? now()),
-                'total_minutes' => $this->calculateMinutes($record->actual_date_in, $record->actual_date_out ?? now()),
-                'remaining_minutes' => $this->calculateMinutes($record->actual_date_in, $record->actual_date_out ?? now()) % 60,
-                'fee' => $this->calculateFee($record),
-                'logo' => public_path('images/ASG.png'),
-            ])->render();
-            
-            // Lưu HTML file thay vì PDF
+        } catch (\Throwable $e) {
+            // Fallback tạo file HTML để vẫn xem được online nếu PDF render lỗi.
+            $html = view('invoices.invoice', $payload)->render();
+
             $htmlFilePath = str_replace('.pdf', '.html', $filePath);
-            file_put_contents(storage_path('app/public/' . $htmlFilePath), $html);
-            
+            file_put_contents(storage_path('app/public/'.$htmlFilePath), $html);
+
             return $htmlFilePath;
         }
     }
 
     private function calculateMinutes($entryTime, $exitTime)
     {
-        $entry = \Carbon\Carbon::parse($entryTime);
-        $exit = \Carbon\Carbon::parse($exitTime);
-        
-        return $exit->diffInMinutes($entry);
+        if (blank($entryTime) || blank($exitTime)) {
+            return 0;
+        }
+
+        $entry = Carbon::parse($entryTime);
+        $exit = Carbon::parse($exitTime);
+
+        // diffInMinutes() expects the earlier date as the instance.
+        return $entry->diffInMinutes($exit);
     }
 
     private function calculateHours($entryTime, $exitTime)
     {
-        $entry = \Carbon\Carbon::parse($entryTime);
-        $exit = \Carbon\Carbon::parse($exitTime);
-        
-        return $exit->diffInHours($entry);
+        if (blank($entryTime) || blank($exitTime)) {
+            return 0;
+        }
+
+        $entry = Carbon::parse($entryTime);
+        $exit = Carbon::parse($exitTime);
+
+        // diffInHours() expects the earlier date as the instance.
+        return $entry->diffInHours($exit);
     }
 
-    private function calculateFee(RegisterDirectly $record)
+    private function calculateRemainingMinutes($entryTime, $exitTime)
     {
-        // Tính tổng số phút từ actual_date_in đến actual_date_out (hoặc now nếu chưa ra)
+    return (int) $this->calculateMinutes($entryTime, $exitTime) % 60;
+    }
+
+    /**
+     * Display hours for invoice:
+     * - If < 1 hour: show decimal hours (1 digit), e.g. 0.8
+     * - If >= 1 hour: show integer hours only, e.g. 1 (minutes handled separately)
+     */
+    private function calculateDisplayHours($entryTime, $exitTime)
+    {
+    $totalMinutes = (int) $this->calculateMinutes($entryTime, $exitTime);
+
+        if ($totalMinutes < 60) {
+            return round($totalMinutes / 60, 1);
+        }
+
+        return intdiv($totalMinutes, 60);
+    }
+
+    private function calculateFee(RegistrationEntry $record)
+    {
+        // NOTE: Project currently doesn't include a PriceList model/table.
+        // Fee is calculated from VehicleRegistration -> GatheringPointFee.
+
+        $vehicleRegistration = $record->vehicleRegistration;
+        if (! $vehicleRegistration) {
+            return 0;
+        }
+
+        $fee = $vehicleRegistration->gatheringPointFee;
+        if (! $fee) {
+            return 0;
+        }
+
         $exitTime = $record->actual_date_out ?? now();
         $totalMinutes = $this->calculateMinutes($record->actual_date_in, $exitTime);
-        
-        // Lấy thông tin price list từ registration vehicle
-        $priceList = null;
-        if ($record->registrationVehicle && $record->registrationVehicle->price_list_id) {
-            $priceList = \App\Models\PriceList::find($record->registrationVehicle->price_list_id);
+
+        // Rough mapping (can be adjusted):
+        // - <= 4 hours: charge half-day
+        // - <= 8 hours: charge full-day
+        // - > 8 hours : charge night fee
+        if ($totalMinutes <= 240) {
+            return (int) ($fee->morning_fee ?? 0);
         }
-        
-        // Nếu không có price list, dùng giá mặc định
-        if (!$priceList) {
-            // Tìm price list mặc định cho xe nhỏ (ID: 1)
-            $priceList = \App\Models\PriceList::find(1); // Xe 3 bánh, Xe ô tô đến 9 chỗ, xe tải dưới 1,5 tấn và xe bán tải
+
+        if ($totalMinutes <= 480) {
+            return (int) ($fee->full_day_fee ?? 0);
         }
-        
-        // Fallback nếu vẫn không có price list
-        if (!$priceList) {
-            return 50000; // Phí cố định
-        }
-        
-        $baseFee = $priceList->base_fee_120min;
-        $additionalFee = $priceList->additional_fee_30min;
-        
-        if ($totalMinutes <= 120) {
-            // ≤ 120 phút: fee = base_fee_120min
-            return $baseFee;
-        } else {
-            // > 120 phút: fee = (base_fee_120min + additional_fee_30min × số_block)
-            $extraMinutes = $totalMinutes - 120;
-            $extraBlocks = ceil($extraMinutes / 30); // Mỗi 30 phút hoặc phần dư tính 1 block
-            
-            return $baseFee + ($additionalFee * $extraBlocks);
-        }
+
+        return (int) ($fee->night_fee ?? 0);
     }
 
     // Public method để gọi từ bên ngoài
-    public function calculateFeePublic(RegisterDirectly $record)
+    public function calculateFeePublic(RegistrationEntry $record)
     {
         return $this->calculateFee($record);
     }
 
     // Method để download invoice
-    public function download(RegisterDirectly $registerDirectly)
+    public function download(RegistrationEntry $registrationEntry)
     {
-        $filePath = $this->generateInvoice($registerDirectly);
-        $fullPath = storage_path('app/public/' . $filePath);
-        
-        if (!file_exists($fullPath)) {
+        $filePath = $this->generateInvoice($registrationEntry);
+        $fullPath = storage_path('app/public/'.$filePath);
+
+        if (! file_exists($fullPath)) {
             abort(404, 'File not found');
         }
-        
-        $filename = 'HoaDon_' . $registerDirectly->bks . '_' . date('YmdHis') . '.pdf';
-        
+
+        $extension = pathinfo($filePath, PATHINFO_EXTENSION) ?: 'pdf';
+        $filename = 'HoaDon_'.$registrationEntry->bks.'_'.date('YmdHis').'.'.$extension;
+
         return response()->download($fullPath, $filename);
     }
 }

@@ -1,108 +1,75 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Card;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class CardPolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->can('view_any_card');
+        return $authUser->can('ViewAny:Card');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Card $card): bool
+    public function view(AuthUser $authUser, Card $card): bool
     {
-        return $user->can('view_card');
+        return $authUser->can('View:Card');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->can('create_card');
+        return $authUser->can('Create:Card');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Card $card): bool
+    public function update(AuthUser $authUser, Card $card): bool
     {
-        return $user->can('update_card');
+        return $authUser->can('Update:Card');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Card $card): bool
+    public function delete(AuthUser $authUser, Card $card): bool
     {
-        return $user->can('delete_card');
+        return $authUser->can('Delete:Card');
     }
 
-    /**
-     * Determine whether the user can bulk delete.
-     */
-    public function deleteAny(User $user): bool
+    public function deleteAny(AuthUser $authUser): bool
     {
-        return $user->can('delete_any_card');
+        return $authUser->can('DeleteAny:Card');
     }
 
-    /**
-     * Determine whether the user can permanently delete.
-     */
-    public function forceDelete(User $user, Card $card): bool
+    public function restore(AuthUser $authUser, Card $card): bool
     {
-        return $user->can('{{ ForceDelete }}');
+        return $authUser->can('Restore:Card');
     }
 
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function forceDelete(AuthUser $authUser, Card $card): bool
     {
-        return $user->can('{{ ForceDeleteAny }}');
+        return $authUser->can('ForceDelete:Card');
     }
 
-    /**
-     * Determine whether the user can restore.
-     */
-    public function restore(User $user, Card $card): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->can('{{ Restore }}');
+        return $authUser->can('ForceDeleteAny:Card');
     }
 
-    /**
-     * Determine whether the user can bulk restore.
-     */
-    public function restoreAny(User $user): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->can('{{ RestoreAny }}');
+        return $authUser->can('RestoreAny:Card');
     }
 
-    /**
-     * Determine whether the user can replicate.
-     */
-    public function replicate(User $user, Card $card): bool
+    public function replicate(AuthUser $authUser, Card $card): bool
     {
-        return $user->can('{{ Replicate }}');
+        return $authUser->can('Replicate:Card');
     }
 
-    /**
-     * Determine whether the user can reorder.
-     */
-    public function reorder(User $user): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->can('{{ Reorder }}');
+        return $authUser->can('Reorder:Card');
     }
+
 }

@@ -1,0 +1,295 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "permission": {
+        "edit": "ask",
+        "bash": "ask",
+        "webfetch": "ask",
+        "skill": {
+            "*": "allow"
+        }
+    },
+    "agent": {
+        "build": {
+            "mode": "primary",
+            "description": "Agent mặc định – phát triển đầy đủ với tất cả công cụ",
+            "model": "alibaba-cn/qwen3.6-plus",
+            "temperature": 0.3,
+            "prompt": "{file:.opencode/prompts/build.txt}",
+            "color": "#4f9eff",
+            "permission": {
+                "edit": "ask",
+                "bash": {
+                    "*": "ask",
+                    "git status": "allow",
+                    "git diff *": "allow",
+                    "git log *": "allow",
+                    "ls *": "allow",
+                    "cat *": "allow",
+                    "echo *": "allow"
+                },
+                "webfetch": "ask",
+                "skill": {
+                    "laravel-best-practices": "allow",
+                    "tailwindcss-development": "allow",
+                    "laravel-pdf": "allow",
+                    "debug-using-debugbar": "allow",
+                    "laravel12": "allow",
+                    "filament-v5": "allow",
+                    "livewire-v4": "allow",
+                    "alpine-v3": "allow",
+                    "tailwind-v4": "allow"
+                }
+            }
+        },
+        "plan": {
+            "mode": "primary",
+            "description": "Agent lập kế hoạch – chỉ phân tích, không thay đổi code",
+            "model": "alibaba-cn/qwen3.6-plus",
+            "temperature": 0.1,
+            "prompt": "{file:.opencode/prompts/plan.txt}",
+            "color": "#f5a623",
+            "permission": {
+                "edit": "deny",
+                "bash": {
+                    "*": "deny",
+                    "git status": "allow",
+                    "git diff *": "allow",
+                    "git log *": "allow",
+                    "ls *": "allow",
+                    "cat *": "allow",
+                    "grep *": "allow",
+                    "find *": "allow"
+                },
+                "webfetch": "ask",
+                "skill": {
+                    "laravel-best-practices": "allow",
+                    "tailwindcss-development": "allow",
+                    "laravel-pdf": "allow",
+                    "debug-using-debugbar": "allow",
+                    "laravel12": "allow",
+                    "filament-v5": "allow",
+                    "livewire-v4": "allow",
+                    "alpine-v3": "allow",
+                    "tailwind-v4": "allow"
+                }
+            }
+        },
+        "review": {
+            "mode": "subagent",
+            "description": "Review code – kiểm tra chất lượng, bảo mật và hiệu năng",
+            "model": "alibaba-cn/qwen3.6-plus",
+            "temperature": 0.1,
+            "color": "#9b59b6",
+            "permission": {
+                "edit": "deny",
+                "bash": {
+                    "*": "deny",
+                    "git diff *": "allow",
+                    "git log *": "allow",
+                    "grep *": "allow"
+                },
+                "webfetch": "deny",
+                "skill": {
+                    "laravel-best-practices": "allow",
+                    "tailwindcss-development": "allow",
+                    "laravel-pdf": "allow",
+                    "debug-using-debugbar": "allow",
+                    "laravel12": "allow",
+                    "filament-v5": "allow",
+                    "livewire-v4": "allow",
+                    "alpine-v3": "allow",
+                    "tailwind-v4": "allow"
+                }
+            }
+        },
+        "debug": {
+            "mode": "subagent",
+            "description": "Debug agent – điều tra lỗi, phân tích stack trace và logs",
+            "model": "alibaba-cn/qwen3.6-plus",
+            "temperature": 0.2,
+            "color": "#e74c3c",
+            "permission": {
+                "edit": "deny",
+                "bash": {
+                    "*": "ask",
+                    "cat *": "allow",
+                    "grep *": "allow",
+                    "find *": "allow",
+                    "ls *": "allow",
+                    "git log *": "allow",
+                    "git diff *": "allow"
+                },
+                "webfetch": "ask",
+                "skill": {
+                    "laravel-best-practices": "allow",
+                    "tailwindcss-development": "allow",
+                    "laravel-pdf": "allow",
+                    "debug-using-debugbar": "allow",
+                    "laravel12": "allow",
+                    "filament-v5": "allow",
+                    "livewire-v4": "allow",
+                    "alpine-v3": "allow",
+                    "tailwind-v4": "allow"
+                }
+            }
+        },
+        "test-writer": {
+            "mode": "subagent",
+            "description": "Tạo unit test, integration test và e2e test",
+            "model": "alibaba-cn/qwen3.6-plus",
+            "temperature": 0.2,
+            "color": "#2ecc71",
+            "permission": {
+                "edit": "ask",
+                "bash": {
+                    "*": "deny",
+                    "php artisan test*": "allow",
+                    "vendor/bin/phpunit*": "allow",
+                    "vendor/bin/pest*": "allow",
+                    "cat *": "allow",
+                    "grep *": "allow"
+                },
+                "webfetch": "deny",
+                "skill": {
+                    "laravel-best-practices": "allow",
+                    "tailwindcss-development": "allow",
+                    "laravel-pdf": "allow",
+                    "debug-using-debugbar": "allow",
+                    "laravel12": "allow",
+                    "filament-v5": "allow",
+                    "livewire-v4": "allow",
+                    "alpine-v3": "allow",
+                    "tailwind-v4": "allow"
+                }
+            }
+        },
+        "refactor": {
+            "mode": "subagent",
+            "description": "Cải thiện code – tái cấu trúc, tối ưu hiệu năng và style",
+            "model": "alibaba-cn/qwen3.6-plus",
+            "temperature": 0.2,
+            "color": "#1abc9c",
+            "permission": {
+                "edit": "ask",
+                "bash": {
+                    "*": "deny",
+                    "grep *": "allow",
+                    "find *": "allow",
+                    "cat *": "allow"
+                },
+                "webfetch": "deny",
+                "skill": {
+                    "laravel-best-practices": "allow",
+                    "tailwindcss-development": "allow",
+                    "laravel-pdf": "allow",
+                    "debug-using-debugbar": "allow",
+                    "laravel12": "allow",
+                    "filament-v5": "allow",
+                    "livewire-v4": "allow",
+                    "alpine-v3": "allow",
+                    "tailwind-v4": "allow"
+                }
+            }
+        },
+        "docs-writer": {
+            "mode": "subagent",
+            "description": "Viết và cập nhật tài liệu kỹ thuật, README và comment",
+            "model": "alibaba-cn/qwen3.6-plus",
+            "temperature": 0.4,
+            "color": "#3498db",
+            "permission": {
+                "edit": "ask",
+                "bash": {
+                    "*": "deny",
+                    "cat *": "allow",
+                    "ls *": "allow",
+                    "grep *": "allow"
+                },
+                "webfetch": "deny",
+                "skill": {
+                    "laravel-best-practices": "allow",
+                    "tailwindcss-development": "allow",
+                    "laravel-pdf": "allow",
+                    "debug-using-debugbar": "allow",
+                    "laravel12": "allow",
+                    "filament-v5": "allow",
+                    "livewire-v4": "allow",
+                    "alpine-v3": "allow",
+                    "tailwind-v4": "allow"
+                }
+            }
+        },
+        "security-audit": {
+            "mode": "subagent",
+            "description": "Kiểm tra bảo mật – phát hiện lỗ hổng, SQL injection, XSS, v.v.",
+            "model": "alibaba-cn/qwen3.6-plus",
+            "temperature": 0.1,
+            "color": "#e67e22",
+            "permission": {
+                "edit": "deny",
+                "bash": {
+                    "*": "deny",
+                    "grep *": "allow",
+                    "find *": "allow",
+                    "cat *": "allow"
+                },
+                "webfetch": "deny",
+                "skill": {
+                    "laravel-best-practices": "allow",
+                    "tailwindcss-development": "allow",
+                    "laravel-pdf": "allow",
+                    "debug-using-debugbar": "allow",
+                    "laravel12": "allow",
+                    "filament-v5": "allow",
+                    "livewire-v4": "allow",
+                    "alpine-v3": "allow",
+                    "tailwind-v4": "allow"
+                }
+            }
+        },
+        "git-helper": {
+            "mode": "subagent",
+            "description": "Hỗ trợ Git – tạo commit message, review PR, giải thích lịch sử",
+            "model": "alibaba-cn/qwen3.6-plus",
+            "temperature": 0.3,
+            "color": "#f39c12",
+            "permission": {
+                "edit": "deny",
+                "bash": {
+                    "*": "deny",
+                    "git status": "allow",
+                    "git diff *": "allow",
+                    "git log *": "allow",
+                    "git show *": "allow",
+                    "git branch *": "allow"
+                },
+                "webfetch": "deny",
+                "skill": {
+                    "laravel-best-practices": "allow",
+                    "tailwindcss-development": "allow",
+                    "laravel-pdf": "allow",
+                    "debug-using-debugbar": "allow",
+                    "laravel12": "allow",
+                    "filament-v5": "allow",
+                    "livewire-v4": "allow",
+                    "alpine-v3": "allow",
+                    "tailwind-v4": "allow"
+                }
+            }
+        }
+    },
+    "compaction": {
+        "auto": true
+    },
+    "mcp": {
+        "laravel-boost": {
+            "type": "local",
+            "enabled": true,
+            "command": [
+                "php",
+                "artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}

@@ -6,7 +6,7 @@
     <body>
         <div class="flex gap-2">
             <!-- LIÊN 1 -->
-            <div class="h-60 w-[450px] bg-gray-100 p-1 text-xs">
+            <div class="h-60 w-112.5 bg-gray-100 p-1 text-xs">
                 <!-- Header -->
                 <div class="flex h-10 items-center">
                 <div class="flex h-full w-16 items-center justify-center">
@@ -73,7 +73,13 @@
                 <!-- Tổng thời gian -->
                 <div class="flex h-4 items-center px-1">
                     <span class="whitespace-nowrap">Tổng thời gian khai thác:</span>
-                    <span class="ml-1 w-32 border-b border-dashed border-black text-center">{{ $total_hours }} giờ / {{ $remaining_minutes ?? ($total_minutes % 60) }} phút</span>
+                    <span class="ml-1 w-32 border-b border-dashed border-black text-center">
+                        @if (($total_minutes ?? 0) < 60)
+                            {{ $total_minutes ?? 0 }} phút
+                        @else
+                            {{ $total_hours }} giờ / {{ $remaining_minutes ?? ($total_minutes % 60) }} phút
+                        @endif
+                    </span>
                 </div>
 
                 <!-- Mức phí -->
@@ -91,7 +97,7 @@
             </div>
 
             <!-- LIÊN 2 (chỉ khác nhãn liên, data dùng chung) -->
-            {{-- <div class="h-60 w-[450px] bg-gray-100 p-1 text-xs">
+            {{-- <div class="h-60 w-112.5 bg-gray-100 p-1 text-xs">
                 <div class="flex h-10 items-center">
                 <div class="flex h-full w-16 items-center justify-center">
                     @if(file_exists($logo))

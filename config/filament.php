@@ -4,98 +4,77 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Broadcasting
+    | Default Filesystem Disk
     |--------------------------------------------------------------------------
     |
-    | By uncommenting the Laravel Echo configuration, you may connect Filament
-    | to any Pusher-compatible websockets server.
-    |
-    | This will allow your users to receive real-time notifications.
+    | Here you may specify the default filesystem disk that should be used
+    | by the framework. The "local" disk, as well as a variety of cloud
+    | based disks are available to your application for file storage.
     |
     */
 
-    'broadcasting' => [
+    'default' => env('FILESYSTEM_DISK', 'local'),
 
-        'echo' => [
-            'broadcaster' => 'reverb',
-            'key' => env('VITE_REVERB_APP_KEY'),
-            'cluster' => env('VITE_REVERB_APP_CLUSTER'),
-            'wsHost' => env('VITE_REVERB_HOST'),
-            'wsPort' => env('VITE_REVERB_PORT'),
-            'wssPort' => env('VITE_REVERB_PORT'),
-            'authEndpoint' => '/broadcasting/auth',
-            'disableStats' => true,
-            'encrypted' => true,
-            'forceTLS' => false,
+    /*
+    |--------------------------------------------------------------------------
+    | Filesystem Disks
+    |--------------------------------------------------------------------------
+    |
+    | Below you may configure as many filesystem disks as necessary, and you
+    | may even configure multiple disks for the same driver. Examples for
+    | most supported storage drivers are configured here for reference.
+    |
+    | Supported drivers: "local", "ftp", "sftp", "s3"
+    |
+    */
+
+    'disks' => [
+
+        'local' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+            'serve' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'public' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        's3' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_BUCKET'),
+            'url' => env('AWS_URL'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => false,
+            'report' => false,
         ],
 
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Default Filesystem Disk
+    | Symbolic Links
     |--------------------------------------------------------------------------
     |
-    | This is the storage disk Filament will use to store files. You may use
-    | any of the disks defined in the `config/filesystems.php`.
+    | Here you may configure the symbolic links that will be created when the
+    | `storage:link` Artisan command is executed. The array keys should be
+    | the locations of the links and the values should be their targets.
     |
     */
 
-    'default_filesystem_disk' => env('FILAMENT_FILESYSTEM_DISK', 'public'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Assets Path
-    |--------------------------------------------------------------------------
-    |
-    | This is the directory where Filament's assets will be published to. It
-    | is relative to the `public` directory of your Laravel application.
-    |
-    | After changing the path, you should run `php artisan filament:assets`.
-    |
-    */
-
-    'assets_path' => null,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cache Path
-    |--------------------------------------------------------------------------
-    |
-    | This is the directory that Filament will use to store cache files that
-    | are used to optimize the registration of components.
-    |
-    | After changing the path, you should run `php artisan filament:cache-components`.
-    |
-    */
-
-    'cache_path' => base_path('bootstrap/cache/filament'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Livewire Loading Delay
-    |--------------------------------------------------------------------------
-    |
-    | This sets the delay before loading indicators appear.
-    |
-    | Setting this to 'none' makes indicators appear immediately, which can be
-    | desirable for high-latency connections. Setting it to 'default' applies
-    | Livewire's standard 200ms delay.
-    |
-    */
-
-    'livewire_loading_delay' => 'default',
-
-    /*
-    |--------------------------------------------------------------------------
-    | System Route Prefix
-    |--------------------------------------------------------------------------
-    |
-    | This is the prefix used for the system routes that Filament registers,
-    | such as the routes for downloading exports and failed import rows.
-    |
-    */
-
-    'system_route_prefix' => 'filament',
+    'links' => [
+        public_path('storage') => storage_path('app/public'),
+    ],
 
 ];

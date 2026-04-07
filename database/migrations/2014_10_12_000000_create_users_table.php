@@ -13,11 +13,18 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->string('username')->nullable();
+            $table->string('asgl_id')->nullable();
+            $table->string('mobile_phone')->nullable();
+            $table->string('avatar')->nullable();
+            $table->string('department_name')->nullable();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('zalo_user_id')->nullable()->comment('ID người dùng Zalo liên kết');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+            $table->foreignId('approver_id')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

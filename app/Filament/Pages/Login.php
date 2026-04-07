@@ -7,31 +7,34 @@ use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use DanHarrin\LivewireRateLimiting\WithRateLimiting;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Notifications\Notification;
-use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\EmbeddedSchema;
+use Filament\Schemas\Components\Form;
+use Filament\Schemas\Components\RenderHook;
+use Filament\Schemas\Schema;
+use Filament\Support\Enums\Alignment;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\HtmlString;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use SensitiveParameter;
 
-/**
- * @property Form $form
- */
 class Login extends SimplePage
 {
-    use InteractsWithFormActions;
     use WithRateLimiting;
 
-    protected static string $view = 'filament-panels::pages.auth.login';
+    // protected string $view = 'filament-panels::pages.auth.login';
 
     /**
      * @var array<string, mixed> | null
@@ -41,47 +44,45 @@ class Login extends SimplePage
     public function mount(): void
     {
         if (Filament::auth()->check()) {
-            redirect()->intended(Filament::getUrl());
+            $this->redirect(Filament::getHomeUrl() ?? Filament::getUrl(), navigate: true);
+
+            return;
         }
 
         $this->form->fill();
     }
-    /**
-     * Ghi đè phần login để login bằng api của ASGL
-     * @return LoginResponse|null
-     */
+
     public function authenticate(): ?LoginResponse
     {
-        //Check nếu login bằng tài khoảnt trong database đúng thì tiếp tục nếu không thì login bằng api của ASGL
-
-
         try {
             $this->rateLimit(5);
         } catch (TooManyRequestsException $exception) {
             $this->getRateLimitedNotification($exception)?->send();
+
             return null;
         }
+
         $data = $this->form->getState();
-        if(!Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)){
+
+        if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
             $loginAsgl = Http::withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post('https://id.asgl.net.vn/api/auth/login',
-            [
+            ])->post('https://id.asgl.net.vn/api/auth/login', [
                 'login' => $data['username'],
                 'password' => $data['password'],
             ]);
-            if(!$loginAsgl->successful()){
+
+            if (! $loginAsgl->successful()) {
                 $this->throwFailureValidationException();
             }
+
             $userResponse = $loginAsgl->json()['data']['user'];
 
-            // Tìm user dựa trên asgl_id (unique identifier từ ASGL)
-            // Nếu không tìm thấy thì tìm theo username
             $user = User::where('asgl_id', $userResponse['id'])
                 ->orWhere('username', $userResponse['username'])
                 ->first();
+
             if ($user) {
-                // Cập nhật thông tin user hiện tại
                 $user->update([
                     'name' => $userResponse['full_name'],
                     'username' => $userResponse['username'],
@@ -91,7 +92,6 @@ class Login extends SimplePage
                     'department_name' => $userResponse['positions'][0]['department']['short_code'] ?? null,
                 ]);
             } else {
-                // Tạo user mới nếu chưa tồn tại
                 $user = User::create([
                     'name' => $userResponse['full_name'],
                     'username' => $userResponse['username'],
@@ -99,42 +99,37 @@ class Login extends SimplePage
                     'asgl_id' => $userResponse['id'],
                     'avatar' => $userResponse['avatar'],
                     'email' => $userResponse['email'] ?? $userResponse['username'],
-                    'password' => \Illuminate\Support\Str::password(),
+                    'password' => Str::password(),
                     'department_name' => $userResponse['positions'][0]['department']['short_code'] ?? null,
                 ]);
-                
-                // KHÔNG tự động gán role - Admin sẽ gán role thủ công
-                // Nếu muốn auto-assign role, uncomment dòng dưới:
-                // $user->assignRole('panel_user');
             }
-            
+
             Filament::auth()->login($user);
-        }
-        else
-        {
+        } else {
             $user = Filament::auth()->user();
         }
 
-
         if (
             ($user instanceof FilamentUser) &&
-            (! $user->canAccessPanel(Filament::getCurrentPanel()))
+            (! $user->canAccessPanel(Filament::getCurrentOrDefaultPanel()))
         ) {
             Filament::auth()->logout();
             $this->throwFailureValidationException();
         }
+
         session()->regenerate();
+
         return app(LoginResponse::class);
     }
 
     protected function getRateLimitedNotification(TooManyRequestsException $exception): ?Notification
     {
         return Notification::make()
-            ->title(__('filament-panels::pages/auth/login.notifications.throttled.title', [
+            ->title(__('filament-panels::auth/pages/login.notifications.throttled.title', [
                 'seconds' => $exception->secondsUntilAvailable,
                 'minutes' => $exception->minutesUntilAvailable,
             ]))
-            ->body(array_key_exists('body', __('filament-panels::pages/auth/login.notifications.throttled') ?: []) ? __('filament-panels::pages/auth/login.notifications.throttled.body', [
+            ->body(array_key_exists('body', __('filament-panels::auth/pages/login.notifications.throttled') ?: []) ? __('filament-panels::auth/pages/login.notifications.throttled.body', [
                 'seconds' => $exception->secondsUntilAvailable,
                 'minutes' => $exception->minutesUntilAvailable,
             ]) : null)
@@ -144,31 +139,24 @@ class Login extends SimplePage
     protected function throwFailureValidationException(): never
     {
         throw ValidationException::withMessages([
-            'data.username' => __('filament-panels::pages/auth/login.messages.failed'),
+            'data.username' => 'Tên đăng nhập hoặc mật khẩu không đúng',
         ]);
     }
 
-    public function form(Form $form): Form
+    public function defaultForm(Schema $schema): Schema
     {
-        return $form;
+        return $schema
+            ->statePath('data');
     }
 
-    /**
-     * @return array<int | string, string | Form>
-     */
-    protected function getForms(): array
+    public function form(Schema $schema): Schema
     {
-        return [
-            'form' => $this->form(
-                $this->makeForm()
-                    ->schema([
-                        $this->getEmailFormComponent(),
-                        $this->getPasswordFormComponent(),
-                        $this->getRememberFormComponent(),
-                    ])
-                    ->statePath('data'),
-            ),
-        ];
+        return $schema
+            ->components([
+                $this->getEmailFormComponent(),
+                $this->getPasswordFormComponent(),
+                $this->getRememberFormComponent(),
+            ]);
     }
 
     protected function getEmailFormComponent(): Component
@@ -184,8 +172,8 @@ class Login extends SimplePage
     protected function getPasswordFormComponent(): Component
     {
         return TextInput::make('password')
-            ->label(__('filament-panels::pages/auth/login.form.password.label'))
-            ->hint(filament()->hasPasswordReset() ? new HtmlString(Blade::render('<x-filament::link :href="filament()->getRequestPasswordResetUrl()" tabindex="3"> {{ __(\'filament-panels::pages/auth/login.actions.request_password_reset.label\') }}</x-filament::link>')) : null)
+            ->label('Mật khẩu')
+            ->hint(filament()->hasPasswordReset() ? new HtmlString(Blade::render('<x-filament::link :href="filament()->getRequestPasswordResetUrl()" tabindex="-1"> {{ __(\'filament-panels::auth/pages/login.actions.request_password_reset.label\') }}</x-filament::link>')) : null)
             ->password()
             ->revealable(filament()->arePasswordsRevealable())
             ->autocomplete('current-password')
@@ -196,25 +184,25 @@ class Login extends SimplePage
     protected function getRememberFormComponent(): Component
     {
         return Checkbox::make('remember')
-            ->label(__('filament-panels::pages/auth/login.form.remember.label'));
+            ->label('Ghi nhớ đăng nhập');
     }
 
     public function registerAction(): Action
     {
         return Action::make('register')
             ->link()
-            ->label(__('filament-panels::pages/auth/login.actions.register.label'))
+            ->label('Đăng ký')
             ->url(filament()->getRegistrationUrl());
     }
 
-    public function getTitle(): string | Htmlable
+    public function getTitle(): string|Htmlable
     {
-        return __('filament-panels::pages/auth/login.title');
+        return 'Đăng nhập';
     }
 
-    public function getHeading(): string | Htmlable
+    public function getHeading(): string|Htmlable|null
     {
-        return __('filament-panels::pages/auth/login.heading');
+        return 'Đăng nhập';
     }
 
     /**
@@ -230,7 +218,7 @@ class Login extends SimplePage
     protected function getAuthenticateFormAction(): Action
     {
         return Action::make('authenticate')
-            ->label(__('filament-panels::pages/auth/login.form.actions.authenticate.label'))
+            ->label('Đăng nhập')
             ->submit('authenticate');
     }
 
@@ -243,11 +231,48 @@ class Login extends SimplePage
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    protected function getCredentialsFromFormData(array $data): array
+    protected function getCredentialsFromFormData(#[SensitiveParameter] array $data): array
     {
         return [
             'username' => $data['username'],
             'password' => $data['password'],
         ];
+    }
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        if (! filament()->hasRegistration()) {
+            return null;
+        }
+
+        return new HtmlString('Đăng ký'.' '.$this->registerAction->toHtml());
+    }
+
+    public function content(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                RenderHook::make(PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE),
+                $this->getFormContentComponent(),
+                RenderHook::make(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER),
+            ]);
+    }
+
+    public function getFormContentComponent(): Component
+    {
+        return Form::make([EmbeddedSchema::make('form')])
+            ->id('form')
+            ->livewireSubmitHandler('authenticate')
+            ->footer([
+                Actions::make($this->getFormActions())
+                    ->alignment($this->getFormActionsAlignment())
+                    ->fullWidth($this->hasFullWidthFormActions())
+                    ->key('form-actions'),
+            ]);
+    }
+
+    public function getFormActionsAlignment(): string|Alignment
+    {
+        return Alignment::Start;
     }
 }

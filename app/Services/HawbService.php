@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class HawbService
 {
@@ -28,7 +28,7 @@ class HawbService
                     return $data['data']['token'];
                 }
             } catch (\Exception $e) {
-                Log::error('Auth token fetch error: ' . $e->getMessage());
+                Log::error('Auth token fetch error: '.$e->getMessage());
             }
 
             return null;
@@ -43,6 +43,7 @@ class HawbService
         $token = self::getAuthToken();
         if (empty($token)) {
             Log::warning('No auth token available for HAWB check');
+
             return null;
         }
 
@@ -58,7 +59,7 @@ class HawbService
                 return $data['data'];
             }
         } catch (\Exception $e) {
-            Log::error('HAWB API error: ' . $e->getMessage());
+            Log::error('HAWB API error: '.$e->getMessage());
         }
 
         return null;
@@ -77,11 +78,12 @@ class HawbService
                 $payload = $data['data'] ?? null;
 
                 // Case: data is an array of strings: ["BOLO","APEX",...]
-                if (is_array($payload) && !empty($payload) && is_string(array_values($payload)[0])) {
+                if (is_array($payload) && ! empty($payload) && is_string(array_values($payload)[0])) {
                     $result = [];
                     foreach ($payload as $agent) {
                         $result[$agent] = $agent;
                     }
+
                     return $result;
                 }
 
@@ -96,65 +98,19 @@ class HawbService
                             $result[$item['AgentCode']] = $item['AgentName'];
                         }
                     }
+
                     return $result;
                 }
 
                 // Case: data is an array of objects with AgentName / AgentCode
-                if (is_array($payload) && !empty($payload) && is_array(reset($payload))) {
+                if (is_array($payload) && ! empty($payload) && is_array(reset($payload))) {
                     return collect($payload)->pluck('AgentName', 'AgentCode')->toArray();
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Agent API error: ' . $e->getMessage());
+            Log::error('Agent API error: '.$e->getMessage());
         }
 
         return [];
-    }
-
-    /**
-     * Process HAWB search results into standardized format
-     */
-    public static function processHawbSearchResults(array $apiData): array
-    {
-        // Expected shape: ['hawb' => [ {Hawb, Pcs, ...}, ... ]]
-        $newRows = [];
-        if (isset($apiData['hawb']) && is_array($apiData['hawb'])) {
-            foreach ($apiData['hawb'] as $item) {
-                $newRows[] = [
-                    'hawb_number' => $item['Hawb'] ?? null,
-                    'pcs' => isset($item['Pcs']) ? (string)$item['Pcs'] : null,
-                ];
-            }
-        }
-
-        return $newRows;
-    }
-
-    /**
-     * Add new HAWB rows to existing array, avoiding duplicates
-     */
-    public static function addHawbsToExisting(array $existingHawbs, array $newRows): array
-    {
-        // Get existing HAWB numbers to check for duplicates
-        $existingHawbNumbers = array_column($existingHawbs, 'hawb_number');
-        
-        $addedCount = 0;
-        $updatedHawbs = $existingHawbs;
-        
-        foreach ($newRows as $newRow) {
-            // Only add if HAWB number doesn't already exist and is not empty
-            if (!empty($newRow['hawb_number']) && !in_array($newRow['hawb_number'], $existingHawbNumbers)) {
-                $updatedHawbs[] = $newRow;
-                $existingHawbNumbers[] = $newRow['hawb_number'];
-                $addedCount++;
-            }
-        }
-
-        return [
-            'hawbs' => $updatedHawbs,
-            'added_count' => $addedCount,
-            'total_count' => count($updatedHawbs),
-            'had_duplicates' => count($newRows) > $addedCount
-        ];
     }
 }

@@ -14,7 +14,9 @@ return [
         'node_binary' => env('LARAVEL_PDF_NODE_BINARY'),
         'npm_binary' => env('LARAVEL_PDF_NPM_BINARY'),
         'include_path' => env('LARAVEL_PDF_INCLUDE_PATH'),
-        'chrome_path' => env('LARAVEL_PDF_CHROME_PATH', '/home/serverai/.cache/puppeteer/chrome/linux-144.0.7559.96/chrome-linux64/chrome'),
+        // Don't hard-code a Linux puppeteer path; let Browsershot auto-detect (macOS/Windows/Linux),
+        // or set LARAVEL_PDF_CHROME_PATH explicitly in .env.
+        'chrome_path' => env('LARAVEL_PDF_CHROME_PATH'),
         'node_modules_path' => env('LARAVEL_PDF_NODE_MODULES_PATH'),
         'bin_path' => env('LARAVEL_PDF_BIN_PATH'),
         'temp_path' => env('LARAVEL_PDF_TEMP_PATH'),

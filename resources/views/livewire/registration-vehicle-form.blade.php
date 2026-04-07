@@ -32,7 +32,7 @@
                          <div class="flex gap-4" style="margin-top: 16px;">
                              <button 
                                  type="submit"
-                                 class="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                                 class="flex-1 bg-linear-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
                                  style="background: linear-gradient(45deg, #10b981, #059669); color: white; padding: 12px 24px; border-radius: 8px; border: none; font-weight: 600; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: all 0.2s; cursor: pointer;"
                                  onmouseover="this.style.background='linear-gradient(45deg, #059669, #047857)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.15)'"
                                  onmouseout="this.style.background='linear-gradient(45deg, #10b981, #059669)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'"
@@ -65,7 +65,7 @@
                  <!-- Danh sach dang ky -->
                 @if($isListRegistered)
                  <div class="px-3 py-2 flex flex-col min-h-screen" >
-                     <div class="flex-shrink-0">
+                     <div class="shrink-0">
                          <div class="flex items-center justify-between mb-4">
                              <h2 class="text-lg font-semibold">Danh sách đăng ký</h2>
                          </div>
@@ -127,14 +127,14 @@
                                                                  <div class="mt-2">
                                                                      <div class="flex gap-2 overflow-x-hidden" style="max-width:18rem; -webkit-overflow-scrolling: touch;">
                                                                          @foreach($reg['hawbs'] as $hawb)
-                                                                             <span class="flex-shrink-0 text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">{{ $hawb }}</span>
+                                                                             <span class="shrink-0 text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">{{ $hawb }}</span>
                                                                          @endforeach
                                                                      </div>
                                                                  </div>
                                                              @endif
                                                          </div>
 
-                                                         <div class="flex-shrink-0 text-right">
+                                                         <div class="shrink-0 text-right">
                                                              <p class="text-xs text-gray-500">{{ $reg['expected_in_at'] ?? '' }}</p>
                                                              <div class="mt-2">
                                                                  <span class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium {{ $reg['status_classes'] ?? '' }}">{{ $reg['status_label'] ?? $reg['status'] ?? '' }}</span>
@@ -218,12 +218,8 @@
             if (saved) {
                 try {
                     const data = JSON.parse(saved);
-                    
-                    // Clean up old format - remove hawb_number if exists
-                    if (data.hawb_number !== undefined) {
-                        delete data.hawb_number;
-                        localStorage.setItem('livewireVehicleForm', JSON.stringify(data));
-                    }
+                    localStorage.setItem('livewireVehicleForm', JSON.stringify(data));
+                  
                 } catch (e) {
                     console.error('Error loading stored data:', e);
                 }

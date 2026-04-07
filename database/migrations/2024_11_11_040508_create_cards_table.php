@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('account_id');
             $table->string('card_number');
             $table->string('card_name');
-            $table->enum('status',['active','inactive','blocked'])->default('inactive');
+            $table->enum('status', ['active', 'inactive', 'blocked'])->default('inactive');
             $table->timestamps();
         });
     }

@@ -12,9 +12,8 @@ class Invoice extends Model
 
     protected $fillable = [
         'invoice_code',
-        'register_directly_id',
+        'registration_entry_id',
         'normalized_license_plate',
-        'car_catalog_id',
         'amount',
         'is_paid',
         'paid_at',
@@ -30,14 +29,9 @@ class Invoice extends Model
     ];
 
     // Relationships
-    public function registerDirectly()
+    public function registrationEntry()
     {
-        return $this->belongsTo(RegisterDirectly::class);
-    }
-
-    public function carCatalog()
-    {
-        return $this->belongsTo(CarCatalog::class);
+        return $this->belongsTo(RegistrationEntry::class);
     }
 
     // Helper methods
@@ -45,17 +39,17 @@ class Invoice extends Model
     {
         $prefix = 'INV';
         $date = now()->format('Ymd');
-        
+
         // Sử dụng lock để tránh race condition
         return DB::transaction(function () use ($prefix, $date) {
             $lastInvoice = self::whereDate('created_at', today())
                 ->orderBy('id', 'desc')
                 ->lockForUpdate()
                 ->first();
-            
+
             $sequence = $lastInvoice ? (int) substr($lastInvoice->invoice_code, -4) + 1 : 1;
-            
-            return $prefix . $date . sprintf('%04d', $sequence);
+
+            return $prefix.$date.sprintf('%04d', $sequence);
         });
     }
 
@@ -64,18 +58,19 @@ class Invoice extends Model
         if (empty($licensePlate)) {
             return null;
         }
-        
+
         // Loại bỏ khoảng trắng, dấu gạch ngang, chuyển thành uppercase
         $cleaned = strtoupper(str_replace([' ', '-', '_', '.'], '', $licensePlate));
-        
+
         // Tách phần chữ và số để thêm dấu gạch ngang chuẩn
         // Ví dụ: 20C00735 -> 20C-00735
         if (preg_match('/^([0-9]+[A-Z]+)([0-9]+)$/', $cleaned, $matches)) {
             $prefix = $matches[1]; // 20C
             $number = $matches[2]; // 00735
-            return $prefix . '-' . $number;
+
+            return $prefix.'-'.$number;
         }
-        
+
         // Nếu không match pattern thì trả về như cũ
         return $cleaned;
     }

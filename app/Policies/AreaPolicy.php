@@ -1,108 +1,75 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Area;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class AreaPolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->can('view_any_area');
+        return $authUser->can('ViewAny:Area');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Area $area): bool
+    public function view(AuthUser $authUser, Area $area): bool
     {
-        return $user->can('view_area');
+        return $authUser->can('View:Area');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->can('create_area');
+        return $authUser->can('Create:Area');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Area $area): bool
+    public function update(AuthUser $authUser, Area $area): bool
     {
-        return $user->can('update_area');
+        return $authUser->can('Update:Area');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Area $area): bool
+    public function delete(AuthUser $authUser, Area $area): bool
     {
-        return $user->can('delete_area');
+        return $authUser->can('Delete:Area');
     }
 
-    /**
-     * Determine whether the user can bulk delete.
-     */
-    public function deleteAny(User $user): bool
+    public function deleteAny(AuthUser $authUser): bool
     {
-        return $user->can('delete_any_area');
+        return $authUser->can('DeleteAny:Area');
     }
 
-    /**
-     * Determine whether the user can permanently delete.
-     */
-    public function forceDelete(User $user, Area $area): bool
+    public function restore(AuthUser $authUser, Area $area): bool
     {
-        return $user->can('{{ ForceDelete }}');
+        return $authUser->can('Restore:Area');
     }
 
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function forceDelete(AuthUser $authUser, Area $area): bool
     {
-        return $user->can('{{ ForceDeleteAny }}');
+        return $authUser->can('ForceDelete:Area');
     }
 
-    /**
-     * Determine whether the user can restore.
-     */
-    public function restore(User $user, Area $area): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->can('{{ Restore }}');
+        return $authUser->can('ForceDeleteAny:Area');
     }
 
-    /**
-     * Determine whether the user can bulk restore.
-     */
-    public function restoreAny(User $user): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->can('{{ RestoreAny }}');
+        return $authUser->can('RestoreAny:Area');
     }
 
-    /**
-     * Determine whether the user can replicate.
-     */
-    public function replicate(User $user, Area $area): bool
+    public function replicate(AuthUser $authUser, Area $area): bool
     {
-        return $user->can('{{ Replicate }}');
+        return $authUser->can('Replicate:Area');
     }
 
-    /**
-     * Determine whether the user can reorder.
-     */
-    public function reorder(User $user): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->can('{{ Reorder }}');
+        return $authUser->can('Reorder:Area');
     }
+
 }

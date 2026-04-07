@@ -1,3 +1,26 @@
-@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import "../../../../vendor/filament/filament/resources/css/theme.css";
 
-@config 'tailwind.config.js';
+@config '../../../../tailwind.config.js';
+
+.fi-ta-table {
+    & > thead {
+        & > tr {
+            &.fi-ta-table-head-groups-row {
+                background-color: #4f39f7 !important;
+            }
+        }
+    }
+}
+.fi-ta-header-group-cell {
+    color: white !important;
+}
+.fi-ta-table {
+    & > thead {
+        & > tr {
+            background-color: #4f39f7 !important;
+        }
+    }
+}
+.fi-ta-header-cell {
+    color: white !important;
+}

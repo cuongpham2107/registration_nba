@@ -64,26 +64,6 @@
                     <td style="padding:10px 8px;">{{ $registration->vehicle_number }}</td>
                 </tr>
                 <tr>
-                    <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Số Hawb</th>
-                    <td style="padding:10px 8px;">
-                        @php
-                            $hawbs = json_decode($registration->hawb_number, true);
-                        @endphp
-                        @if(is_array($hawbs) && count($hawbs) > 0)
-                            @foreach($hawbs as $index => $hawb)
-                                <div style="margin-bottom: 4px;">
-                                    <strong>{{ $hawb['hawb_number'] ?? '—' }}</strong>
-                                    @if(!empty($hawb['pcs']))
-                                        <span style="color: #718096;">({{ $hawb['pcs'] }} PCS)</span>
-                                    @endif
-                                </div>
-                            @endforeach
-                        @else
-                            {{ $registration->hawb_number }}
-                        @endif
-                    </td>
-                </tr>
-                <tr>
                     <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Thời gian vào dự kiến</th>
                     <td style="padding:10px 8px;">{{ \Carbon\Carbon::parse($registration->expected_in_at)->format('d/m/Y H:i') }}</td>
                 </tr>
@@ -103,8 +83,8 @@
         </table>
         <div style="margin-top: 32px; text-align:center;">
             @php
-                $baseUrl = route('filament.admin.resources.registration-vehicles.index');
-                $filterUrl = $baseUrl . '?tableFilters[vehicle_filter][search]='. $registration->hawb_number.'&tableFilters[vehicle_filter][start_date]='. \Carbon\Carbon::parse($registration->expected_in_at)->format('Y-m-d H:i:s');
+                $baseUrl = route('filament.admin.resources.vehicle-registrations.index');
+                // $filterUrl = $baseUrl . '?tableFilters[vehicle_filter][search]='. $registration.'&tableFilters[vehicle_filter][start_date]='. \Carbon\Carbon::parse($registration->expected_in_at)->format('Y-m-d H:i:s');
             @endphp
             <a href="{{ $filterUrl }}" class="btn" style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-weight:600;font-size:16px;padding:12px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(102,126,234,0.12);margin-right:12px;text-decoration:none;display:inline-block;">Duyệt</a>
         </div>

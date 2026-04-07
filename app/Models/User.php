@@ -3,20 +3,19 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
     use HasRoles;
-    use HasPanelShield;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -48,17 +47,6 @@ class User extends Authenticatable implements FilamentUser
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        // Super admin luôn được truy cập
-        if ($this->hasRole('super_admin')) {
-            return true;
-        }
-
-        // User có bất kỳ role nào (panel_user, approver, etc.) đều được truy cập
-        if ($this->roles()->count() > 0) {
-            return true;
-        }
-
-        // User không có role vẫn được truy cập (có thể điều chỉnh theo nhu cầu)
         return true;
     }
 
