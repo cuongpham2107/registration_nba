@@ -19,9 +19,9 @@ use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\HtmlString;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Http;
 
 /**
  * @property Form $form
@@ -46,39 +46,39 @@ class Login extends SimplePage
 
         $this->form->fill();
     }
+
     /**
      * Ghi đè phần login để login bằng api của ASG
-     * @return LoginResponse|null
      */
     public function authenticate(): ?LoginResponse
     {
-        //Check nếu login bằng tài khoảnt trong database đúng thì tiếp tục nếu không thì login bằng api của ASG
-
+        // Check nếu login bằng tài khoảnt trong database đúng thì tiếp tục nếu không thì login bằng api của ASG
 
         try {
             $this->rateLimit(5);
         } catch (TooManyRequestsException $exception) {
             $this->getRateLimitedNotification($exception)?->send();
+
             return null;
         }
         $data = $this->form->getState();
-        if(!Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)){
+        if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
             try {
                 $loginAsgl = Http::withHeaders([
                     'Content-Type' => 'application/json',
                 ])->post('https://id.asgl.net.vn/api/auth/login',
-                [
-                    'login' => $data['username'],
-                    'password' => $data['password'],
-                ]);
+                    [
+                        'login' => $data['username'],
+                        'password' => $data['password'],
+                    ]);
 
-                if(!$loginAsgl->successful()){
+                if (! $loginAsgl->successful()) {
                     $this->throwFailureValidationException();
                 }
 
                 $userResponse = $loginAsgl->json()['data']['user'] ?? null;
 
-                if (!$userResponse) {
+                if (! $userResponse) {
                     $this->throwFailureValidationException();
                 }
 
@@ -119,7 +119,7 @@ class Login extends SimplePage
                         'password' => \Illuminate\Support\Str::password(),
                         'department_name' => $userResponse['positions'][0]['department']['short_code'] ?? null,
                     ]);
-                    
+
                     // KHÔNG tự động gán role - Admin sẽ gán role thủ công
                     // Nếu muốn auto-assign role, uncomment dòng dưới:
                     // $user->assignRole('panel_user');
@@ -134,12 +134,9 @@ class Login extends SimplePage
 
                 $this->throwFailureValidationException();
             }
-        }
-        else
-        {
+        } else {
             $user = Filament::auth()->user();
         }
-
 
         if (
             ($user instanceof FilamentUser) &&
@@ -149,6 +146,7 @@ class Login extends SimplePage
             $this->throwFailureValidationException();
         }
         session()->regenerate();
+
         return app(LoginResponse::class);
     }
 
@@ -232,12 +230,12 @@ class Login extends SimplePage
             ->url(filament()->getRegistrationUrl());
     }
 
-    public function getTitle(): string | Htmlable
+    public function getTitle(): string|Htmlable
     {
         return __('filament-panels::pages/auth/login.title');
     }
 
-    public function getHeading(): string | Htmlable
+    public function getHeading(): string|Htmlable
     {
         return __('filament-panels::pages/auth/login.heading');
     }
