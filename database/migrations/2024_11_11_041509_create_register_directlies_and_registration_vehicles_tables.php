@@ -29,8 +29,8 @@ return new class extends Migration
             $table->dateTime('type_date')->nullable();
             $table->string('asset')->nullable();
             $table->string('note')->nullable();
-            $table->foreignId('user_id')
-                ->constrained('users')
+            $table->foreignId('customer_id')
+                ->constrained('customers')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
             $table->timestamps();
