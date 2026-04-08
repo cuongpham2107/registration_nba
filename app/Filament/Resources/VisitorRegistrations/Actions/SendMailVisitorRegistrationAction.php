@@ -11,7 +11,6 @@ use Filament\Notifications\Notification;
 use Filament\Support\Enums\Size;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -95,39 +94,6 @@ class SendMailVisitorRegistrationAction
 
                     // Cập nhật status
                     $record->update(['status' => 'sent']);
-
-                    // Gửi Zalo (không hiển thị notification)
-                    if ($approver->zalo_user_id) {
-                        try {
-                            $encryptedId = Crypt::encryptString($record->id);
-                            $approveLink = route('approve', $encryptedId).'?name_manager='.urlencode($approver->name).'&job_title_manager='.urlencode($approver->department_name ?? '');
-                            $rejectLink = route('reject', $encryptedId).'?name_manager='.urlencode($approver->name).'&job_title_manager='.urlencode($approver->department_name ?? '');
-
-                            $zaloData = [
-                                'type' => 'approve',
-                                'zalo_id_user_approve' => $approver->zalo_user_id,
-                                'data' => [
-                                    'action' => 'Đăng ký khách mới',
-                                    'customer_number' => (string) $record->id,
-                                    'requestor' => $record->user->name ?? 'N/A',
-                                    'customer_unit' => $record->name,
-                                    'purpose' => $record->purpose,
-                                    'quantity' => $customers->count().' người',
-                                    'area' => $customers->pluck('areas')->flatten()->unique()->implode(', '),
-                                    'request_time' => now()->format('H:i:s d-m-Y'),
-                                    'user_approve' => $approver->name.($approver->department_name ? ' ('.$approver->department_name.')' : ''),
-                                    'approve_link' => $approveLink,
-                                    'reject_link' => $rejectLink,
-                                ],
-                            ];
-
-                            Http::timeout(10)
-                                ->post(config('services.zalo.webhook_url'), $zaloData);
-                        } catch (\Exception $e) {
-                            Log::error('Zalo notification failed: '.$e->getMessage());
-                        }
-                    }
-
                     // Broadcast đến các approver
                     try {
                         $approveVehicleUsers = User::role('approver')->get();

@@ -82,6 +82,8 @@
                         <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Giấy tờ</th>
                         <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Số</th>
                         <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Khu vực</th>
+                         <!-- <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Khu vực</th> -->
+
                     </tr>
                 </thead>
                 <tbody>

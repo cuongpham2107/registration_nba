@@ -33,7 +33,6 @@ return new class extends Migration
                 ->constrained('users')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
-            $table->unsignedBigInteger('visitor_vehicle_fee_id')->nullable();
             $table->timestamps();
         });
 
@@ -50,7 +49,6 @@ return new class extends Migration
                 ->constrained('visitor_registrations')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
-            $table->unsignedBigInteger('gathering_point_fee_id')->nullable();
             $table->unsignedBigInteger('visitor_vehicle_fee_id')->nullable();
             $table->timestamps();
         });

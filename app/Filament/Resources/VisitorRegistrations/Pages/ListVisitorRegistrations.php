@@ -26,6 +26,9 @@ class ListVisitorRegistrations extends ListRecords
                     if ($user && $user->approver) {
                         $data['user_id'] = $user->id;
                         $data['approver_id'] = $user->approver->id;
+                    } else {
+                        $data['user_id'] = $user->id;
+                        $data['approver_id'] = null;
                     }
 
                     return $data;
