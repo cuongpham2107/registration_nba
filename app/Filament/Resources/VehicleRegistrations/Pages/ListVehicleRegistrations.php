@@ -4,6 +4,7 @@ namespace App\Filament\Resources\VehicleRegistrations\Pages;
 
 use App\Filament\Resources\VehicleRegistrations\VehicleRegistrationResource;
 use App\Models\User;
+use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
@@ -100,5 +101,12 @@ class ListVehicleRegistrations extends ListRecords
         } catch (\Exception $e) {
             Log::error('Broadcast notification failed: '.$e->getMessage());
         }
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            CreateAction::make(),
+        ];
     }
 }

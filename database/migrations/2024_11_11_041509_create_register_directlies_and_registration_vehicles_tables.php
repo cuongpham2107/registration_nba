@@ -24,15 +24,17 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('users')
                 ->onUpdate('cascade')
-                ->onDelete('cascade');
+                ->onDelete('cascade')
+                ->comment('Người dùng phê duyệt');
             $table->enum('type', ['browse', 'refuse'])->nullable();
             $table->dateTime('type_date')->nullable();
             $table->string('asset')->nullable();
             $table->string('note')->nullable();
-            $table->foreignId('customer_id')
-                ->constrained('customers')
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
+            $table->foreignId('user_id')
+                ->nullable()
+                ->constrained('users')
+                ->onDelete('set null')
+                ->comment('Người dùng tạo đơn đăng ký');
             $table->timestamps();
         });
 
@@ -49,7 +51,10 @@ return new class extends Migration
                 ->constrained('visitor_registrations')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
-            $table->unsignedBigInteger('visitor_vehicle_fee_id')->nullable();
+            $table->foreignId('visitor_vehicle_fee_id')
+                ->nullable()
+                ->constrained('visitor_vehicle_fees')
+                ->nullOnDelete();
             $table->timestamps();
         });
 
@@ -63,8 +68,14 @@ return new class extends Migration
             $table->string('vehicle_number');
             $table->boolean('is_priority')->default(false);
             $table->integer('sort')->nullable();
-            $table->unsignedBigInteger('gathering_point_fee_id')->nullable();
-            $table->unsignedBigInteger('lifting_service_fee_id')->nullable();
+            $table->foreignId('gathering_point_fee_id')
+                ->nullable()
+                ->constrained('gathering_point_fees')
+                ->nullOnDelete();
+            $table->foreignId('lifting_service_fee_id')
+                ->nullable()
+                ->constrained('lifting_service_fees')
+                ->nullOnDelete();
             $table->foreignId('company_id')
                 ->nullable()
                 ->constrained('companies')
@@ -128,24 +139,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop circular FK first (guarded: may not exist depending on migration history)
-        try {
-            Schema::table('vehicle_registrations', function (Blueprint $table) {
-                $table->dropForeign(['id_registration_entry']);
-            });
-        } catch (Throwable $e) {
-            // ignore
-        }
-
-        // Drop FK from registration_entries to vehicle_registrations (guarded)
-        try {
-            Schema::table('registration_entries', function (Blueprint $table) {
-                $table->dropForeign(['id_vehicle_registration']);
-            });
-        } catch (Throwable $e) {
-            // ignore
-        }
-
         Schema::dropIfExists('vehicle_registrations');
         Schema::dropIfExists('registration_entries');
         Schema::dropIfExists('customers');

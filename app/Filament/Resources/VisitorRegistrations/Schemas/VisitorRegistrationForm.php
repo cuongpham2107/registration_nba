@@ -4,6 +4,7 @@ namespace App\Filament\Resources\VisitorRegistrations\Schemas;
 
 use App\Filament\Resources\VisitorRegistrations\Actions\ImportCustomersAction;
 use App\Models\Area;
+use App\Models\VisitorVehicleFee;
 use Carbon\Carbon;
 use Closure;
 use Filament\Forms;
@@ -161,14 +162,8 @@ class VisitorRegistrationForm
                             ->options(Area::all()->pluck('name', 'code'))
                             ->searchable()
                             ->preload(),
-                        Select::make('vehicle_type')
-                            ->options([
-                                '1' => 'Xe đạp, Xe đạp điện, Xe máy, Xe máy điện',
-                                '2' => 'Ô tô đến 9 chỗ, xe tải đến 1.5 tấn, xe 3 bánh và xe bán tải',
-                                '3' => 'Xe ô tô 10-16 chỗ, xe tải lớn hơn 1.5 tấn đến 3.5 tấn',
-                                '4' => 'Xe ô tô từ 17-27 chỗ, xe tải lớn hơn 3.5 tấn đến 7 tấn',
-                                '5' => 'Xe ô tô từ 30 chỗ trở lên, xe tải trên 7 tấn, xe container, xe kéo rơ moóc',
-                            ])
+                        Select::make('visitor_vehicle_fee_id')
+                            ->options(VisitorVehicleFee::all()->pluck('vehicle_type', 'id'))
                             ->searchable()
                             ->preload(),
                         TextInput::make('note'),

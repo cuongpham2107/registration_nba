@@ -18,7 +18,7 @@ class ListVisitorRegistrations extends ListRecords
             CreateAction::make()
                 ->label('Đăng ký khách mới')
                 ->icon('heroicon-o-plus')
-                ->hidden(fn () => Auth::user() ? ! Auth::user()->hasRole('panel_user') : true)
+                // ->hidden(fn () => Auth::user() ? ! Auth::user()->hasRole('panel_user') : true)
                 ->modalWidth(Width::ScreenTwoExtraLarge)
                 ->modalHeading('Đăng ký khách mới')
                 ->mutateDataUsing(function (array $data): array {

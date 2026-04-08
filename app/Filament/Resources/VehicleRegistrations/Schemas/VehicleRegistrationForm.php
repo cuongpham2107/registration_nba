@@ -7,6 +7,8 @@ use App\Models\GatheringPointFee;
 use App\Models\LiftingServiceFee;
 use Closure;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -52,19 +54,43 @@ class VehicleRegistrationForm
                             ->seconds(false)
                             ->required()
                             ->columnSpanFull(),
+                        Repeater::make('customer')
+                            ->label('Danh sách khách hàng đi cùng')
+                            ->columnSpanFull()
+                            ->table([
+                                TableColumn::make('name'),
+                                TableColumn::make('phone'),
+                                TableColumn::make('email'),
+                            ])
+                            ->compact()
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Họ và tên')
+                                    ->required()
+                                    ->maxLength(255),
+                                TextInput::make('papers')
+                                    ->label('Số điện thoại')
+                                    ->required()
+                                    ->maxLength(20),
+                                TextInput::make('type')
+                                    ->label('Email')
+                                    ->required()
+                                    ->maxLength(255),
+                            ]),
                         Select::make('gathering_point_fee_id')
                             ->label('Loại xe, trọng tải (Biểu phí địa điểm tập trung)')
                             ->options(GatheringPointFee::where('is_active', true)->pluck('vehicle_type', 'id'))
                             ->required()
+                            ->native(false)
                             ->columnSpanFull(),
-                        Toggle::make('has_lifting_service')
-                            ->label('Có sử dụng dịch vụ nâng hạ không')
-                            ->onIcon('heroicon-o-check')
-                            ->offIcon('heroicon-o-x-mark')
-                            ->onColor('primary')
-                            ->inline(false)
-                            ->live()
-                            ->columnSpanFull(),
+                        // Toggle::make('has_lifting_service')
+                        //     ->label('Có sử dụng dịch vụ nâng hạ không')
+                        //     ->onIcon('heroicon-o-check')
+                        //     ->offIcon('heroicon-o-x-mark')
+                        //     ->onColor('primary')
+                        //     ->inline(false)
+                        //     ->live()
+                        //     ->columnSpanFull(),
                         Select::make('lifting_service_fee_id')
                             ->label('Loại dịch vụ nâng hạ')
                             ->options(LiftingServiceFee::where('is_active', true)->pluck('service_name', 'id'))
@@ -177,13 +203,13 @@ class VehicleRegistrationForm
                                 return implode("\n", $lines);
                             })
                             ->columnSpanFull(),
-                        Toggle::make('is_priority')
-                            ->label('Ưu tiên')
-                            ->helperText('Đánh dấu nếu Đăng ký xe kiểm hoá này là ưu tiên')
-                            ->onIcon('heroicon-o-arrow-up')
-                            ->offIcon('heroicon-o-arrow-down')
-                            ->inline(false)
-                            ->columnSpanFull(),
+                        // Toggle::make('is_priority')
+                        //     ->label('Ưu tiên')
+                        //     ->helperText('Đánh dấu nếu Đăng ký xe kiểm hoá này là ưu tiên')
+                        //     ->onIcon('heroicon-o-arrow-up')
+                        //     ->offIcon('heroicon-o-arrow-down')
+                        //     ->inline(false)
+                        //     ->columnSpanFull(),
                         Textarea::make('notes')
                             ->label('Ghi chú')
                             ->columnSpanFull(),
