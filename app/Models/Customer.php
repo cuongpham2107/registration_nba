@@ -11,9 +11,14 @@ class Customer extends Model
      */
     protected $guarded = [];
 
-    public function registration()
+    public function visitorRegistration()
     {
         return $this->belongsTo(VisitorRegistration::class);
+    }
+
+    public function vehicleRegistration()
+    {
+        return $this->belongsTo(VehicleRegistration::class);
     }
 
     protected $casts = [

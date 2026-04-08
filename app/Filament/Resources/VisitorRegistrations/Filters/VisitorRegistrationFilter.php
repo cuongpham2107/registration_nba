@@ -54,7 +54,6 @@ class VisitorRegistrationFilter extends Filter
                         $data['search'],
                         fn (Builder $query, $search): Builder => $query->where(function ($query) use ($search) {
                             return $query->where('name', 'like', "%{$search}%")
-                                ->orWhere('contact_person', 'like', "%{$search}%")
                                 ->orWhere('purpose', 'like', "%{$search}%");
                         }),
                     )

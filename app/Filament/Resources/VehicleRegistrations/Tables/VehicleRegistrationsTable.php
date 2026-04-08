@@ -187,16 +187,45 @@ class VehicleRegistrationsTable
                         function (array $data, Model $record): array {
                             $data['has_lifting_service'] = $record->lifting_service_fee_id !== null;
                             $data['wants_invoice'] = $record->company_id !== null;
+                            $data['customers'] = $record->customers()
+                                ->get()
+                                ->map(fn ($customer) => [
+                                    'name' => $customer->name,
+                                    'papers' => $customer->papers,
+                                    'type' => $customer->type,
+                                    'note' => $customer->note,
+                                ])
+                                ->toArray();
 
                             return $data;
                         }
                     )
                     ->mutateDataUsing(
                         function (array $data, Model $record): array {
-                            unset($data['has_lifting_service']);
-                            unset($data['wants_invoice']);
+                            // Handle customers repeater data - extract and update related records
+                            $customers = $data['customers'] ?? [];
+                            unset($data['has_lifting_service'], $data['wants_invoice'], $data['customers']);
 
-                            return $data;
+                            // Update the vehicle registration
+                            $record->update($data);
+
+                            // Update customer records
+                            if (isset($customers)) {
+                                // Delete existing customers
+                                $record->customers()->delete();
+
+                                // Create new customer records
+                                foreach ($customers as $customerData) {
+                                    $record->customers()->create([
+                                        'name' => $customerData['name'] ?? null,
+                                        'papers' => $customerData['papers'] ?? null,
+                                        'type' => $customerData['type'] ?? null,
+                                        'note' => $customerData['note'] ?? null,
+                                    ]);
+                                }
+                            }
+
+                            return [];
                         }
                     )
                     ->label('Sửa'),

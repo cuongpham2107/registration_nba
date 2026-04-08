@@ -40,17 +40,18 @@ class FeeCalculator
             exitTime: $exitTime,
         );
 
-        $liftingAmount = self::calculateLifting(
-            fee: $liftingFee,
-            countPackage: (int) ($vehicleRegistration->count_package ?? 0),
-            entryTime: $entryTime,
-            exitTime: $exitTime,
-        );
+        // $liftingAmount = self::calculateLifting(
+        //     fee: $liftingFee,
+        //     countPackage: (int) ($vehicleRegistration->count_package ?? 0),
+        //     entryTime: $entryTime,
+        //     exitTime: $exitTime,
+        // );
 
         return [
             'gathering' => $gatheringAmount,
-            'lifting' => $liftingAmount,
-            'total' => $gatheringAmount + $liftingAmount,
+            // 'lifting' => $liftingAmount,
+            // 'total' => $gatheringAmount + $liftingAmount,
+            'total' => $gatheringAmount,
             'meta' => [
                 'entry_time' => $entryTime,
                 'exit_time' => $exitTime,
@@ -107,53 +108,53 @@ class FeeCalculator
         return (int) ($fee->night_fee ?? 0);
     }
 
-    public static function calculateLifting(?LiftingServiceFee $fee, int $countPackage, $entryTime, $exitTime): int
-    {
-        if (! $fee || blank($entryTime) || blank($exitTime)) {
-            return 0;
-        }
+    // public static function calculateLifting(?LiftingServiceFee $fee, int $countPackage, $entryTime, $exitTime): int
+    // {
+    //     if (! $fee || blank($entryTime) || blank($exitTime)) {
+    //         return 0;
+    //     }
 
-        $entry = Carbon::parse($entryTime);
-        $exit = Carbon::parse($exitTime);
-        if ($exit->lessThan($entry)) {
-            [$entry, $exit] = [$exit, $entry];
-        }
+    //     $entry = Carbon::parse($entryTime);
+    //     $exit = Carbon::parse($exitTime);
+    //     if ($exit->lessThan($entry)) {
+    //         [$entry, $exit] = [$exit, $entry];
+    //     }
 
-        // Working window for lifting:
-        // - Regular: 07:30 -> 16:30
-        // - After-hours: 16:30 -> 07:30 next day => base + 150% (i.e. *2.5) according to requirement.
+    //     // Working window for lifting:
+    //     // - Regular: 07:30 -> 16:30
+    //     // - After-hours: 16:30 -> 07:30 next day => base + 150% (i.e. *2.5) according to requirement.
 
-        $baseDate = $entry->copy()->startOfDay();
-        $regularStart = $baseDate->copy()->setTime(7, 30);
-        $regularEnd = $baseDate->copy()->setTime(16, 30);
-        $nextRegularStart = $baseDate->copy()->addDay()->setTime(7, 30);
+    //     $baseDate = $entry->copy()->startOfDay();
+    //     $regularStart = $baseDate->copy()->setTime(7, 30);
+    //     $regularEnd = $baseDate->copy()->setTime(16, 30);
+    //     $nextRegularStart = $baseDate->copy()->addDay()->setTime(7, 30);
 
-        $isAfterHours = self::overlaps($entry, $exit, $regularEnd, $nextRegularStart);
+    //     $isAfterHours = self::overlaps($entry, $exit, $regularEnd, $nextRegularStart);
 
-        $afterHoursPercent = (int) ($fee->after_hours_fee ?? 150); // seed: 150
-        $multiplier = $isAfterHours ? (1 + ($afterHoursPercent / 100)) : 1; // base + 150% => 2.5
+    //     $afterHoursPercent = (int) ($fee->after_hours_fee ?? 150); // seed: 150
+    //     $multiplier = $isAfterHours ? (1 + ($afterHoursPercent / 100)) : 1; // base + 150% => 2.5
 
-        if ($fee->weight_category === 'under_2_tons') {
-            $perPackage = (int) ($fee->regular_hours_fee ?? 0);
-            $packages = max(0, $countPackage);
-            $base = $perPackage * $packages;
+    //     if ($fee->weight_category === 'under_2_tons') {
+    //         $perPackage = (int) ($fee->regular_hours_fee ?? 0);
+    //         $packages = max(0, $countPackage);
+    //         $base = $perPackage * $packages;
 
-            return (int) round($base * $multiplier);
-        }
+    //         return (int) round($base * $multiplier);
+    //     }
 
-        // over_2_tons
-        $minutes = $entry->diffInMinutes($exit);
+    //     // over_2_tons
+    //     $minutes = $entry->diffInMinutes($exit);
 
-        // Requirement: 1 ca 4h => 3.000.000, 8h => 5.000.000
-        $base = 0;
-        if ($minutes <= 240) {
-            $base = (int) ($fee->four_hour_shift_fee ?? 0);
-        } else {
-            $base = (int) ($fee->eight_hour_shift_fee ?? 0);
-        }
+    //     // Requirement: 1 ca 4h => 3.000.000, 8h => 5.000.000
+    //     $base = 0;
+    //     if ($minutes <= 240) {
+    //         $base = (int) ($fee->four_hour_shift_fee ?? 0);
+    //     } else {
+    //         $base = (int) ($fee->eight_hour_shift_fee ?? 0);
+    //     }
 
-        return (int) round($base * $multiplier);
-    }
+    //     return (int) round($base * $multiplier);
+    // }
 
     private static function overlaps(Carbon $aStart, Carbon $aEnd, Carbon $bStart, Carbon $bEnd): bool
     {

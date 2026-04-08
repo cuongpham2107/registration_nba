@@ -73,7 +73,7 @@ class ApproveVehicleRegistrationAction
                         'is_priority' => $data['is_priority'] ?? false,
                         'approved_at' => now(),
                         'approved_by' => Auth::id(),
-                        'id_registration_entry' => $id,
+                        'registration_entry_id' => $id,
                     ]);
 
                     $protectUsers = User::whereHas('roles', fn ($query) => $query->where('name', 'protect'))->get();

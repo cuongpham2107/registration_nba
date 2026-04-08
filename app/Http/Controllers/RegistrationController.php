@@ -175,13 +175,13 @@ class RegistrationController extends Controller
                     'papers' => $customer->papers,
                     'address' => '',
                     'bks' => $customer->license_plate ? $customer->license_plate : '',
-                    'id_customer' => $customer->id,
+                    'customer_id' => $customer->id,
                     'job' => $registration->purpose,
                     'start_date' => $startOfDay,
                     'end_date' => $endOfDay,
                     'type' => 'passenger',
                     'areas' => $customer->areas,
-                    'id_visitor_registration' => $registration->id,
+                    'visitor_registration_id' => $registration->id,
                     'status' => 'none',
                 ]);
             }
@@ -193,6 +193,7 @@ class RegistrationController extends Controller
 
     public function createRegistrationEntryFromVehicle(VehicleRegistration $registration, bool $is_priority = false)
     {
+
         // Sử dụng database transaction với lock để đảm bảo atomic operation
         return DB::transaction(function () use ($registration, $is_priority) {
             // Lock bản ghi registration để tránh race condition
@@ -204,7 +205,7 @@ class RegistrationController extends Controller
             // Kiểm tra status để tránh double processing
             if ($lockedRegistration->status === 'approve') {
                 // Tìm bản ghi RegistrationEntry đã tồn tại
-                $existingRecord = RegistrationEntry::where('id_vehicle_registration', $lockedRegistration->id)->first();
+                $existingRecord = RegistrationEntry::where('vehicle_registration_id', $lockedRegistration->id)->first();
                 if ($existingRecord) {
                     return $existingRecord->id;
                 }
@@ -213,7 +214,7 @@ class RegistrationController extends Controller
             $startDate = Carbon::parse($registration->expected_in_at, 'Asia/Ho_Chi_Minh');
 
             // Kiểm tra xem đã có bản ghi nào được tạo từ registration này trong 2 phút qua không (tăng từ 30 giây)
-            $existingRecord = RegistrationEntry::where('id_vehicle_registration', $registration->id)
+            $existingRecord = RegistrationEntry::where('vehicle_registration_id', $registration->id)
                 ->where('created_at', '>=', now()->subMinutes(2))
                 ->first();
 
@@ -239,15 +240,33 @@ class RegistrationController extends Controller
                 'papers' => $registration->driver_id_card ?? '',
                 'address' => '',
                 'bks' => $registration->vehicle_number ?? '',
-                'contact_person' => '',
                 'job' => $registration->gatheringPointFee?->vehicle_type.'|'.$registration->liftingServiceFee?->service_name,
                 'start_date' => $startDate,
                 'end_date' => null,
                 'is_priority' => $is_priority,
-                'id_vehicle_registration' => $registration->id,
+                'vehicle_registration_id' => $registration->id,
                 'type' => 'vehicle',
                 'status' => 'none',
             ]);
+
+            if ($registration->customers()->exists()) {
+                foreach ($registration->customers as $customer) {
+                    RegistrationEntry::create([
+                        'name' => $customer->name,
+                        'papers' => $customer->papers,
+                        'customer_id' => $customer->id,
+                        'address' => '',
+                        'bks' => '',
+                        'job' => '',
+                        'start_date' => $record->start_date,
+                        'end_date' => null,
+                        'is_priority' => $record->is_priority,
+                        'vehicle_registration_id' => $registration->id,
+                        'type' => 'vehicle',
+                        'status' => 'none',
+                    ]);
+                }
+            }
 
             return $record->id;
         });

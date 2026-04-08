@@ -36,9 +36,6 @@ class RegistrationEntryForm
                             ->label('Địa chỉ')
                             ->hidden(fn ($state) => $state === null)
                             ->prefixIcon('heroicon-o-map-pin'),
-                        Forms\Components\TextInput::make('contact_person')
-                            ->hidden(fn ($state) => $state === null)
-                            ->label('Người liên hệ'),
                         Forms\Components\Toggle::make('is_priority')
                             ->label('Ưu tiên')
                             ->helperText('Đánh dấu nếu đây là đơn đăng ký ưu tiên')

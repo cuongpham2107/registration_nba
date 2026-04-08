@@ -25,7 +25,17 @@ class RegistrationEntry extends Model
 
     public function vehicleRegistration()
     {
-        return $this->belongsTo(VehicleRegistration::class, 'id_vehicle_registration');
+        return $this->belongsTo(VehicleRegistration::class, 'vehicle_registration_id');
+    }
+
+    public function visitorRegistration()
+    {
+        return $this->belongsTo(VisitorRegistration::class, 'visitor_registration_id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function invoice()

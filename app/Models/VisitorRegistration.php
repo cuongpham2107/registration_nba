@@ -31,4 +31,9 @@ class VisitorRegistration extends Model
     {
         return $this->belongsTo(VisitorVehicleFee::class);
     }
+
+    public function registrationEntries()
+    {
+        return $this->hasMany(RegistrationEntry::class, 'visitor_registration_id');
+    }
 }

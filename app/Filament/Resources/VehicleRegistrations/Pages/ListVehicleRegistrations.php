@@ -4,6 +4,7 @@ namespace App\Filament\Resources\VehicleRegistrations\Pages;
 
 use App\Filament\Resources\VehicleRegistrations\VehicleRegistrationResource;
 use App\Models\User;
+use App\Models\VehicleRegistration;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
@@ -106,7 +107,36 @@ class ListVehicleRegistrations extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->label('Tạo mới đăng ký kiểm hoá')
+                ->icon('heroicon-o-plus')
+                ->mutateDataUsing(function (array $data): array {
+                    // Handle customers repeater data - extract and create related records
+                    $customers = $data['customers'] ?? [];
+                    unset($data['wants_invoice'], $data['customers']);
+                    $data['status'] = 'sent';
+                    // Create the vehicle registration first
+                    $vehicleRegistration = VehicleRegistration::create($data);
+
+                    // Create customer records if any
+                    if (! empty($customers)) {
+                        foreach ($customers as $customerData) {
+                            $vehicleRegistration->customers()->create([
+                                'name' => $customerData['name'] ?? null,
+                                'papers' => $customerData['papers'] ?? null,
+                                'type' => $customerData['type'] ?? null,
+                                'note' => $customerData['note'] ?? null,
+                            ]);
+                        }
+                    }
+
+                    // Return empty array to prevent default creation since we handled it manually
+                    return [];
+                })
+                ->using(function (array $data) {
+                    // This won't be called due to mutateDataUsing returning []
+                    return null;
+                }),
         ];
     }
 }

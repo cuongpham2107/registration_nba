@@ -24,9 +24,14 @@ class VehicleRegistration extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function customers()
+    {
+        return $this->hasMany(Customer::class, 'vehicle_registration_id');
+    }
+
     public function registrationEntry()
     {
-        return $this->belongsTo(RegistrationEntry::class, 'id_registration_entry');
+        return $this->belongsTo(RegistrationEntry::class, 'registration_entry_id');
     }
 
     public function gatheringPointFee()

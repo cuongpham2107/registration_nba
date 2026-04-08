@@ -25,8 +25,6 @@ class RegistrationEntryExporter extends Exporter
                 ->label('Địa chỉ'),
             ExportColumn::make('bks')
                 ->label('Biển kiểm soát'),
-            ExportColumn::make('contact_person')
-                ->label('Người liên hệ'),
             ExportColumn::make('job')
                 ->label('Mục đích công việc'),
             ExportColumn::make('card.card_name')

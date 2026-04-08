@@ -52,29 +52,37 @@ class VehicleRegistrationForm
                         DateTimePicker::make('expected_in_at')
                             ->label('Thời gian vào dự kiến')
                             ->seconds(false)
+                            ->native(false)
                             ->required()
                             ->columnSpanFull(),
-                        Repeater::make('customer')
-                            ->label('Danh sách khách hàng đi cùng')
+                        Repeater::make('customers')
+                            ->label('Danh sách khách đi cùng')
                             ->columnSpanFull()
                             ->table([
-                                TableColumn::make('name'),
-                                TableColumn::make('phone'),
-                                TableColumn::make('email'),
+                                TableColumn::make('Họ và tên')
+                                    ->markAsRequired(),
+                                TableColumn::make('Số giấy tờ')
+                                    ->markAsRequired(),
+                                TableColumn::make('Loại giấy tờ')
+                                    ->markAsRequired(),
+                                TableColumn::make('Ghi chú'),
                             ])
                             ->compact()
                             ->schema([
                                 TextInput::make('name')
-                                    ->label('Họ và tên')
                                     ->required()
                                     ->maxLength(255),
                                 TextInput::make('papers')
-                                    ->label('Số điện thoại')
                                     ->required()
                                     ->maxLength(20),
-                                TextInput::make('type')
-                                    ->label('Email')
-                                    ->required()
+                                Select::make('type')
+                                    ->options([
+                                        'ID_CARD' => 'CMND/CCCD',
+                                        'DRIVER_LICENSE' => 'Giấy phép lái xe',
+                                        'OTHER' => 'Khác',
+                                    ])
+                                    ->required(),
+                                TextInput::make('note')
                                     ->maxLength(255),
                             ]),
                         Select::make('gathering_point_fee_id')
