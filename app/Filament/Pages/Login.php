@@ -63,52 +63,77 @@ class Login extends SimplePage
         }
         $data = $this->form->getState();
         if(!Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)){
-            $loginAsgl = Http::withHeaders([
-                'Content-Type' => 'application/json',
-            ])->post('https://id.asgl.net.vn/api/auth/login',
-            [
-                'login' => $data['username'],
-                'password' => $data['password'],
-            ]);
-            if(!$loginAsgl->successful()){
+            try {
+                $loginAsgl = Http::withHeaders([
+                    'Content-Type' => 'application/json',
+                ])->post('https://id.asgl.net.vn/api/auth/login',
+                [
+                    'login' => $data['username'],
+                    'password' => $data['password'],
+                ]);
+
+                if(!$loginAsgl->successful()){
+                    $this->throwFailureValidationException();
+                }
+
+                $userResponse = $loginAsgl->json()['data']['user'] ?? null;
+
+                if (!$userResponse) {
+                    $this->throwFailureValidationException();
+                }
+
+                // Tìm user dựa trên asgl_id (unique identifier từ ASG)
+                // Nếu không tìm thấy thì tìm theo username
+                $user = User::where('asgl_id', $userResponse['id'])
+                    ->orWhere('username', $userResponse['username'])
+                    ->first();
+                if ($user) {
+                    // Cập nhật thông tin user hiện tại
+                    $user->update([
+                        'name' => $userResponse['full_name'],
+                        'username' => $userResponse['username'],
+                        'mobile_phone' => $userResponse['mobile_phone'],
+                        'asgl_id' => $userResponse['id'],
+                        'avatar' => $userResponse['avatar'],
+                        'department_name' => $userResponse['positions'][0]['department']['short_code'] ?? null,
+                    ]);
+                } else {
+                    // Tạo user mới nếu chưa tồn tại
+                    $defaultEmail = trim($userResponse['email'] ?? '');
+                    if (empty($defaultEmail)) {
+                        $defaultEmail = sprintf('%s@asgl.net.vn', $userResponse['id']);
+                    }
+
+                    // Nếu vẫn trùng bộ lọc unique email thì sinh email tức thời
+                    if (User::where('email', $defaultEmail)->exists()) {
+                        $defaultEmail = sprintf('%s+%s@asgl.net.vn', $userResponse['id'], uniqid());
+                    }
+
+                    $user = User::create([
+                        'name' => $userResponse['full_name'],
+                        'username' => $userResponse['username'],
+                        'mobile_phone' => $userResponse['mobile_phone'],
+                        'asgl_id' => $userResponse['id'],
+                        'avatar' => $userResponse['avatar'],
+                        'email' => $defaultEmail,
+                        'password' => \Illuminate\Support\Str::password(),
+                        'department_name' => $userResponse['positions'][0]['department']['short_code'] ?? null,
+                    ]);
+                    
+                    // KHÔNG tự động gán role - Admin sẽ gán role thủ công
+                    // Nếu muốn auto-assign role, uncomment dòng dưới:
+                    // $user->assignRole('panel_user');
+                }
+
+                Filament::auth()->login($user);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::error('Login ASGL failed', [
+                    'username' => $data['username'],
+                    'exception' => $exception,
+                ]);
+
                 $this->throwFailureValidationException();
             }
-            $userResponse = $loginAsgl->json()['data']['user'];
-
-            // Tìm user dựa trên asgl_id (unique identifier từ ASG)
-            // Nếu không tìm thấy thì tìm theo username
-            $user = User::where('asgl_id', $userResponse['id'])
-                ->orWhere('username', $userResponse['username'])
-                ->first();
-            if ($user) {
-                // Cập nhật thông tin user hiện tại
-                $user->update([
-                    'name' => $userResponse['full_name'],
-                    'username' => $userResponse['username'],
-                    'mobile_phone' => $userResponse['mobile_phone'],
-                    'asgl_id' => $userResponse['id'],
-                    'avatar' => $userResponse['avatar'],
-                    'department_name' => $userResponse['positions'][0]['department']['short_code'] ?? null,
-                ]);
-            } else {
-                // Tạo user mới nếu chưa tồn tại
-                $user = User::create([
-                    'name' => $userResponse['full_name'],
-                    'username' => $userResponse['username'],
-                    'mobile_phone' => $userResponse['mobile_phone'],
-                    'asgl_id' => $userResponse['id'],
-                    'avatar' => $userResponse['avatar'],
-                    'email' => $userResponse['email'] ?? $userResponse['username'],
-                    'password' => \Illuminate\Support\Str::password(),
-                    'department_name' => $userResponse['positions'][0]['department']['short_code'] ?? null,
-                ]);
-                
-                // KHÔNG tự động gán role - Admin sẽ gán role thủ công
-                // Nếu muốn auto-assign role, uncomment dòng dưới:
-                // $user->assignRole('panel_user');
-            }
-            
-            Filament::auth()->login($user);
         }
         else
         {
