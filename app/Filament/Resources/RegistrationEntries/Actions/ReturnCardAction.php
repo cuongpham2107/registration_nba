@@ -8,12 +8,11 @@ use App\Models\RegistrationEntry;
 use App\Support\FeeCalculator;
 use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
-use Joaopaulolndev\FilamentPdfViewer\Forms\Components\PdfViewerField;
 
 class ReturnCardAction
 {
@@ -26,49 +25,40 @@ class ReturnCardAction
             ->icon('heroicon-o-arrow-uturn-up')
             ->requiresConfirmation()
             ->modalIcon('heroicon-o-arrow-uturn-up')
-            ->modalWidth('4xl')
             ->modalHeading(function (RegistrationEntry $record) {
-                if ($record->type === 'vehicle') {
+                if ($record->type === 'inspection') {
                     return 'Xe ra: '.$record->bks.' | Họ tên: '.$record->name;
                 } else {
                     return 'Người ra: '.$record->name.' | CMND: '.$record->papers;
                 }
             })
             ->modalDescription(function (RegistrationEntry $record) {
-                if ($record->type === 'vehicle') {
+                if ($record->type === 'inspection') {
                     return 'Xe ra khỏi khu vực kiểm soát, thẻ sẽ được trả lại hệ thống.';
                 } else {
                     return 'Người ra khỏi khu vực kiểm soát, thẻ sẽ được trả lại hệ thống.';
                 }
-            }
-            )
+            })
             ->hidden(
                 fn (RegistrationEntry $record) => is_null($record->status) ||
                 $record->status === 'none' ||
-                $record->status === '' ||
-                $record->status === 'came_out'
+                $record->status === 'exited'
             )
             ->form([
-                // PdfViewerField::make('invoice_pdf')
-                //     ->label('Hóa đơn')
-                //     ->minHeight('40svh')
-                //     ->fileUrl(function (RegistrationEntry $record) {
-                //         $controller = new DownloadInvoiceController;
-                //         $filePath = $controller->generateInvoice($record);
-
-                //         return Storage::url($filePath);
-                //     }) // Set the file url if you are getting a pdf without database
-                //     ->columnSpanFull(),
+                Toggle::make('is_money')
+                    ->label('Trả tiền cho bảo vệ')
+                    ->default(false)
+                    ->columnSpanFull(),
             ])
 
-            ->action(function (RegistrationEntry $record): void {
+            ->action(function (array $data, RegistrationEntry $record): void {
                 try {
                     $downloadUrl = null;
                     $feeAmount = null;
 
-                    DB::transaction(function () use ($record, &$downloadUrl, &$feeAmount) {
-                        // nếu customer_id có dữ liệu và type là vehicle thì không tính tiền
-                        if ($record->relationLoaded('customer') || $record->customer && $record->type === 'vehicle') {
+                    DB::transaction(function () use ($data, $record, &$downloadUrl, &$feeAmount) {
+                        // nếu guest_id có dữ liệu và type là inspection thì không tính tiền
+                        if ($data['is_money'] === false) {
                             $feeAmount = 0;
                             $downloadUrl = null;
                         } else {
@@ -76,8 +66,11 @@ class ReturnCardAction
                             $filePath = $controller->generateInvoice($record);
 
                             $normalizedBks = Invoice::normalizeLicensePlate($record->bks);
-
-                            $feeAmount = (int) (FeeCalculator::forRegistrationEntry($record)['total'] ?? 0);
+                            if ($record->type === 'working') {
+                                $feeAmount = (int) (FeeCalculator::forRegistrationWorking($record)['total'] ?? 0);
+                            } else {
+                                $feeAmount = (int) (FeeCalculator::forRegistrationInspection($record)['total'] ?? 0);
+                            }
 
                             $existingInvoice = $record->invoice;
                             $invoiceData = [
@@ -89,7 +82,7 @@ class ReturnCardAction
                                 'paid_at' => now(),
                                 'payment_method' => 'Trả tiền cho bảo vệ',
                                 'file_path' => $filePath,
-                                'notes' => 'Tạo khi xe ra khỏi bãi thành công',
+                                'notes' => $record->type === 'working' ? 'Khách ra vào trả thẻ ra thành công' : 'Xe ra khỏi bãi thành công',
                             ];
 
                             if ($existingInvoice) {
@@ -113,16 +106,16 @@ class ReturnCardAction
                             }
                         }
 
-                        if ($record->relationLoaded('registrationVehicle') || $record->registrationVehicle) {
-                            $registrationVehicle = $record->registrationVehicle;
-                            if ($registrationVehicle instanceof Model) {
-                                $registrationVehicle->status = 'exited';
-                                $registrationVehicle->save();
+                        if ($record->relationLoaded('registration') || $record->registration) {
+                            $registration = $record->registration;
+                            if ($registration instanceof Model) {
+                                $registration->status = 'exited';
+                                $registration->save();
                             }
                         }
 
                         $record->update([
-                            'status' => 'came_out',
+                            'status' => 'exited',
                             'actual_date_out' => Carbon::now('Asia/Ho_Chi_Minh'),
                             'card_id' => null,
                         ]);

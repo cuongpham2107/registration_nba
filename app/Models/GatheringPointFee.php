@@ -18,12 +18,4 @@ class GatheringPointFee extends Model
         'full_day_fee' => 'integer',
         'night_fee' => 'integer',
     ];
-
-    /**
-     * Get vehicle registrations using this fee.
-     */
-    public function vehicleRegistrations()
-    {
-        return $this->hasMany(VehicleRegistration::class);
-    }
 }

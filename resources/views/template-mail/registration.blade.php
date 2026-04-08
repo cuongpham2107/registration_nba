@@ -52,10 +52,6 @@
                     <td style="padding:10px 8px;">{{ $purpose }}</td>
                 </tr>
                 <tr>
-                    <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">BKS ô tô</th>
-                    <td style="padding:10px 8px;">{{ $bks }}</td>
-                </tr>
-                <tr>
                     <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Giờ vào dự kiến</th>
                     <td style="padding:10px 8px;">{{ $start_date }}</td>
                 </tr>
@@ -81,8 +77,9 @@
                         <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Tên khách</th>
                         <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Giấy tờ</th>
                         <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Số</th>
+                        <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">BKS</th>
                         <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Khu vực</th>
-                         <!-- <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Khu vực</th> -->
+                        <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Trọng tải</th>
 
                     </tr>
                 </thead>
@@ -92,11 +89,13 @@
                         <td style="padding:10px 8px;">{{ $staff['name'] }}</td>
                         <td style="padding:10px 8px;">{{ $staff['type'] }}</td>
                         <td style="padding:10px 8px;">{{ $staff['papers'] }}</td>
+                        <td style="padding:10px 8px;">{{ $staff['license_plate'] }}</td>
                         <td style="padding:10px 8px;">
                             @foreach ($staff['areas'] as $area)
                                 <p>{{ \App\Models\Area::where('code',$area)->first()->name}}</p>
                             @endforeach
                         </td>
+                        <td style="padding:10px 8px;">{{ $staff['visitorVehicleFee'] ? $staff['visitorVehicleFee']['vehicle_type'] : $staff['gatheringPointFee']['vehicle_type'] }}</td>
                     </tr>
                     @endforeach
                 </tbody>

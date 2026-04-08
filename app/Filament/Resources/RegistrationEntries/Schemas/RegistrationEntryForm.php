@@ -27,7 +27,7 @@ class RegistrationEntryForm
                             ->label('Số CCCD')
                             ->numeric()
                             ->required(),
-                        Forms\Components\TextInput::make('bks')
+                        Forms\Components\TextInput::make('license_plate')
                             ->label('Biển kiểm soát')
                             ->prefixIcon('heroicon-o-truck')
                             ->formatStateUsing(fn (?string $state) => $state ? strtoupper(str_replace(' ', '', $state)) : '')
@@ -36,12 +36,13 @@ class RegistrationEntryForm
                             ->label('Địa chỉ')
                             ->hidden(fn ($state) => $state === null)
                             ->prefixIcon('heroicon-o-map-pin'),
-                        Forms\Components\Toggle::make('is_priority')
-                            ->label('Ưu tiên')
-                            ->helperText('Đánh dấu nếu đây là đơn đăng ký ưu tiên')
-                            ->onIcon('heroicon-s-arrow-up')
-                            ->offIcon('heroicon-s-arrow-down')
-                            ->inline(false),
+                        Forms\Components\Select::make('type')
+                            ->label('Loại ra vào')
+                            ->options([
+                                'inspection' => 'Đăng ký kiểm hoá',
+                                'working' => 'Đăng ký khách ra vào',
+                            ])
+                            ->searchable(),
                         Forms\Components\Textarea::make('job')
                             ->label('Mục đích công việc')
                             ->formatStateUsing(fn (?string $state) => $state ? implode("\n", [
@@ -129,8 +130,8 @@ class RegistrationEntryForm
                         Forms\Components\Select::make('status')
                             ->options([
                                 'none' => 'Chưa vào',
-                                'coming_in' => 'Đang vào',
-                                'came_out' => 'Đã ra',
+                                'entering' => 'Đang vào',
+                                'exited' => 'Đã ra',
                             ])
                             ->default('none')
                             ->label('Trạng thái')

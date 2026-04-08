@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Biểu phí đối với phương tiện ra vào "Địa điểm tập trung" (vehicle_registrations)
+        // Biểu phí đối với phương tiện ra vào "Địa điểm tập trung" (registrations)
         Schema::create('gathering_point_fees', function (Blueprint $table) {
             $table->id();
             $table->string('vehicle_type')->comment('Loại phương tiện');

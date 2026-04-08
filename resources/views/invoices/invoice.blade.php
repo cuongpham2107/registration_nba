@@ -98,21 +98,12 @@
                     <span class="whitespace-nowrap">Phí ra vào:</span>
 
                     <span
-                        class="mx-1 w-28 border-b border-dashed border-black text-center font-normal">{{ number_format($fee_breakdown['gathering'] ?? 0, 0, '.', '.') }}</span>
+                        class="mx-1 w-28 border-b border-dashed border-black text-center font-normal">{{ number_format($fee_breakdown['working'] ?? ($fee_breakdown['gathering'] ?? 0), 0, '.', '.') }}</span>
 
                     <span class="whitespace-nowrap">Đồng</span>
                 </div>
 
-                @if (!empty($fee_breakdown) && (($fee_breakdown['lifting'] ?? 0) > 0))
-                    <!-- Phí nâng hạ -->
-                    <div class="flex h-4 items-center justify-center px-1">
-                        <span class="whitespace-nowrap">Phí nâng hạ:</span>
-                        <span class="mx-1 w-28 border-b border-dashed border-black text-center font-normal">
-                            {{ number_format($fee_breakdown['lifting'] ?? 0, 0, '.', '.') }}
-                        </span>
-                        <span class="whitespace-nowrap">Đồng</span>
-                    </div>
-                @endif
+               
 
                 <!-- Tổng phí -->
                 <div class="flex h-4 items-center justify-center px-1 font-bold">

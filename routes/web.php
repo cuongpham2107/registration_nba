@@ -2,8 +2,6 @@
 
 use App\Http\Controllers\DownloadInvoiceController;
 use App\Http\Controllers\RegistrationController;
-use App\Livewire\VehicleRegistrationForm;
-use App\Models\VisitorRegistration;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,20 +25,10 @@ Route::get('/reject/{id}', [RegistrationController::class, 'reject'])->name('rej
 Route::get('/approve-vehicle/{id}', [RegistrationController::class, 'approveVehicle'])->name('approve-vehicle');
 Route::get('/reject-vehicle/{id}', [RegistrationController::class, 'rejectVehicle'])->name('reject-vehicle');
 
-Route::get('test', function () {
-    $registration = VisitorRegistration::with('customers')->where('id', 25)->first();
-    dd($registration->customers->first());
-});
-
-// Route mới với Filament Livewire
-Route::get('/dang-ky-kiem-hoa', VehicleRegistrationForm::class)->name('registration-vehicle.index');
-
-Route::post('/registration-vehicle', [RegistrationController::class, 'storeVehicle'])->name('registration-vehicle.store');
-
 // Success page route
-Route::get('/registration-vehicle/success', function () {
-    return view('registration_vehicle.success');
-})->name('registration-vehicle.success');
+Route::get('/registration/success', function () {
+    return view('registration.success');
+})->name('registration.success');
 
 // Invoice download route
 Route::get('/invoice/download/{registrationEntry}', [DownloadInvoiceController::class, 'download'])

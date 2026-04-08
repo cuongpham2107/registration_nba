@@ -1,0 +1,56 @@
+<?php
+
+namespace App\Filament\Resources\Guests;
+
+use App\Filament\Resources\Guests\Pages\ListGuests;
+use App\Filament\Resources\Guests\Schemas\GuestForm;
+use App\Filament\Resources\Guests\Tables\GuestsTable;
+use App\Models\Guest;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+
+class GuestResource extends Resource
+{
+    protected static ?string $model = Guest::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
+
+    protected static ?string $modelLabel = 'Khách';
+
+    protected static ?string $navigationLabel = 'Danh sách khách';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Quản lý danh mục';
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return 2;
+    }
+
+    public static function form(Schema $schema): Schema
+    {
+        return GuestForm::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return GuestsTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListGuests::route('/'),
+        ];
+    }
+}

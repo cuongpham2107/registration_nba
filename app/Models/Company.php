@@ -11,8 +11,8 @@ class Company extends Model
 
     protected $guarded = [];
 
-    public function vehicleRegistrations()
+    public function registrations()
     {
-        return $this->hasMany(VehicleRegistration::class);
+        return $this->hasMany(Registration::class);
     }
 }

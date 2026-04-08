@@ -18,11 +18,11 @@ class GiveCardAction
         return Action::make('give-card')
             ->label('Vào')
             ->button()
-            ->hidden(fn (RegistrationEntry $record) => $record->status === 'coming_in' || $record->status === 'came_out')
+            ->hidden(fn (RegistrationEntry $record) => $record->status !== 'none')
             ->icon('heroicon-o-inbox-arrow-down')
             ->modalHeading(function (RegistrationEntry $record) {
-                if ($record->type === 'vehicle') {
-                    return 'Xe: '.$record->bks;
+                if ($record->type === 'inspection') {
+                    return 'Xe kiểm hoá: '.$record->license_plate;
                 } else {
                     return 'Khách: '.$record->name.' | CMND: '.$record->papers;
                 }
@@ -35,19 +35,19 @@ class GiveCardAction
                             ->default(fn (RegistrationEntry $record) => $record->name)
                             ->disabled()
                             ->columnSpanFull(),
-                        Forms\Components\TextInput::make('bks')
+                        Forms\Components\TextInput::make('license_plate')
                             ->label('Biển số xe')
-                            ->default(fn (RegistrationEntry $record) => $record->bks)
+                            ->default(fn (RegistrationEntry $record) => $record->license_plate)
                             ->disabled(),
-                        Forms\Components\TextInput::make('vehicle_type')
+                        Forms\Components\TextInput::make('guest.visitorVehicleFee.vehicle_type')
                             ->label('Loại phương tiện')
-                            ->default(function (RegistrationEntry $record) {
-                                if ($record->vehicleRegistration) {
-                                    return $record->vehicleRegistration->gatheringPointFee->vehicle_type ?? '';
-                                }
-
-                                return '';
-                            })
+                            ->hidden(fn (RegistrationEntry $record): bool => blank($record->guest?->visitorVehicleFee))
+                            ->default(fn (RegistrationEntry $record) => $record->guest?->visitorVehicleFee?->vehicle_type)
+                            ->disabled(),
+                        Forms\Components\TextInput::make('guest.gatheringPointFee.vehicle_type')
+                            ->label('Loại phương tiện')
+                            ->hidden(fn (RegistrationEntry $record): bool => blank($record->guest?->gatheringPointFee))
+                            ->default(fn (RegistrationEntry $record) => $record->guest?->gatheringPointFee?->vehicle_type)
                             ->disabled(),
                         Forms\Components\Select::make('id')
                             ->label('Thẻ')
@@ -67,7 +67,7 @@ class GiveCardAction
             ->action(function (array $data, RegistrationEntry $record): void {
                 try {
                     DB::transaction(function () use ($data, $record) {
-                        $record->status = 'coming_in';
+                        $record->status = 'entering';
                         $record->actual_date_in = $data['start_date'];
 
                         if (! empty($data['id'])) {
@@ -103,11 +103,11 @@ class GiveCardAction
                             $record->card_id = $card->id;
                         }
 
-                        if ($record->relationLoaded('vehicleRegistration') || $record->vehicleRegistration) {
-                            $vehicleRegistration = $record->vehicleRegistration;
-                            if ($vehicleRegistration instanceof Model) {
-                                $vehicleRegistration->status = 'entering';
-                                $vehicleRegistration->save();
+                        if ($record->relationLoaded('registration') || $record->registration) {
+                            $registration = $record->registration;
+                            if ($registration instanceof Model) {
+                                $registration->status = 'entering';
+                                $registration->save();
                             }
                         }
                         $record->save();

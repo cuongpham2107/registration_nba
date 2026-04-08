@@ -234,7 +234,7 @@ return [
 
     'custom_permissions' => [
         'Approve:VehicleRegistrations' => 'Phê duyệt đăng ký kiểm hoá',
-        'Approve:VisitorRegistrations' => 'Phê duyệt đăng ký khách',
+        'Approve:Registrationss' => 'Phê duyệt đăng ký khách',
     ],
 
     /*

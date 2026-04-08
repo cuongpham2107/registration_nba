@@ -3,36 +3,36 @@
 namespace App\Support;
 
 use App\Models\GatheringPointFee;
-use App\Models\LiftingServiceFee;
 use App\Models\RegistrationEntry;
+use App\Models\VisitorVehicleFee;
 use Carbon\Carbon;
 
 class FeeCalculator
 {
+    public static function forRegistrationEntry(RegistrationEntry $entry): array
+    {
+        return match ($entry->type) {
+            'inspection' => self::forRegistrationInspection($entry),
+            default => self::forRegistrationWorking($entry),
+        };
+    }
+
     /**
      * Contract:
-     * - Input: RegistrationEntry (expects actual_date_in, actual_date_out? and vehicleRegistration relations)
-     * - Output: array{gathering:int,lifting:int,total:int,meta:array}
+     * - Input: RegistrationEntry (expects actual_date_in, actual_date_out? and guest relations)
+     * - Output: array{gathering:int,total:int,meta:array}
      */
-    public static function forRegistrationEntry(RegistrationEntry $entry): array
+    public static function forRegistrationInspection(RegistrationEntry $entry): array
     {
         $entryTime = $entry->actual_date_in;
         $exitTime = $entry->actual_date_out ?? now();
 
-        $vehicleRegistration = $entry->vehicleRegistration;
-        if (! $vehicleRegistration) {
+        $guest = $entry->guest;
+        if (! $guest) {
             return self::empty();
         }
 
-        $gatheringFee = $vehicleRegistration->gatheringPointFee;
-        $liftingFee = null;
-
-        if (filled($vehicleRegistration->lifting_service_fee_id)) {
-            $liftingFee = LiftingServiceFee::query()
-                ->whereKey($vehicleRegistration->lifting_service_fee_id)
-                ->where('is_active', true)
-                ->first();
-        }
+        $gatheringFee = $guest->gatheringPointFee;
 
         $gatheringAmount = self::calculateGathering(
             fee: $gatheringFee,
@@ -40,23 +40,49 @@ class FeeCalculator
             exitTime: $exitTime,
         );
 
-        // $liftingAmount = self::calculateLifting(
-        //     fee: $liftingFee,
-        //     countPackage: (int) ($vehicleRegistration->count_package ?? 0),
-        //     entryTime: $entryTime,
-        //     exitTime: $exitTime,
-        // );
-
         return [
             'gathering' => $gatheringAmount,
-            // 'lifting' => $liftingAmount,
-            // 'total' => $gatheringAmount + $liftingAmount,
             'total' => $gatheringAmount,
             'meta' => [
                 'entry_time' => $entryTime,
                 'exit_time' => $exitTime,
             ],
         ];
+    }
+
+    public static function forRegistrationWorking(RegistrationEntry $entry): array
+    {
+        $entryTime = $entry->actual_date_in;
+        $exitTime = $entry->actual_date_out ?? now();
+
+        $guest = $entry->guest;
+        if (! $guest) {
+            return self::empty();
+        }
+
+        $workingFee = $guest->visitorVehicleFee;
+
+        $workingAmount = self::calculateVisitorVehicle(
+            fee: $workingFee,
+        );
+
+        return [
+            'working' => $workingAmount,
+            'total' => $workingAmount,
+            'meta' => [
+                'entry_time' => $entryTime,
+                'exit_time' => $exitTime,
+            ],
+        ];
+    }
+
+    public static function calculateVisitorVehicle(?VisitorVehicleFee $fee): int
+    {
+
+        // Rule (per yêu cầu):
+        // - per_visit_fee = phí cho 1 lượt ra/vào
+        // - monthly_fee là vé tháng nhưng hiện KHÔNG dùng trong tính phí
+        return (int) ($fee->per_visit_fee ?? 0);
     }
 
     public static function calculateGathering(?GatheringPointFee $fee, $entryTime, $exitTime): int
@@ -108,54 +134,6 @@ class FeeCalculator
         return (int) ($fee->night_fee ?? 0);
     }
 
-    // public static function calculateLifting(?LiftingServiceFee $fee, int $countPackage, $entryTime, $exitTime): int
-    // {
-    //     if (! $fee || blank($entryTime) || blank($exitTime)) {
-    //         return 0;
-    //     }
-
-    //     $entry = Carbon::parse($entryTime);
-    //     $exit = Carbon::parse($exitTime);
-    //     if ($exit->lessThan($entry)) {
-    //         [$entry, $exit] = [$exit, $entry];
-    //     }
-
-    //     // Working window for lifting:
-    //     // - Regular: 07:30 -> 16:30
-    //     // - After-hours: 16:30 -> 07:30 next day => base + 150% (i.e. *2.5) according to requirement.
-
-    //     $baseDate = $entry->copy()->startOfDay();
-    //     $regularStart = $baseDate->copy()->setTime(7, 30);
-    //     $regularEnd = $baseDate->copy()->setTime(16, 30);
-    //     $nextRegularStart = $baseDate->copy()->addDay()->setTime(7, 30);
-
-    //     $isAfterHours = self::overlaps($entry, $exit, $regularEnd, $nextRegularStart);
-
-    //     $afterHoursPercent = (int) ($fee->after_hours_fee ?? 150); // seed: 150
-    //     $multiplier = $isAfterHours ? (1 + ($afterHoursPercent / 100)) : 1; // base + 150% => 2.5
-
-    //     if ($fee->weight_category === 'under_2_tons') {
-    //         $perPackage = (int) ($fee->regular_hours_fee ?? 0);
-    //         $packages = max(0, $countPackage);
-    //         $base = $perPackage * $packages;
-
-    //         return (int) round($base * $multiplier);
-    //     }
-
-    //     // over_2_tons
-    //     $minutes = $entry->diffInMinutes($exit);
-
-    //     // Requirement: 1 ca 4h => 3.000.000, 8h => 5.000.000
-    //     $base = 0;
-    //     if ($minutes <= 240) {
-    //         $base = (int) ($fee->four_hour_shift_fee ?? 0);
-    //     } else {
-    //         $base = (int) ($fee->eight_hour_shift_fee ?? 0);
-    //     }
-
-    //     return (int) round($base * $multiplier);
-    // }
-
     private static function overlaps(Carbon $aStart, Carbon $aEnd, Carbon $bStart, Carbon $bEnd): bool
     {
         return $aStart->lessThan($bEnd) && $aEnd->greaterThan($bStart);
@@ -165,7 +143,6 @@ class FeeCalculator
     {
         return [
             'gathering' => 0,
-            'lifting' => 0,
             'total' => 0,
             'meta' => [],
         ];

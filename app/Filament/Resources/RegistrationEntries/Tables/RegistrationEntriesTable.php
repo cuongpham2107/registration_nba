@@ -21,11 +21,9 @@ use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\ColumnGroup;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Request;
 
 class RegistrationEntriesTable
 {
@@ -36,8 +34,8 @@ class RegistrationEntriesTable
             ->emptyStateHeading('Không có khách hay xe khai thác nào')
             ->emptyStateDescription('Hiện tại chưa có khách hay xe khai thác nào.')
             ->columns(self::getColumns())
-            ->defaultSort('sort', 'asc')
-            ->modifyQueryUsing(fn ($query) => self::modifyQuery($query))
+            ->defaultSort('created_at', 'asc')
+            // ->modifyQueryUsing(fn ($query) => self::modifyQuery($query))
             ->filters(self::getFilters(), layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(1)
             ->deferLoading()
@@ -73,7 +71,7 @@ class RegistrationEntriesTable
                 ->label('Số CCCD')
                 ->weight(FontWeight::Bold)
                 ->toggleable(),
-            TextColumn::make('bks')
+            TextColumn::make('license_plate')
                 ->label('Biển kiểm soát')
                 ->weight(FontWeight::Bold)
                 ->formatStateUsing(fn (?string $state): string => $state ? strtoupper($state) : '')
@@ -97,8 +95,8 @@ class RegistrationEntriesTable
                     }
 
                     return match ($state) {
-                        'coming_in' => 'danger',
-                        'came_out' => 'primary',
+                        'entering' => 'danger',
+                        'exited' => 'primary',
                     };
                 })
                 ->formatStateUsing(function ($state) {
@@ -107,8 +105,8 @@ class RegistrationEntriesTable
                     }
 
                     return match ($state) {
-                        'coming_in' => 'Đang vào',
-                        'came_out' => 'Đã ra',
+                        'entering' => 'Đang vào',
+                        'exited' => 'Đã ra',
                     };
                 })
                 ->toggleable(),
@@ -143,11 +141,6 @@ class RegistrationEntriesTable
                     return isset($parts[1]) ? trim($parts[1]) : '';
                 })
                 ->toggleable(isToggledHiddenByDefault: true),
-            ToggleColumn::make('is_priority')
-                ->label('Ưu tiên')
-                ->onIcon('heroicon-s-arrow-up')
-                ->offIcon('heroicon-s-arrow-down')
-                ->disabled(),
             TextColumn::make('card.card_name')
                 ->label('Thẻ')
                 ->numeric(),
@@ -158,18 +151,6 @@ class RegistrationEntriesTable
                 ->alignment(Alignment::Center)
                 ->toggleable(),
         ];
-    }
-
-    private static function modifyQuery($query)
-    {
-        $tableFilters = Request::input('tableFilters', []);
-        $isPriorityEnabled = $tableFilters['date_range']['is_priority'] ?? false;
-
-        if ($isPriorityEnabled === true) {
-            return $query->orderByRaw('is_priority DESC, sort ASC, created_at DESC');
-        }
-
-        return $query;
     }
 
     private static function getFilters(): array
@@ -188,7 +169,7 @@ class RegistrationEntriesTable
                 EditAction::make()
                     ->slideOver()
                     ->modalWidth(Width::SixExtraLarge)
-                    ->hidden(fn ($record) => $record->status === 'came_out'),
+                    ->hidden(fn ($record) => $record->status === 'exited'),
                 DeleteAction::make(),
             ])
                 ->icon('heroicon-m-adjustments-vertical')

@@ -23,19 +23,14 @@ class RegistrationEntry extends Model
         return $this->belongsTo(Card::class);
     }
 
-    public function vehicleRegistration()
+    public function registration()
     {
-        return $this->belongsTo(VehicleRegistration::class, 'vehicle_registration_id');
+        return $this->belongsTo(Registration::class, 'registration_id');
     }
 
-    public function visitorRegistration()
+    public function guest()
     {
-        return $this->belongsTo(VisitorRegistration::class, 'visitor_registration_id');
-    }
-
-    public function customer()
-    {
-        return $this->belongsTo(Customer::class, 'customer_id');
+        return $this->belongsTo(Guest::class, 'guest_id');
     }
 
     public function invoice()

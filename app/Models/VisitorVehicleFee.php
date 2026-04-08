@@ -16,12 +16,4 @@ class VisitorVehicleFee extends Model
         'per_visit_fee' => 'integer',
         'monthly_fee' => 'integer',
     ];
-
-    /**
-     * Get visitor registrations using this fee.
-     */
-    public function visitorRegistrations()
-    {
-        return $this->hasMany(VisitorRegistration::class);
-    }
 }

@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\GatheringPointFee;
-use App\Models\LiftingServiceFee;
 use App\Models\VisitorVehicleFee;
 use Illuminate\Database\Seeder;
 
@@ -100,70 +99,6 @@ class FeeTablesSeeder extends Seeder
             GatheringPointFee::create($fee);
         }
 
-        // 3. Biểu phí dịch vụ nâng hạ (vehicle_registrations)
-        $liftingServiceFees = [
-            // Dưới 2 tấn
-            [
-                'service_name' => 'Kiện hàng dưới 1 tấn, kích thước dài * rộng dưới 1.5m',
-                'weight_category' => 'under_2_tons',
-                'regular_hours_fee' => 80000,
-                'four_hour_shift_fee' => null,
-                'eight_hour_shift_fee' => null,
-                'after_hours_fee' => 150, // 150%
-                'is_active' => true,
-            ],
-            [
-                'service_name' => 'Kiện hàng trên 1 tấn đến dưới 2 tấn, kích thước dài*rộng dưới 2m',
-                'weight_category' => 'under_2_tons',
-                'regular_hours_fee' => 120000,
-                'four_hour_shift_fee' => null,
-                'eight_hour_shift_fee' => null,
-                'after_hours_fee' => 150, // 150%
-                'is_active' => true,
-            ],
-            // Trên 2 tấn
-            [
-                'service_name' => 'Thuê xe nâng 5 tấn',
-                'weight_category' => 'over_2_tons',
-                'regular_hours_fee' => null,
-                'four_hour_shift_fee' => 3000000,
-                'eight_hour_shift_fee' => 5000000,
-                'after_hours_fee' => 150, // 150%
-                'is_active' => true,
-            ],
-            [
-                'service_name' => 'Thuê xe nâng 10 tấn',
-                'weight_category' => 'over_2_tons',
-                'regular_hours_fee' => null,
-                'four_hour_shift_fee' => 4500000,
-                'eight_hour_shift_fee' => 8000000,
-                'after_hours_fee' => 150, // 150%
-                'is_active' => true,
-            ],
-            [
-                'service_name' => 'Thuê xe nâng 15 tấn',
-                'weight_category' => 'over_2_tons',
-                'regular_hours_fee' => null,
-                'four_hour_shift_fee' => 7000000,
-                'eight_hour_shift_fee' => 12000000,
-                'after_hours_fee' => 150, // 150%
-                'is_active' => true,
-            ],
-            [
-                'service_name' => 'Cẩu 50 tấn',
-                'weight_category' => 'over_2_tons',
-                'regular_hours_fee' => null,
-                'four_hour_shift_fee' => 5500000,
-                'eight_hour_shift_fee' => 10000000,
-                'after_hours_fee' => 150, // 150%
-                'is_active' => true,
-            ],
-        ];
-
-        foreach ($liftingServiceFees as $fee) {
-            LiftingServiceFee::create($fee);
-        }
-
-        $this->command->info('Đã seed dữ liệu mẫu cho 3 bảng phí!');
+        $this->command->info('Đã seed dữ liệu mẫu cho 2 bảng phí!');
     }
 }

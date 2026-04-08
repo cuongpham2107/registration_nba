@@ -34,6 +34,11 @@ class AdminPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->colors([
                 'primary' => Color::Indigo,
+                'secondary' => Color::Gray,
+                'success' => Color::Green,
+                'danger' => Color::Red,
+                'warning' => Color::Yellow,
+                'info' => Color::Blue,
             ])
             ->maxContentWidth(Width::Full)
             ->brandName('ASGL')

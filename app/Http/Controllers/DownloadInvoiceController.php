@@ -25,8 +25,8 @@ class DownloadInvoiceController extends Controller
         $payload = [
             'record' => $record,
             'company' => $record->vehicleRegistration?->company,
-            'vehicle_number' => $record->bks,
-            'vehicle_weight' => $record->vehicleRegistration?->gatheringPointFee?->vehicle_type,
+            'vehicle_number' => $record->license_plate,
+            'vehicle_weight' => $record->guest?->visitorVehicleFee ? $record->guest->visitorVehicleFee->vehicle_type : $record->guest?->gatheringPointFee?->vehicle_type,
             'customer_name' => $record->name,
             'entry_time' => $record->actual_date_in,
             'exit_time' => $record->actual_date_out ?? now(),
