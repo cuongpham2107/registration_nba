@@ -69,7 +69,7 @@ class GuestPolicy
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $authUser->can('Reorder:Customer');
+        return $authUser->can('Reorder:Guest');
     }
 
 }
