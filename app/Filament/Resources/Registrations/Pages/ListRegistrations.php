@@ -18,7 +18,7 @@ class ListRegistrations extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label('Đăng ký khách mới')
+                ->label(Auth::user()->hasRole('working') ? 'Đăng ký khách mới' : 'Đăng ký xe kiểm hoá')
                 ->icon('heroicon-o-plus')
                 ->hidden(fn () => Auth::user() ? ! Auth::user()->hasRole(['inspection', 'working']) : true)
                 ->modalWidth(Width::ScreenTwoExtraLarge)
