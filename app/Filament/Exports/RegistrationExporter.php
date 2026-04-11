@@ -30,18 +30,24 @@ class RegistrationExporter extends Exporter
             ExportColumn::make('status')
                 ->label('Trạng thái')
                 ->formatStateUsing(fn (?string $state): string => $state ? match ($state) {
+                    'none' => 'Chưa gửi',
                     'sent' => 'Đã gửi',
-                    'not_yet_sent' => 'Chưa gửi',
+                    'approve' => 'Đã phê duyệt',
+                    'reject' => 'Đã từ chối',
+                    'entering' => 'Đang vào',
+                    'exited' => 'Đã ra',
                     default => $state,
                 } : ''),
-            ExportColumn::make('type')
+            ExportColumn::make('approved_at')
                 ->label('Duyệt')
-                ->formatStateUsing(fn (?string $state): string => $state ? match ($state) {
-                    'browse' => 'Duyệt',
-                    'refuse' => 'Từ chối',
-                    default => $state,
-                } : ''),
-            ExportColumn::make('type_date')
+                ->formatStateUsing(fn ($state, $record): string => filled($record?->approved_at)
+                    ? match ($record?->status) {
+                        'approve' => 'Duyệt',
+                        'reject' => 'Từ chối',
+                        default => 'Đã xử lý',
+                    }
+                    : 'Chưa duyệt'),
+            ExportColumn::make('approved_at')
                 ->label('Ngày duyệt'),
             ExportColumn::make('asset')
                 ->label('Tài sản'),

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\GatheringPointFees\Schemas;
+namespace App\Filament\Resources\Fees\Schemas;
 
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -9,7 +9,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 
-class GatheringPointFeeForm
+class FeeForm
 {
     public static function configure(Schema $schema): Schema
     {

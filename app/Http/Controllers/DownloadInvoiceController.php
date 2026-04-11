@@ -10,7 +10,7 @@ use function Spatie\LaravelPdf\Support\pdf;
 
 class DownloadInvoiceController extends Controller
 {
-    public function generateInvoice(RegistrationEntry $record)
+    public function generateInvoice(RegistrationEntry $record): string
     {
         // Tạo tên file unique
         $filename = 'invoice_'.$record->id.'_'.time().'.pdf';
@@ -26,7 +26,8 @@ class DownloadInvoiceController extends Controller
             'record' => $record,
             'company' => $record->vehicleRegistration?->company,
             'vehicle_number' => $record->license_plate,
-            'vehicle_weight' => $record->guest?->visitorVehicleFee ? $record->guest->visitorVehicleFee->vehicle_type : $record->guest?->gatheringPointFee?->vehicle_type,
+            // Only use `fees` table now.
+            'vehicle_weight' => $record->guest?->fee?->vehicle_type,
             'customer_name' => $record->name,
             'entry_time' => $record->actual_date_in,
             'exit_time' => $record->actual_date_out ?? now(),
@@ -38,7 +39,7 @@ class DownloadInvoiceController extends Controller
             'fee' => (int) (FeeCalculator::forRegistrationEntry($record)['total'] ?? 0),
             'logo' => public_path('images/ASG.png'),
         ];
-
+        // dd($payload);
         try {
             pdf('invoices.invoice', $payload)
                 ->headerHtml('')
@@ -128,7 +129,8 @@ class DownloadInvoiceController extends Controller
         }
 
         $extension = pathinfo($filePath, PATHINFO_EXTENSION) ?: 'pdf';
-        $filename = 'HoaDon_'.$registrationEntry->bks.'_'.date('YmdHis').'.'.$extension;
+        $licensePlate = $registrationEntry->license_plate ?: (string) $registrationEntry->id;
+        $filename = 'HoaDon_'.$licensePlate.'_'.date('YmdHis').'.'.$extension;
 
         return response()->download($fullPath, $filename);
     }

@@ -7,6 +7,7 @@ use App\Filament\Resources\Registrations\Actions\ApproveRegistrationAction;
 use App\Filament\Resources\Registrations\Actions\RefuseRegistrationAction;
 use App\Filament\Resources\Registrations\Actions\SendMailRegistrationAction;
 use App\Filament\Resources\Registrations\Filters\RegistrationFilter;
+use App\Filament\Resources\Registrations\Schemas\RegistrationForm;
 use App\Models\Registration;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
@@ -15,6 +16,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ExportBulkAction;
 use Filament\Actions\Exports\Models\Export;
 use Filament\Actions\ViewAction;
+use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\Size;
 use Filament\Support\Enums\Width;
@@ -43,6 +45,7 @@ class RegistrationsTable
                 default => '',
             })
             ->defaultSort('created_at', 'desc')
+
             ->paginated([10, 25, 50, 100])
             ->defaultPaginationPageOption(25)
             ->deferFilters(false)
@@ -215,10 +218,13 @@ class RegistrationsTable
             ActionGroup::make([
                 EditAction::make()
                     ->modalWidth(Width::SixExtraLarge)
-                    ->hidden(fn (Registration $record) => $record->status === 'sent' && $record->type === 'browse' || $record->type === 'refuse' || $record->user_id !== Auth::id()),
-                ViewAction::make()->modalWidth(Width::SixExtraLarge),
+                    ->schema(fn (Schema $schema, Registration $record) => RegistrationForm::configure($schema, $record->type ?? 'working'))
+                    ->hidden(fn (Registration $record) => in_array($record->status, ['sent', 'approve', 'reject', 'entering', 'exited'], true) || $record->user_id !== Auth::id()),
+                ViewAction::make()
+                    ->modalWidth(Width::SixExtraLarge)
+                    ->schema(fn (Schema $schema, Registration $record) => RegistrationForm::configure($schema, $record->type ?? 'working')),
                 DeleteAction::make()
-                    ->hidden(fn (Registration $record) => $record->status === 'sent' && $record->type === 'browse' || $record->type === 'refuse' || $record->user_id !== Auth::id()),
+                    ->hidden(fn (Registration $record) => in_array($record->status, ['sent', 'approve', 'reject', 'entering', 'exited'], true) || $record->user_id !== Auth::id()),
                 ApproveRegistrationAction::make(),
                 RefuseRegistrationAction::make(),
             ])->icon('heroicon-m-adjustments-vertical')

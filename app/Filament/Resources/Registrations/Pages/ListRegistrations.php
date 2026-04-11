@@ -20,10 +20,17 @@ class ListRegistrations extends ListRecords
             CreateAction::make()
                 ->label(Auth::user()->hasRole('working') ? 'Đăng ký khách mới' : 'Đăng ký xe kiểm hoá')
                 ->icon('heroicon-o-plus')
-                ->hidden(fn () => Auth::user() ? ! Auth::user()->hasRole(['inspection', 'working']) : true)
+                // ->hidden(fn () => Auth::user() ? ! Auth::user()->hasRole(['inspection', 'working']) : true)
                 ->modalWidth(Width::ScreenTwoExtraLarge)
                 ->modalHeading('Đăng ký khách mới')
-                ->schema(fn (Schema $schema) => RegistrationForm::configure($schema, Auth::user()->roles->pluck('name')->first()))
+                ->schema(function (Schema $schema) {
+                    $role = Auth::user()?->roles?->pluck('name')?->first();
+
+                    // `registrations.type` is an enum: only 'working' | 'inspection'.
+                    $type = in_array($role, ['working', 'inspection'], true) ? $role : 'working';
+
+                    return RegistrationForm::configure($schema, $type);
+                })
                 ->mutateDataUsing(function (array $data): array {
                     $user = Auth::user();
                     if ($user && $user->approver) {
@@ -32,6 +39,11 @@ class ListRegistrations extends ListRecords
                     } else {
                         $data['user_id'] = $user->id;
                         $data['approver_id'] = null;
+                    }
+
+                    // Defensive: never allow invalid enum values.
+                    if (! in_array($data['type'] ?? null, ['working', 'inspection'], true)) {
+                        $data['type'] = 'working';
                     }
 
                     return $data;

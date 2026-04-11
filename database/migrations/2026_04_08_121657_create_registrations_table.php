@@ -18,7 +18,7 @@ return new class extends Migration
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->enum('type', ['working', 'inspection'])->nullable(); // loại ['Ra vào làm việc, 'Ra vào kiểm hoá']
-            $table->enum('status', ['none', 'sent', 'approve', 'entering', 'exited', 'reject'])->default('none');
+            $table->enum('status', ['none', 'sent', 'approve', 'entering', 'exited', 'reject'])->default('none'); // 'Chưa duyệt', 'Đã gửi', 'Đã phê duyệt', 'Đang vào', 'Đã ra', 'Đã từ chối'
             $table->foreignId('approver_id')
                 ->nullable()
                 ->constrained('users')

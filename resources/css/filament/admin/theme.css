@@ -6,7 +6,7 @@
     & > thead {
         & > tr {
             &.fi-ta-table-head-groups-row {
-                background-color: var(--color-primary-600);
+                background-color: var(--color-primary-600) !important;
             }
         }
     }
@@ -17,12 +17,12 @@
 .fi-ta-table {
     & > thead {
         & > tr {
-            background-color: var(--color-primary-600);
+            background-color: var(--color-primary-600) !important;
         }
     }
 }
 .fi-ta-header-cell {
-    color: oklch(1 0 0);
-    border-inline-end-style: var(--tw-border-style);
-    border-inline-end-width: 1px;
+    color: oklch(1 0 0) !important;
+    border-inline-end-style: var(--tw-border-style) !important;
+    border-inline-end-width: 1px !important;
 }

@@ -27,7 +27,7 @@ class ReturnCardAction
             ->modalIcon('heroicon-o-arrow-uturn-up')
             ->modalHeading(function (RegistrationEntry $record) {
                 if ($record->type === 'inspection') {
-                    return 'Xe ra: '.$record->bks.' | Họ tên: '.$record->name;
+                    return 'Xe ra: '.$record->license_plate.' | Họ tên: '.$record->name;
                 } else {
                     return 'Người ra: '.$record->name.' | CMND: '.$record->papers;
                 }
@@ -48,7 +48,9 @@ class ReturnCardAction
                 Toggle::make('is_money')
                     ->label('Trả tiền cho bảo vệ')
                     ->default(false)
+                    ->inline(false)
                     ->columnSpanFull(),
+
             ])
 
             ->action(function (array $data, RegistrationEntry $record): void {
@@ -65,12 +67,8 @@ class ReturnCardAction
                             $controller = new DownloadInvoiceController;
                             $filePath = $controller->generateInvoice($record);
 
-                            $normalizedBks = Invoice::normalizeLicensePlate($record->bks);
-                            if ($record->type === 'working') {
-                                $feeAmount = (int) (FeeCalculator::forRegistrationWorking($record)['total'] ?? 0);
-                            } else {
-                                $feeAmount = (int) (FeeCalculator::forRegistrationInspection($record)['total'] ?? 0);
-                            }
+                            $normalizedBks = Invoice::normalizeLicensePlate($record->license_plate);
+                            $feeAmount = (int) (FeeCalculator::forRegistrationEntry($record)['total'] ?? 0);
 
                             $existingInvoice = $record->invoice;
                             $invoiceData = [

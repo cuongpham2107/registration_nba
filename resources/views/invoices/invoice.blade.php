@@ -98,7 +98,7 @@
                     <span class="whitespace-nowrap">Phí ra vào:</span>
 
                     <span
-                        class="mx-1 w-28 border-b border-dashed border-black text-center font-normal">{{ number_format($fee_breakdown['working'] ?? ($fee_breakdown['gathering'] ?? 0), 0, '.', '.') }}</span>
+                        class="mx-1 w-28 border-b border-dashed border-black text-center font-normal">{{ number_format($fee_breakdown['fee'] ?? ($fee_breakdown['total'] ?? 0), 0, '.', '.') }}</span>
 
                     <span class="whitespace-nowrap">Đồng</span>
                 </div>

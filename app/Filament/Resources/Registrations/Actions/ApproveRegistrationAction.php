@@ -45,6 +45,9 @@ class ApproveRegistrationAction
             ->action(function (Registration $record) {
                 $record->update([
                     'approved_at' => now(),
+                    'status' => 'approve',
+                    // Keep type consistent for generated registration entries.
+                    'type' => $record->type ?? 'working',
                 ]);
 
                 (new RegistrationController)->createRegistrationEntryFromGuest($record);

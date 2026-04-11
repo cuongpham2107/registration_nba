@@ -2,28 +2,15 @@
 
 namespace App\Support;
 
-use App\Models\GatheringPointFee;
+use App\Models\Fee;
 use App\Models\RegistrationEntry;
-use App\Models\VisitorVehicleFee;
 use Carbon\Carbon;
 
 class FeeCalculator
 {
     public static function forRegistrationEntry(RegistrationEntry $entry): array
     {
-        return match ($entry->type) {
-            'inspection' => self::forRegistrationInspection($entry),
-            default => self::forRegistrationWorking($entry),
-        };
-    }
-
-    /**
-     * Contract:
-     * - Input: RegistrationEntry (expects actual_date_in, actual_date_out? and guest relations)
-     * - Output: array{gathering:int,total:int,meta:array}
-     */
-    public static function forRegistrationInspection(RegistrationEntry $entry): array
-    {
+        // Single pricing table (`fees`) for all entry types.
         $entryTime = $entry->actual_date_in;
         $exitTime = $entry->actual_date_out ?? now();
 
@@ -32,17 +19,17 @@ class FeeCalculator
             return self::empty();
         }
 
-        $gatheringFee = $guest->gatheringPointFee;
+        $fee = $guest->fee;
 
-        $gatheringAmount = self::calculateGathering(
-            fee: $gatheringFee,
+        $feeAmount = self::calculateFee(
+            fee: $fee,
             entryTime: $entryTime,
             exitTime: $exitTime,
         );
 
         return [
-            'gathering' => $gatheringAmount,
-            'total' => $gatheringAmount,
+            'fee' => $feeAmount,
+            'total' => $feeAmount,
             'meta' => [
                 'entry_time' => $entryTime,
                 'exit_time' => $exitTime,
@@ -50,42 +37,7 @@ class FeeCalculator
         ];
     }
 
-    public static function forRegistrationWorking(RegistrationEntry $entry): array
-    {
-        $entryTime = $entry->actual_date_in;
-        $exitTime = $entry->actual_date_out ?? now();
-
-        $guest = $entry->guest;
-        if (! $guest) {
-            return self::empty();
-        }
-
-        $workingFee = $guest->visitorVehicleFee;
-
-        $workingAmount = self::calculateVisitorVehicle(
-            fee: $workingFee,
-        );
-
-        return [
-            'working' => $workingAmount,
-            'total' => $workingAmount,
-            'meta' => [
-                'entry_time' => $entryTime,
-                'exit_time' => $exitTime,
-            ],
-        ];
-    }
-
-    public static function calculateVisitorVehicle(?VisitorVehicleFee $fee): int
-    {
-
-        // Rule (per yêu cầu):
-        // - per_visit_fee = phí cho 1 lượt ra/vào
-        // - monthly_fee là vé tháng nhưng hiện KHÔNG dùng trong tính phí
-        return (int) ($fee->per_visit_fee ?? 0);
-    }
-
-    public static function calculateGathering(?GatheringPointFee $fee, $entryTime, $exitTime): int
+    public static function calculateFee(?Fee $fee, $entryTime, $exitTime): int
     {
         if (! $fee || blank($entryTime) || blank($exitTime)) {
             return 0;
@@ -97,41 +49,77 @@ class FeeCalculator
             [$entry, $exit] = [$exit, $entry];
         }
 
-        // Rules:
-        // - 07:00 -> 12:00 : morning_fee
-        // - 12:00 -> 17:00 : afternoon_fee
-        // - 07:00 -> 17:00 (covers both peaks) : full_day_fee
-        // - 17:00 -> 07:00 next day (any overlap) : night_fee
-
-        $entryDate = $entry->copy()->startOfDay();
-
-        $morningStart = $entryDate->copy()->setTime(7, 0);
-        $noon = $entryDate->copy()->setTime(12, 0);
-        $afternoonEnd = $entryDate->copy()->setTime(17, 0);
-        $nextMorningStart = $entryDate->copy()->addDay()->setTime(7, 0);
-
-        $usesMorning = self::overlaps($entry, $exit, $morningStart, $noon);
-        $usesAfternoon = self::overlaps($entry, $exit, $noon, $afternoonEnd);
-        $usesNight = self::overlaps($entry, $exit, $afternoonEnd, $nextMorningStart);
-
-        if ($usesNight) {
-            return (int) ($fee->night_fee ?? 0);
+        // Business rule: nếu đã có giờ vào/ra hợp lệ thì tối thiểu tính 1 block.
+        // Tránh trường hợp vào/ra cùng timestamp (0 phút) nhưng vẫn cần thu phí.
+        if ($exit->equalTo($entry)) {
+            $exit = $exit->copy()->addMinute();
         }
 
-        if ($usesMorning && $usesAfternoon) {
+        // New rules (per yêu cầu):
+        // - Chỉ dùng 1 bảng `fees`.
+        // - Nếu là xe máy: tính 1 giá duy nhất (full_day_fee).
+        // - Các loại còn lại: chia ca theo block 4h.
+        //     + 07:00 -> 17:00: tính theo full_day_fee * số block(4h)
+        //     + 17:00 -> 07:00 hôm sau: tính theo night_fee * số block(4h)
+        // - Số block = ceil(số phút sử dụng trong ca / 240)
+
+        $vehicleType = mb_strtolower((string) ($fee->vehicle_type ?? ''), 'UTF-8');
+        $isMotorbike = str_contains($vehicleType, 'xe máy') || str_contains($vehicleType, 'xe may');
+        if ($isMotorbike) {
             return (int) ($fee->full_day_fee ?? 0);
         }
 
-        if ($usesMorning) {
-            return (int) ($fee->morning_fee ?? 0);
+        return self::calculateShiftBlocks(
+            fee: $fee,
+            entry: $entry,
+            exit: $exit,
+        );
+    }
+
+    private static function calculateShiftBlocks(Fee $fee, Carbon $entry, Carbon $exit): int
+    {
+        $total = 0;
+
+        // Iterate day by day, summing overlap minutes with day shift and night shift.
+        // Day shift: 07:00 -> 17:00
+        // Night shift: 17:00 -> 07:00 next day
+        $cursorDay = $entry->copy()->startOfDay();
+        $endDay = $exit->copy()->startOfDay();
+
+        while ($cursorDay->lessThanOrEqualTo($endDay)) {
+            $dayStart = $cursorDay->copy()->setTime(7, 0);
+            $dayEnd = $cursorDay->copy()->setTime(17, 0);
+            $nightStart = $dayEnd->copy();
+            $nightEnd = $cursorDay->copy()->addDay()->setTime(7, 0);
+
+            $dayMinutes = self::overlapMinutes($entry, $exit, $dayStart, $dayEnd);
+            if ($dayMinutes > 0) {
+                $blocks = (int) ceil($dayMinutes / 240);
+                $total += $blocks * (int) ($fee->full_day_fee ?? 0);
+            }
+
+            $nightMinutes = self::overlapMinutes($entry, $exit, $nightStart, $nightEnd);
+            if ($nightMinutes > 0) {
+                $blocks = (int) ceil($nightMinutes / 240);
+                $total += $blocks * (int) ($fee->night_fee ?? 0);
+            }
+
+            $cursorDay->addDay();
         }
 
-        if ($usesAfternoon) {
-            return (int) ($fee->afternoon_fee ?? 0);
+        return $total;
+    }
+
+    private static function overlapMinutes(Carbon $aStart, Carbon $aEnd, Carbon $bStart, Carbon $bEnd): int
+    {
+        if (! self::overlaps($aStart, $aEnd, $bStart, $bEnd)) {
+            return 0;
         }
 
-        // If it doesn't fall into any window (e.g. before 07:00 but exits before 07:00), treat as night.
-        return (int) ($fee->night_fee ?? 0);
+        $start = $aStart->copy()->max($bStart);
+        $end = $aEnd->copy()->min($bEnd);
+
+        return max(0, $start->diffInMinutes($end));
     }
 
     private static function overlaps(Carbon $aStart, Carbon $aEnd, Carbon $bStart, Carbon $bEnd): bool
@@ -142,7 +130,7 @@ class FeeCalculator
     private static function empty(): array
     {
         return [
-            'gathering' => 0,
+            'fee' => 0,
             'total' => 0,
             'meta' => [],
         ];

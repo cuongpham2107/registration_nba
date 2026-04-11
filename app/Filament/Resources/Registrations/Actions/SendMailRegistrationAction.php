@@ -60,8 +60,10 @@ class SendMailRegistrationAction
 
                         return;
                     }
-                    // đang làm đến đây
-                    $customers = Guest::where('registration_id', $record->id)->get();
+                    $customers = Guest::query()
+                        ->where('registration_id', $record->id)
+                        ->with('fee')
+                        ->get();
                     // Gửi email
                     $mail = (new MailService)->sendMailWithTemplate(
                         $approver->email,

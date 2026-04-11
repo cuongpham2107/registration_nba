@@ -24,14 +24,9 @@ return new class extends Migration
                 ->constrained('registrations')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
-            $table->foreignId('visitor_vehicle_fee_id')
+            $table->foreignId('fee_id')
                 ->nullable()
-                ->constrained('visitor_vehicle_fees')
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
-            $table->foreignId('gathering_point_fee_id')
-                ->nullable()
-                ->constrained('gathering_point_fees')
+                ->constrained('fees')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
             $table->timestamps();

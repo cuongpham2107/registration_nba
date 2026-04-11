@@ -91,11 +91,12 @@
                         <td style="padding:10px 8px;">{{ $staff['papers'] }}</td>
                         <td style="padding:10px 8px;">{{ $staff['license_plate'] }}</td>
                         <td style="padding:10px 8px;">
-                            @foreach ($staff['areas'] as $area)
-                                <p>{{ \App\Models\Area::where('code',$area)->first()->name}}</p>
+                            @foreach (($staff['areas'] ?? []) as $area)
+                                @php($areaName = \App\Models\Area::where('code', $area)->value('name'))
+                                <p>{{ $areaName ?? $area }}</p>
                             @endforeach
                         </td>
-                        <td style="padding:10px 8px;">{{ $staff['visitorVehicleFee'] ? $staff['visitorVehicleFee']['vehicle_type'] : $staff['gatheringPointFee']['vehicle_type'] }}</td>
+                        <td style="padding:10px 8px;">{{ $staff['fee']['vehicle_type'] ?? '' }}</td>
                     </tr>
                     @endforeach
                 </tbody>

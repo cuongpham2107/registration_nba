@@ -34,21 +34,17 @@ class GiveCardAction
                             ->label('Họ và tên')
                             ->default(fn (RegistrationEntry $record) => $record->name)
                             ->disabled()
-                            ->columnSpanFull(),
+                            ->columnSpan(2),
                         Forms\Components\TextInput::make('license_plate')
                             ->label('Biển số xe')
                             ->default(fn (RegistrationEntry $record) => $record->license_plate)
-                            ->disabled(),
-                        Forms\Components\TextInput::make('guest.visitorVehicleFee.vehicle_type')
+                            ->disabled()
+                            ->columnSpan(2),
+                        Forms\Components\TextInput::make('guest.fee.vehicle_type')
                             ->label('Loại phương tiện')
-                            ->hidden(fn (RegistrationEntry $record): bool => blank($record->guest?->visitorVehicleFee))
-                            ->default(fn (RegistrationEntry $record) => $record->guest?->visitorVehicleFee?->vehicle_type)
-                            ->disabled(),
-                        Forms\Components\TextInput::make('guest.gatheringPointFee.vehicle_type')
-                            ->label('Loại phương tiện')
-                            ->hidden(fn (RegistrationEntry $record): bool => blank($record->guest?->gatheringPointFee))
-                            ->default(fn (RegistrationEntry $record) => $record->guest?->gatheringPointFee?->vehicle_type)
-                            ->disabled(),
+                            ->default(fn (RegistrationEntry $record) => $record->guest?->fee?->vehicle_type)
+                            ->disabled()
+                            ->columnSpan(2),
                         Forms\Components\Select::make('id')
                             ->label('Thẻ')
                             ->options(fn () => Card::query()
@@ -56,13 +52,17 @@ class GiveCardAction
                                 ->orderBy('card_name')
                                 ->pluck('card_name', 'id'))
                             ->searchable(['card_name', 'card_number'])
-                            ->preload(),
+                            ->preload()
+                            ->columnSpan(3),
                         Forms\Components\DateTimePicker::make('start_date')
                             ->label('Giờ vào')
                             ->default(now())
+                            ->displayFormat('d/m/Y H:i')
                             ->readOnly()
-                            ->required(),
-                    ])->columns(2),
+                            ->required()
+                            ->native(false)
+                            ->columnSpan(3),
+                    ])->columns(6),
             ])
             ->action(function (array $data, RegistrationEntry $record): void {
                 try {

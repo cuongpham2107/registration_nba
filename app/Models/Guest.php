@@ -12,17 +12,7 @@ class Guest extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [
-        'name',
-        'papers',
-        'type',
-        'license_plate',
-        'areas',
-        'note',
-        'registration_id',
-        'visitor_vehicle_fee_id',
-        'gathering_point_fee_id',
-    ];
+    protected $guarded = [];
 
     /**
      * The attributes that should be cast.
@@ -36,13 +26,8 @@ class Guest extends Model
         return $this->belongsTo(Registration::class, 'registration_id');
     }
 
-    public function visitorVehicleFee()
+    public function fee()
     {
-        return $this->belongsTo(VisitorVehicleFee::class, 'visitor_vehicle_fee_id');
-    }
-
-    public function gatheringPointFee()
-    {
-        return $this->belongsTo(GatheringPointFee::class, 'gathering_point_fee_id');
+        return $this->belongsTo(Fee::class, 'fee_id');
     }
 }

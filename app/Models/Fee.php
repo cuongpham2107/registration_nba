@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class VisitorVehicleFee extends Model
+class Fee extends Model
 {
     use HasFactory;
 
@@ -13,7 +13,9 @@ class VisitorVehicleFee extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'per_visit_fee' => 'integer',
-        'monthly_fee' => 'integer',
+        'morning_fee' => 'integer',
+        'afternoon_fee' => 'integer',
+        'full_day_fee' => 'integer',
+        'night_fee' => 'integer',
     ];
 }

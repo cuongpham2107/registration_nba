@@ -23,7 +23,10 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Enums\RecordActionsPosition;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class RegistrationEntriesTable
 {
@@ -35,14 +38,41 @@ class RegistrationEntriesTable
             ->emptyStateDescription('Hiện tại chưa có khách hay xe khai thác nào.')
             ->columns(self::getColumns())
             ->defaultSort('created_at', 'asc')
-            // ->modifyQueryUsing(fn ($query) => self::modifyQuery($query))
+            ->modifyQueryUsing(fn ($query) => self::modifyQuery($query))
             ->filters(self::getFilters(), layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(1)
             ->deferLoading()
             ->deferFilters(false)
+            // ->groups([
+            //     Group::make('license_plate')
+            //         ->titlePrefixedWithLabel(false)
+            //         ->getKeyFromRecordUsing(fn ($record): string => (int) $record->plate_count > 1
+            //                 ? $record->license_plate
+            //                 : '__single__'.$record->id
+            //         )
+            //         ->getTitleFromRecordUsing(fn ($record): ?string => (int) $record->plate_count > 1
+            //                 ? $record->license_plate
+            //                 : null
+            //         ),
+            // ])
+            // ->defaultGroup('license_plate')
             ->defaultPaginationPageOption(25)
             ->recordActions(self::getRecordActions(), position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions(self::getToolbarActions());
+    }
+
+    private static function modifyQuery($query): Builder
+    {
+        // $query->addSelect([
+        //     'registration_entries.*',
+        //     DB::raw('(
+        //             SELECT COUNT(*)
+        //             FROM registration_entries re2
+        //             WHERE re2.license_plate = registration_entries.license_plate
+        //         ) as plate_count'),
+        // ]);
+
+        return $query;
     }
 
     private static function getColumns(): array
@@ -50,8 +80,8 @@ class RegistrationEntriesTable
         return [
             IconColumn::make('type')
                 ->icon(fn (?string $state): string => match ($state) {
-                    'passenger' => 'heroicon-o-user',
-                    'vehicle' => 'heroicon-o-truck',
+                    'working' => 'heroicon-o-user',
+                    'inspection' => 'heroicon-o-truck',
                     default => 'heroicon-o-user',
                 })
                 ->label('Loại'),

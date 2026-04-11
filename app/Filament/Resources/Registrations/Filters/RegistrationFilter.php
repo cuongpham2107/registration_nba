@@ -27,16 +27,20 @@ class RegistrationFilter extends Filter
                 Select::make('status')
                     ->label('Trạng thái')
                     ->options([
+                        'none' => 'Chưa gửi',
                         'sent' => 'Đã gửi',
-                        'not_yet_sent' => 'Chưa gửi',
+                        'approve' => 'Đã phê duyệt',
+                        'reject' => 'Đã từ chối',
+                        'entering' => 'Đang vào',
+                        'exited' => 'Đã ra',
                     ]),
 
-                Select::make('type')
+                Select::make('approval')
                     ->label('Duyệt')
                     ->options([
-                        'none' => 'Chưa duyệt',
-                        'browse' => 'Duyệt',
-                        'refuse' => 'Từ chối',
+                        'pending' => 'Chưa duyệt',
+                        'approved' => 'Duyệt',
+                        'rejected' => 'Từ chối',
                     ]),
                 DatePicker::make('start_date')
                     ->label('Từ ngày')
@@ -62,13 +66,14 @@ class RegistrationFilter extends Filter
                         fn (Builder $query, $status): Builder => $query->where('status', $status),
                     )
                     ->when(
-                        isset($data['type']),
+                        isset($data['approval']),
                         function (Builder $query) use ($data) {
-                            if ($data['type'] === 'none') {
-                                return $query->whereNull('type');
-                            }
-
-                            return $query->where('type', $data['type']);
+                            return match ($data['approval']) {
+                                'pending' => $query->whereNull('approved_at'),
+                                'approved' => $query->whereNotNull('approved_at')->where('status', 'approve'),
+                                'rejected' => $query->whereNotNull('approved_at')->where('status', 'reject'),
+                                default => $query,
+                            };
                         }
                     )
                     ->when(
@@ -96,23 +101,27 @@ class RegistrationFilter extends Filter
 
                 if ($data['status'] ?? null) {
                     $statusText = match ($data['status']) {
+                        'none' => 'Chưa gửi',
                         'sent' => 'Đã gửi',
-                        'not_yet_sent' => 'Chưa gửi',
+                        'approve' => 'Đã phê duyệt',
+                        'reject' => 'Đã từ chối',
+                        'entering' => 'Đang vào',
+                        'exited' => 'Đã ra',
                         default => $data['status'],
                     };
                     $indicators[] = Indicator::make('Trạng thái: '.$statusText)
                         ->removeField('status');
                 }
 
-                if ($data['type'] ?? null) {
-                    $typeText = match ($data['type']) {
-                        'none' => 'Chưa duyệt',
-                        'browse' => 'Duyệt',
-                        'refuse' => 'Từ chối',
-                        default => $data['type'],
+                if ($data['approval'] ?? null) {
+                    $typeText = match ($data['approval']) {
+                        'pending' => 'Chưa duyệt',
+                        'approved' => 'Duyệt',
+                        'rejected' => 'Từ chối',
+                        default => $data['approval'],
                     };
                     $indicators[] = Indicator::make('Duyệt: '.$typeText)
-                        ->removeField('type');
+                        ->removeField('approval');
                 }
 
                 if ($data['start_date'] ?? null) {

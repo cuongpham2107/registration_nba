@@ -9,7 +9,6 @@ use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class RegistrationController extends Controller
@@ -20,8 +19,16 @@ class RegistrationController extends Controller
         $job_title_manager = $request->query('job_title_manager');
         $id = Crypt::decryptString($id);
         $registration = Registration::with('guests')->where('id', $id)->first();
-        // Kiểm tra xem đã được xử lý chưa
-        if ($registration->type !== null) {
+
+        if (! $registration) {
+            $status = 'Lỗi';
+            $message = 'Không tìm thấy đăng ký.';
+
+            return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
+        }
+
+    // Kiểm tra xem đã được xử lý chưa
+    if (in_array($registration->status, ['approve', 'reject'], true) || filled($registration->approved_at)) {
             $status = 'Lỗi';
             $message = 'Đăng ký này đã được thực hiện phê duyệt rồi';
 
@@ -29,43 +36,11 @@ class RegistrationController extends Controller
         }
 
         $this->createRegistrationEntryFromGuest($registration);
-        $registration->type = 'working';
-        $registration->approved_at = now();
-        $registration->save();
-
-        // Gửi thông báo Zalo sau khi phê duyệt thành công
-        $approver = $registration->approver;
-        if ($approver) {
-            try {
-                $guests = $registration->guests;
-
-                // Tạm thời lấy từ config, không sử dụng zalo_user_id
-                $zaloId = config('services.zalo.default_user_id', '3948439024214471746');
-
-                $zaloData = [
-                    'type' => 'approved',
-                    'zalo_id_user_approve' => $zaloId,
-                    'data' => [
-                        'action' => 'Đăng ký khách đã được phê duyệt',
-                        'customer_number' => (string) $registration->id,
-                        'requestor' => $registration->creator?->name ?? 'N/A',
-                        'customer_unit' => $registration->name,
-                        'purpose' => $registration->purpose,
-                        'quantity' => $guests->count().' người',
-                        'area' => $guests->pluck('areas')->flatten()->unique()->implode(', '),
-                        'request_time' => Carbon::parse($registration->created_at)->format('H:i:s d-m-Y'),
-                        'approver' => $name_manager.($job_title_manager ? ' ('.$job_title_manager.')' : ''),
-                        'approve_time' => now()->format('H:i d-m-Y'),
-                    ],
-                ];
-
-                Http::timeout(10)
-                    ->post(config('services.zalo.webhook_url'), $zaloData);
-
-            } catch (\Exception $e) {
-                Log::error('Zalo notification failed: '.$e->getMessage());
-            }
-        }
+        $registration->update([
+            'type' => $registration->type ?? 'working',
+            'status' => 'approve',
+            'approved_at' => now(),
+        ]);
 
         $status = 'Duyệt';
         $message = 'Đăng ký khách đã được phê duyệt thành công';
@@ -97,8 +72,15 @@ class RegistrationController extends Controller
         $id = Crypt::decryptString($id);
         $registration = Registration::where('id', $id)->first();
 
-        // Kiểm tra xem đã được xử lý chưa
-        if ($registration->type !== null) {
+        if (! $registration) {
+            $status = 'Lỗi';
+            $message = 'Không tìm thấy đăng ký.';
+
+            return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
+        }
+
+    // Kiểm tra xem đã được xử lý chưa
+    if (in_array($registration->status, ['approve', 'reject'], true) || filled($registration->approved_at)) {
             $status = 'Lỗi';
             $message = 'Đăng ký này đã được thực hiện phê duyệt rồi';
 
@@ -109,40 +91,6 @@ class RegistrationController extends Controller
             'status' => 'reject',
             'approved_at' => now(),
         ]);
-
-        // Gửi thông báo Zalo sau khi từ chối
-        $approver = $registration->approver;
-        if ($approver) {
-            try {
-                $guests = $registration->guests;
-
-                // Tạm thời lấy từ config, không sử dụng zalo_user_id
-                $zaloId = config('services.zalo.default_user_id', '3948439024214471746');
-
-                $zaloData = [
-                    'type' => 'rejected',
-                    'zalo_id_user_approve' => $zaloId,
-                    'data' => [
-                        'action' => 'Đăng ký khách đã bị từ chối',
-                        'customer_number' => (string) $registration->id,
-                        'requestor' => $registration->creator?->name ?? 'N/A',
-                        'customer_unit' => $registration->name,
-                        'purpose' => $registration->purpose,
-                        'quantity' => $guests->count().' người',
-                        'area' => $guests->pluck('areas')->flatten()->unique()->implode(', '),
-                        'request_time' => Carbon::parse($registration->created_at)->format('H:i:s d-m-Y'),
-                        'approver' => $name_manager.($job_title_manager ? ' ('.$job_title_manager.')' : ''),
-                        'reject_time' => now()->format('H:i:s d-m-Y'),
-                    ],
-                ];
-
-                Http::timeout(10)
-                    ->post('http://192.168.1.70:5678/webhook/send-registration', $zaloData);
-
-            } catch (\Exception $e) {
-                Log::error('Zalo notification failed: '.$e->getMessage());
-            }
-        }
 
         $status = 'Từ chối';
         $message = 'Đăng ký khách đã bị từ chối';

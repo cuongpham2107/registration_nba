@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\VisitorVehicleFees\Tables;
+namespace App\Filament\Resources\Fees\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -9,7 +9,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class VisitorVehicleFeesTable
+class FeesTable
 {
     public static function configure(Table $table): Table
     {
@@ -19,14 +19,13 @@ class VisitorVehicleFeesTable
                     ->label('Loại phương tiện')
                     ->searchable()
                     ->sortable(),
-
-                TextColumn::make('per_visit_fee')
-                    ->label('Phí theo lượt')
+                TextColumn::make('full_day_fee')
+                    ->label('Cả ngày 7h - 17h (Block 4h)')
                     ->money('VND')
                     ->sortable(),
 
-                TextColumn::make('monthly_fee')
-                    ->label('Phí theo tháng')
+                TextColumn::make('night_fee')
+                    ->label('Sau 17h - 7h (Block 4h)')
                     ->money('VND')
                     ->sortable(),
 
