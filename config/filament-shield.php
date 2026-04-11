@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use App\Filament\Resources\Registrations\RegistrationResource;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
 use Filament\Widgets\AccountWidget;
@@ -176,9 +177,13 @@ return [
                 'update',
                 'delete',
             ],
+            RegistrationResource::class => [
+                'approver',
+                'send_email',
+            ],
         ],
         'exclude' => [
-            //
+
         ],
     ],
 

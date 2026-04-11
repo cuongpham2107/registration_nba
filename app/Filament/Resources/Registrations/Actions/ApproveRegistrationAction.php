@@ -24,14 +24,13 @@ class ApproveRegistrationAction
             ->requiresConfirmation()
             ->hidden(function (Registration $record) {
                 $user = Auth::user();
-
                 // Ẩn nếu chưa gửi hoặc đã duyệt/từ chối
                 if ($record->status !== 'sent') {
                     return true;
                 }
 
-                // Ẩn nếu user không phải approver
-                if (! $user || ! $user->hasRole('approver')) {
+                // Ẩn nếu user không có quyền Approver
+                if (! $user || ! $user->can('Approver:Registration')) {
                     return true;
                 }
 
@@ -46,10 +45,8 @@ class ApproveRegistrationAction
                 $record->update([
                     'approved_at' => now(),
                     'status' => 'approve',
-                    // Keep type consistent for generated registration entries.
                     'type' => $record->type ?? 'working',
                 ]);
-
                 (new RegistrationController)->createRegistrationEntryFromGuest($record);
 
                 Notification::make()

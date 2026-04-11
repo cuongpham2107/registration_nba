@@ -28,8 +28,8 @@ class RefuseRegistrationAction
                     return true;
                 }
 
-                // Ẩn nếu user không phải approver
-                if (! $user || ! $user->hasRole('approver')) {
+                // Ẩn nếu user không có quyền Approver
+                if (! $user || ! $user->can('Approver:Registration')) {
                     return true;
                 }
 

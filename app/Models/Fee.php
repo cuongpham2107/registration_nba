@@ -13,8 +13,6 @@ class Fee extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'morning_fee' => 'integer',
-        'afternoon_fee' => 'integer',
         'full_day_fee' => 'integer',
         'night_fee' => 'integer',
     ];

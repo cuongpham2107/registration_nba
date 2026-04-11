@@ -98,7 +98,7 @@ class UserForm
                                 'lg' => 2,
                             ]),
                     ])
-                    ->columnSpan(2),
+                    ->columnSpan('full'),
                 Section::make('Phân quyền')
                     ->columns(1)
                     ->schema([

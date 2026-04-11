@@ -20,11 +20,11 @@ class FeeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCurrencyDollar;
 
-    protected static ?string $modelLabel = 'Phí địa điểm tập trung';
+    protected static ?string $modelLabel = 'Biểu phí';
 
-    protected static ?string $navigationLabel = 'Phí địa điểm tập trung';
+    protected static ?string $navigationLabel = 'Biểu phí';
 
-    protected static ?string $pluralModelLabel = 'Biểu phí địa điểm tập trung';
+    protected static ?string $pluralModelLabel = 'Biểu phí';
 
     public static function getNavigationGroup(): ?string
     {

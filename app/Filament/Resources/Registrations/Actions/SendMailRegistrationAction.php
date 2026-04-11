@@ -23,9 +23,8 @@ class SendMailRegistrationAction
             ->icon('heroicon-m-envelope')
             ->size(Size::Small)
             ->requiresConfirmation()
-            ->hidden(fn (Registration $record) => $record->status === 'sent' || $record->user_id !== Auth::id())
+            ->hidden(fn (Registration $record) => $record->status === 'sent' || ! Auth::user()->can('SendEmail:Registration'))
             ->action(function (Registration $record) {
-
                 try {
                     // Lấy thông tin người phê duyệt từ relationship
                     $approver = $record->approver;

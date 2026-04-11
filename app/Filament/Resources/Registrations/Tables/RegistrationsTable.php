@@ -146,11 +146,11 @@ class RegistrationsTable
                 ->badge()
                 ->toggleable()
                 ->color(fn (string $state): string => match ($state) {
-                    'none' => 'default',
+                    'none' => 'gray',
                     'sent' => 'success',
                     'approve' => 'info',
                     'entering' => 'warning',
-                    'exited' => 'secondary',
+                    'exited' => 'gray',
                     'reject' => 'danger',
                 })
                 ->formatStateUsing(fn (string $state) => match ($state) {

@@ -26,30 +26,12 @@ class FeeForm
                             ->columnSpanFull(),
                     ]),
 
-                Section::make('Biểu phí theo khung giờ')
+                Section::make('Biểu phí')
                     ->description('Giá áp dụng cho từng khung giờ trong ngày')
                     ->columnSpanFull()
                     ->schema([
-                        TextInput::make('morning_fee')
-                            ->label('Giá từ 7h - 12h (VNĐ)')
-                            ->required()
-                            ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
-                            ->numeric()
-                            ->default(0)
-                            ->prefix('VNĐ'),
-
-                        TextInput::make('afternoon_fee')
-                            ->label('Giá từ 12h - 17h (VNĐ)')
-                            ->required()
-                            ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
-                            ->numeric()
-                            ->default(0)
-                            ->prefix('VNĐ'),
-
                         TextInput::make('full_day_fee')
-                            ->label('Giá cả ngày 7h - 17h (VNĐ)')
+                            ->label('Giá cả ngày (7h - 17h) / 1 block 4h (VNĐ)')
                             ->required()
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
@@ -58,7 +40,7 @@ class FeeForm
                             ->prefix('VNĐ'),
 
                         TextInput::make('night_fee')
-                            ->label('Giá sau 17h - 7h sáng hôm sau (VNĐ)')
+                            ->label('Giá sau 17h đến 7h sáng / 1 block 4h (VNĐ)')
                             ->required()
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')

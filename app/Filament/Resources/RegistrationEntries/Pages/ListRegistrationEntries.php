@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\RegistrationEntries\Pages;
 
 use App\Filament\Resources\RegistrationEntries\RegistrationEntryResource;
+use App\Filament\Resources\Registrations\Actions\ImportGuestsAction;
 use App\Models\Fee;
 use App\Models\Guest;
 use App\Models\RegistrationEntry;
@@ -70,26 +71,36 @@ class ListRegistrationEntries extends ListRecords
                                 ->width('150px'),
                             TableColumn::make('Loại giấy tờ')
                                 ->markAsRequired()
-                                ->width('150px'),
+                                ->width('100px'),
                             TableColumn::make('Biển số')
                                 ->markAsRequired()
                                 ->width('150px'),
                             TableColumn::make('Loại phương tiện')
                                 ->markAsRequired()
-                                ->width('250px'),
+                                ->width('300px'),
                             TableColumn::make('Ghi chú')
                                 ->width('150px'),
                         ])
                         ->label('Khách')
                         ->compact()
                         ->cloneable()
+                        ->afterLabel([
+                            ImportGuestsAction::make(),
+                        ])
                         ->schema([
                             TextInput::make('name')
                                 ->required(),
                             TextInput::make('papers')
                                 ->required(),
-                            TextInput::make('type')
-                                ->required(),
+                            Select::make('type')
+                                ->required()
+                                ->options([
+                                    'cmnd' => 'CMND/CCCD',
+                                    'driver_license' => 'Bằng lái xe',
+                                    'passport' => 'Hộ chiếu',
+                                    'other' => 'Khác',
+                                ])
+                                ->default('cmnd'),
                             TextInput::make('license_plate'),
                             Select::make('fee_id')
                                 ->label('Loại phương tiện')
