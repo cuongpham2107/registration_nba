@@ -63,9 +63,9 @@ class ImportGuestsAction
                             continue;
                         }
 
-                        // Tìm fee_id dựa trên vehicle_type (cột E - Loại phương tiện)
+                        // Tìm fee_id dựa trên vehicle_type (cột F - Loại phương tiện)
                         $feeId = null;
-                        $vehicleType = $row[4] ?? ''; // Column E - Loại phương tiện
+                        $vehicleType = $row[5] ?? ''; // Column F - Loại phương tiện
                         if (! empty($vehicleType)) {
                             foreach ($fees as $id => $type) {
                                 if (strtolower(trim($type)) === strtolower(trim($vehicleType))) {
@@ -77,11 +77,12 @@ class ImportGuestsAction
 
                         $importedGuests[] = [
                             'name' => $row[0] ?? '',           // Column A - Tên khách
-                            'papers' => $row[1] ?? '',        // Column B - Số giấy tờ
-                            'type' => $row[2] ?? '',          // Column C - Loại giấy tờ
-                            'license_plate' => $row[3] ?? '', // Column D - Biển số
-                            'fee_id' => $feeId,               // Column E - Loại phương tiện
-                            'note' => $row[5] ?? '',          // Column F - Ghi chú
+                            'phone' => $row[1] ?? '',          // Column B - Số điện thoại
+                            'papers' => $row[2] ?? '',         // Column C - Số giấy tờ
+                            'type' => $row[3] ?? '',           // Column D - Loại giấy tờ
+                            'license_plate' => $row[4] ?? '',  // Column E - Biển số
+                            'fee_id' => $feeId,                // Column F - Loại phương tiện
+                            'note' => $row[6] ?? '',           // Column G - Ghi chú
                         ];
                     }
 

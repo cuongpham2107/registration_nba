@@ -10,5 +10,6 @@ export default {
         "./resources/views/forms/**/*.blade.php",
         "./app/Forms/**/*.php",
         "./resources/views/vendor/**/*.blade.php",
+        "./resources/views/components/**/*.blade.php",
     ],
 };

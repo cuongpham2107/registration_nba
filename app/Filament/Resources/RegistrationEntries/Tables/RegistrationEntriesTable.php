@@ -14,6 +14,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ExportBulkAction;
 use Filament\Actions\Exports\Models\Export;
+use Filament\Actions\ViewAction;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\Size;
@@ -23,7 +24,6 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Enums\RecordActionsPosition;
-use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -43,19 +43,6 @@ class RegistrationEntriesTable
             ->filtersFormColumns(1)
             ->deferLoading()
             ->deferFilters(false)
-            // ->groups([
-            //     Group::make('license_plate')
-            //         ->titlePrefixedWithLabel(false)
-            //         ->getKeyFromRecordUsing(fn ($record): string => (int) $record->plate_count > 1
-            //                 ? $record->license_plate
-            //                 : '__single__'.$record->id
-            //         )
-            //         ->getTitleFromRecordUsing(fn ($record): ?string => (int) $record->plate_count > 1
-            //                 ? $record->license_plate
-            //                 : null
-            //         ),
-            // ])
-            // ->defaultGroup('license_plate')
             ->defaultPaginationPageOption(25)
             ->recordActions(self::getRecordActions(), position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions(self::getToolbarActions());
@@ -96,11 +83,11 @@ class RegistrationEntriesTable
                     return isset($parts[1]) ? trim($parts[1]) : '';
                 })
                 ->weight(FontWeight::Bold)
-                ->toggleable(),
+                ->toggleable(isToggledHiddenByDefault: true),
             TextColumn::make('papers')
                 ->label('Số CCCD')
                 ->weight(FontWeight::Bold)
-                ->toggleable(),
+                ->toggleable(isToggledHiddenByDefault: true),
             TextColumn::make('license_plate')
                 ->label('Biển kiểm soát')
                 ->weight(FontWeight::Bold)
@@ -114,7 +101,7 @@ class RegistrationEntriesTable
                     return $area ? $area->name : '';
                 })
                 ->badge()
-                ->toggleable(),
+                ->toggleable(isToggledHiddenByDefault: true),
             TextColumn::make('status')
                 ->label('Trạng thái')
                 ->sortable()
@@ -146,7 +133,7 @@ class RegistrationEntriesTable
                 ->icon('heroicon-s-calendar-days')
                 ->sortable()
                 ->alignment(Alignment::Center)
-                ->toggleable(),
+                ->toggleable(isToggledHiddenByDefault: true),
             ColumnGroup::make('Thời gian thực tế', [
                 TextColumn::make('actual_date_in')
                     ->label('Giờ vào thực tế')
@@ -174,12 +161,15 @@ class RegistrationEntriesTable
             TextColumn::make('card.card_name')
                 ->label('Thẻ')
                 ->numeric(),
+            TextColumn::make('invoice.amount')
+                ->label('Số tiền')
+                ->money('VND'),
             TextColumn::make('created_at')
                 ->label('Ngày tạo')
                 ->dateTime('d/m/Y H:i')
                 ->sortable()
                 ->alignment(Alignment::Center)
-                ->toggleable(),
+                ->toggleable(isToggledHiddenByDefault: true),
         ];
     }
 
@@ -196,6 +186,9 @@ class RegistrationEntriesTable
             GiveCardAction::make(),
             ReturnCardAction::make(),
             ActionGroup::make([
+                ViewAction::make()
+                    ->slideOver()
+                    ->modalWidth(Width::SixExtraLarge),
                 EditAction::make()
                     ->slideOver()
                     ->modalWidth(Width::SixExtraLarge)

@@ -62,7 +62,7 @@ class InvoicesTable
                 ->falseIcon('heroicon-o-x-circle')
                 ->trueColor('success')
                 ->falseColor('danger'),
-            TextColumn::make('registrationEntry.vehicleRegistration.company')
+            TextColumn::make('company_id')
                 ->label('Có xuất hóa đơn không?')
                 ->badge()
                 ->formatStateUsing(fn ($state) => $state ? 'Có' : 'Không')

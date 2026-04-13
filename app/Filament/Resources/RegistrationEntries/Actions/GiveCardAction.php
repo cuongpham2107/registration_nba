@@ -48,11 +48,16 @@ class GiveCardAction
                         Forms\Components\Select::make('id')
                             ->label('Thẻ')
                             ->options(fn () => Card::query()
-                                ->where('status', '!=', 'active')
+                                ->where('status', 'inactive')
                                 ->orderBy('card_name')
-                                ->pluck('card_name', 'id'))
+                                ->get()
+                                ->mapWithKeys(fn (Card $card) => [
+                                    $card->id => trim($card->card_name.' - '.$card->card_number),
+                                ])
+                                ->toArray())
                             ->searchable(['card_name', 'card_number'])
                             ->preload()
+                            ->native(false)
                             ->columnSpan(3),
                         Forms\Components\DateTimePicker::make('start_date')
                             ->label('Giờ vào')

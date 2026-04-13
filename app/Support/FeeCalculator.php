@@ -8,6 +8,57 @@ use Carbon\Carbon;
 
 class FeeCalculator
 {
+    /**
+     * Format duration for display (same rules as invoices):
+     * - If < 60 minutes: show "N phút"
+     * - If >= 60 minutes: show "H giờ, M phút"
+     */
+    public static function formatDurationForDisplay($entryTime, $exitTime, string $timezone = 'Asia/Ho_Chi_Minh'): string
+    {
+        if (blank($entryTime) || blank($exitTime)) {
+            return '0 phút';
+        }
+
+        $entry = Carbon::parse($entryTime, $timezone);
+        $exit = Carbon::parse($exitTime, $timezone);
+
+        if ($exit->lessThan($entry)) {
+            [$entry, $exit] = [$exit, $entry];
+        }
+
+        // Làm tròn lên theo phút để hiển thị (vd: 27.35 phút => 28 phút).
+        // Carbon diffInMinutes mặc định trả về số nguyên, nhưng vẫn ceil để thống nhất rule hiển thị.
+        $totalMinutes = (int) ceil($entry->diffInSeconds($exit) / 60);
+
+        if ($totalMinutes < 60) {
+            return $totalMinutes.' phút';
+        }
+
+        $hours = intdiv($totalMinutes, 60);
+        $minutes = $totalMinutes % 60;
+
+        return $hours.' giờ, '.$minutes.' phút';
+    }
+
+    /**
+     * Total minutes between entry & exit (always non-negative).
+     */
+    public static function durationMinutes($entryTime, $exitTime, string $timezone = 'Asia/Ho_Chi_Minh'): int
+    {
+        if (blank($entryTime) || blank($exitTime)) {
+            return 0;
+        }
+
+        $entry = Carbon::parse($entryTime, $timezone);
+        $exit = Carbon::parse($exitTime, $timezone);
+
+        if ($exit->lessThan($entry)) {
+            [$entry, $exit] = [$exit, $entry];
+        }
+
+        return (int) ceil($entry->diffInSeconds($exit) / 60);
+    }
+
     public static function forRegistrationEntry(RegistrationEntry $entry): array
     {
         // Single pricing table (`fees`) for all entry types.
@@ -51,8 +102,9 @@ class FeeCalculator
 
         // Business rule: nếu đã có giờ vào/ra hợp lệ thì tối thiểu tính 1 block.
         // Tránh trường hợp vào/ra cùng timestamp (0 phút) nhưng vẫn cần thu phí.
-        if ($exit->equalTo($entry)) {
-            $exit = $exit->copy()->addMinute();
+        // NOTE: diffInMinutes() sẽ trả 0 nếu < 60s. Nên ép tối thiểu 1 phút khi exit <= entry.
+        if ($exit->lessThanOrEqualTo($entry)) {
+            $exit = $entry->copy()->addMinute();
         }
 
         // New rules (per yêu cầu):
@@ -119,7 +171,12 @@ class FeeCalculator
         $start = $aStart->copy()->max($bStart);
         $end = $aEnd->copy()->min($bEnd);
 
-        return max(0, $start->diffInMinutes($end));
+        // Làm tròn lên theo phút cho phần overlap.
+        // Tránh case vào/ra trong vài giây => diffInMinutes() = 0 => không tính block => 0đ.
+        $seconds = $start->diffInSeconds($end);
+        $minutes = (int) ceil($seconds / 60);
+
+        return max(0, $minutes);
     }
 
     private static function overlaps(Carbon $aStart, Carbon $aEnd, Carbon $bStart, Carbon $bEnd): bool

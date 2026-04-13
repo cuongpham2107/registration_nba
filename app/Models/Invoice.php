@@ -20,6 +20,8 @@ class Invoice extends Model
         'payment_method',
         'file_path',
         'notes',
+        'company_id',
+        'is_issued',
     ];
 
     protected $casts = [

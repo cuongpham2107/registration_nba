@@ -3,13 +3,19 @@
 namespace App\Filament\Resources\RegistrationEntries\Actions;
 
 use App\Http\Controllers\DownloadInvoiceController;
+use App\Models\CarCatalog;
 use App\Models\Invoice;
 use App\Models\RegistrationEntry;
 use App\Support\FeeCalculator;
 use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\ToggleButtons;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
@@ -24,6 +30,7 @@ class ReturnCardAction
             ->button()
             ->icon('heroicon-o-arrow-uturn-up')
             ->requiresConfirmation()
+            ->modalWidth(Width::Large)
             ->modalIcon('heroicon-o-arrow-uturn-up')
             ->modalHeading(function (RegistrationEntry $record) {
                 if ($record->type === 'inspection') {
@@ -45,11 +52,80 @@ class ReturnCardAction
                 $record->status === 'exited'
             )
             ->form([
-                Toggle::make('is_money')
+                Hidden::make('is_money')
                     ->label('Trả tiền cho bảo vệ')
-                    ->default(false)
-                    ->inline(false)
+                    ->default(function (RegistrationEntry $record): bool {
+                        $carCatalogExists = CarCatalog::query()
+                            ->where('license_plate', $record->license_plate)
+                            ->exists();
+                        if ($carCatalogExists) {
+                            return true;
+                        }
+
+                        return $carCatalogExists;
+                    })
                     ->columnSpanFull(),
+
+                Section::make('Thông tin tạm tính')
+                    ->description('Thông tin phí tạm tính dựa trên giờ vào và giờ ra hiện tại. Phí chính xác sẽ được tính khi tạo hóa đơn.')
+                    ->columnSpanFull()
+                    ->columns(2)
+                    ->components([
+                        TextEntry::make('entry_time_preview')
+                            ->label('Giờ vào')
+                            ->state(fn (RegistrationEntry $record): string => $record->actual_date_in
+                                ? Carbon::parse($record->actual_date_in, 'Asia/Ho_Chi_Minh')->format('d/m/Y H:i')
+                                : 'Chưa có giờ vào')
+                            ->icon('heroicon-o-calendar')
+                            ->columnSpan(1),
+
+                        TextEntry::make('exit_time_preview')
+                            ->label('Giờ ra (tạm tính)')
+                            ->state(fn (): string => Carbon::now('Asia/Ho_Chi_Minh')->format('d/m/Y H:i'))
+                            ->icon('heroicon-o-calendar-days')
+                            ->columnSpan(1),
+
+                        TextEntry::make('duration_preview')
+                            ->label('Thời gian (tạm tính)')
+                            ->state(function (RegistrationEntry $record): string {
+                                if (! $record->actual_date_in) {
+                                    return 'Chưa có giờ vào';
+                                }
+
+                                return FeeCalculator::formatDurationForDisplay(
+                                    entryTime: $record->actual_date_in,
+                                    exitTime: Carbon::now('Asia/Ho_Chi_Minh'),
+                                );
+                            })
+                            ->icon('heroicon-o-clock')
+                            ->columnSpan(1),
+
+                        TextEntry::make('vehicle_type_preview')
+                            ->label('Loại xe / Trọng tải')
+                            ->state(fn (RegistrationEntry $record): string => $record->guest?->fee?->vehicle_type ?: 'Không xác định')
+                            ->icon('heroicon-o-truck')
+                            ->columnSpanFull(),
+
+                        TextEntry::make('fee_preview')
+                            ->label('Số tiền: ')
+                            ->inlineLabel(true)
+                            ->alignEnd()
+                            ->weight(FontWeight::Bold)
+                            ->state(function (RegistrationEntry $record): string {
+                                $amount = (int) (FeeCalculator::forRegistrationEntry($record)['total'] ?? 0);
+
+                                return number_format((int) $amount, 0, ',', '.').' đ';
+                            })
+                            ->columnSpanFull(),
+                        ToggleButtons::make('payment_method')
+                            ->label('Phương thức thanh toán')
+                            ->grouped()
+                            // ->boolean(trueLabel: 'Tiền mặt', falseLabel: 'Chuyển khoản'),
+                            ->options([
+                                'Tiền mặt' => 'Tiền mặt',
+                                'Chuyển khoản' => 'Chuyển khoản',
+                            ]),
+                    ]),
 
             ])
 
@@ -60,7 +136,7 @@ class ReturnCardAction
 
                     DB::transaction(function () use ($data, $record, &$downloadUrl, &$feeAmount) {
                         // nếu guest_id có dữ liệu và type là inspection thì không tính tiền
-                        if ($data['is_money'] === false) {
+                        if ($data['is_money'] === true) {
                             $feeAmount = 0;
                             $downloadUrl = null;
                         } else {
@@ -78,7 +154,7 @@ class ReturnCardAction
                                 'amount' => $feeAmount,
                                 'is_paid' => true,
                                 'paid_at' => now(),
-                                'payment_method' => 'Trả tiền cho bảo vệ',
+                                'payment_method' => $data['payment_method'],
                                 'file_path' => $filePath,
                                 'notes' => $record->type === 'working' ? 'Khách ra vào trả thẻ ra thành công' : 'Xe ra khỏi bãi thành công',
                             ];
@@ -115,7 +191,6 @@ class ReturnCardAction
                         $record->update([
                             'status' => 'exited',
                             'actual_date_out' => Carbon::now('Asia/Ho_Chi_Minh'),
-                            'card_id' => null,
                         ]);
                     });
 

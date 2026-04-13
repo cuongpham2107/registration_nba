@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\RegistrationEntry;
 use App\Support\FeeCalculator;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 use function Spatie\LaravelPdf\Support\pdf;
 
@@ -24,16 +24,20 @@ class DownloadInvoiceController extends Controller
 
         $payload = [
             'record' => $record,
-            'company' => $record->vehicleRegistration?->company,
             'vehicle_number' => $record->license_plate,
             // Only use `fees` table now.
             'vehicle_weight' => $record->guest?->fee?->vehicle_type,
             'customer_name' => $record->name,
             'entry_time' => $record->actual_date_in,
             'exit_time' => $record->actual_date_out ?? now(),
-            'total_hours' => $this->calculateDisplayHours($record->actual_date_in, $record->actual_date_out ?? now()),
-            'total_minutes' => (int) $this->calculateMinutes($record->actual_date_in, $record->actual_date_out ?? now()),
-            'remaining_minutes' => (int) $this->calculateRemainingMinutes($record->actual_date_in, $record->actual_date_out ?? now()),
+            // Đồng nhất với UI preview: làm tròn lên theo phút.
+            // `total_hours` + `remaining_minutes` dùng để hiển thị kiểu: "H giờ, M phút".
+            'total_hours' => intdiv(
+                FeeCalculator::durationMinutes($record->actual_date_in, $record->actual_date_out ?? now()),
+                60
+            ),
+            'total_minutes' => FeeCalculator::durationMinutes($record->actual_date_in, $record->actual_date_out ?? now()),
+            'remaining_minutes' => FeeCalculator::durationMinutes($record->actual_date_in, $record->actual_date_out ?? now()) % 60,
             // Backward compatible: `fee` is the total.
             'fee_breakdown' => FeeCalculator::forRegistrationEntry($record),
             'fee' => (int) (FeeCalculator::forRegistrationEntry($record)['total'] ?? 0),
@@ -46,11 +50,14 @@ class DownloadInvoiceController extends Controller
                 ->footerHtml('')
                 ->margins(0, 0, 0, 0)
                 ->format('A4')
+                ->withBrowsershot(function ($browsershot) {
+                    $browsershot->noSandbox();
+                })
                 ->save(storage_path('app/public/'.$filePath));
 
             return $filePath;
         } catch (\Throwable $e) {
-            // Fallback tạo file HTML để vẫn xem được online nếu PDF render lỗi.
+            Log::error('PDF Generation Failed: '.$e->getMessage());
             $html = view('invoices.invoice', $payload)->render();
 
             $htmlFilePath = str_replace('.pdf', '.html', $filePath);
@@ -58,53 +65,6 @@ class DownloadInvoiceController extends Controller
 
             return $htmlFilePath;
         }
-    }
-
-    private function calculateMinutes($entryTime, $exitTime)
-    {
-        if (blank($entryTime) || blank($exitTime)) {
-            return 0;
-        }
-
-        $entry = Carbon::parse($entryTime);
-        $exit = Carbon::parse($exitTime);
-
-        // diffInMinutes() expects the earlier date as the instance.
-        return $entry->diffInMinutes($exit);
-    }
-
-    private function calculateHours($entryTime, $exitTime)
-    {
-        if (blank($entryTime) || blank($exitTime)) {
-            return 0;
-        }
-
-        $entry = Carbon::parse($entryTime);
-        $exit = Carbon::parse($exitTime);
-
-        // diffInHours() expects the earlier date as the instance.
-        return $entry->diffInHours($exit);
-    }
-
-    private function calculateRemainingMinutes($entryTime, $exitTime)
-    {
-        return (int) $this->calculateMinutes($entryTime, $exitTime) % 60;
-    }
-
-    /**
-     * Display hours for invoice:
-     * - If < 1 hour: show decimal hours (1 digit), e.g. 0.8
-     * - If >= 1 hour: show integer hours only, e.g. 1 (minutes handled separately)
-     */
-    private function calculateDisplayHours($entryTime, $exitTime)
-    {
-        $totalMinutes = (int) $this->calculateMinutes($entryTime, $exitTime);
-
-        if ($totalMinutes < 60) {
-            return round($totalMinutes / 60, 1);
-        }
-
-        return intdiv($totalMinutes, 60);
     }
 
     private function calculateFee(RegistrationEntry $record)
