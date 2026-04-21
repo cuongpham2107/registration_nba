@@ -27,4 +27,28 @@
         @filamentScripts
         @vite('resources/js/app.js')
     </body>
+    <script>
+        window.printFile = function (url) {
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+
+            iframe.src = url;
+            document.body.appendChild(iframe);
+
+            iframe.onload = function () {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+                
+                // Xóa iframe sau một lúc
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 5000);
+            };
+        };
+    </script>
 </html>

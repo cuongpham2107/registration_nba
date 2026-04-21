@@ -36,6 +36,11 @@ class Invoice extends Model
         return $this->belongsTo(RegistrationEntry::class);
     }
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     // Helper methods
     public static function generateInvoiceCode()
     {

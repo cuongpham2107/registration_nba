@@ -104,6 +104,7 @@ class RegistrationEntriesTable
                 ->toggleable(isToggledHiddenByDefault: true),
             TextColumn::make('status')
                 ->label('Trạng thái')
+                ->alignment(Alignment::Center)
                 ->sortable()
                 ->badge()
                 ->color(function ($state) {
@@ -138,6 +139,7 @@ class RegistrationEntriesTable
                 TextColumn::make('actual_date_in')
                     ->label('Giờ vào thực tế')
                     ->dateTime('d/m/Y H:i')
+                    ->alignment(Alignment::Center)
                     ->icon('heroicon-s-calendar-days')
                     ->toggleable(),
                 TextColumn::make('actual_date_out')
@@ -160,10 +162,20 @@ class RegistrationEntriesTable
                 ->toggleable(isToggledHiddenByDefault: true),
             TextColumn::make('card.card_name')
                 ->label('Thẻ')
+                // ->bagde()
+                ->badge()
                 ->numeric(),
             TextColumn::make('invoice.amount')
                 ->label('Số tiền')
                 ->money('VND'),
+            TextColumn::make('invoice.file_path')
+                ->label('Hoá đơn')
+                ->alignment(Alignment::Center)
+                ->icon(fn (?string $state): ?string => $state ? 'heroicon-m-printer' : null)
+                ->formatStateUsing(fn (?string $state): string => $state ? 'In vé' : '')
+                ->color('info')
+                ->width('150px')
+                ->url(fn (?string $state): ?string => $state ? "javascript:printFile('".asset('storage/'.$state)."')" : null),
             TextColumn::make('created_at')
                 ->label('Ngày tạo')
                 ->dateTime('d/m/Y H:i')

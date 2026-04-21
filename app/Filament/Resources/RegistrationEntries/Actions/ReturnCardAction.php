@@ -19,6 +19,7 @@ use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
+use Livewire\Component;
 
 class ReturnCardAction
 {
@@ -129,12 +130,13 @@ class ReturnCardAction
 
             ])
 
-            ->action(function (array $data, RegistrationEntry $record): void {
+            ->action(function (array $data, RegistrationEntry $record, Component $livewire): void {
                 try {
                     $downloadUrl = null;
                     $feeAmount = null;
+                    $printUrl = null;
 
-                    DB::transaction(function () use ($data, $record, &$downloadUrl, &$feeAmount) {
+                    DB::transaction(function () use ($data, $record, &$downloadUrl, &$feeAmount, &$printUrl) {
                         // nếu guest_id có dữ liệu và type là inspection thì không tính tiền
                         if ($data['is_money'] === true) {
                             $feeAmount = 0;
@@ -142,6 +144,7 @@ class ReturnCardAction
                         } else {
                             $controller = new DownloadInvoiceController;
                             $filePath = $controller->generateInvoice($record);
+                            $printUrl = asset('storage/'.$filePath);
 
                             $normalizedBks = Invoice::normalizeLicensePlate($record->license_plate);
                             $feeAmount = (int) (FeeCalculator::forRegistrationEntry($record)['total'] ?? 0);
@@ -194,10 +197,13 @@ class ReturnCardAction
                         ]);
                     });
 
-                    if ($downloadUrl) {
+                    if ($printUrl) {
+                        // Gọi hàm in tự động qua Livewire JS
+                        $livewire->js("window.printFile('{$printUrl}')");
+
                         Notification::make()
                             ->title('Trả thẻ thành công')
-                            ->body('Hóa đơn đã được tạo. Nhấn để tải về.')
+                            ->body('Hóa đơn đang được lệnh in...')
                             ->success()
                             ->actions([
                                 Action::make('download_invoice')

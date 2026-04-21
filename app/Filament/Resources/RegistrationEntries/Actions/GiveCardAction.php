@@ -30,34 +30,24 @@ class GiveCardAction
             ->schema([
                 Fieldset::make('Lựa chọn')
                     ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label('Họ và tên')
-                            ->default(fn (RegistrationEntry $record) => $record->name)
-                            ->disabled()
-                            ->columnSpan(2),
+                        // Forms\Components\TextInput::make('name')
+                        //     ->label('Họ và tên')
+                        //     ->default(fn (RegistrationEntry $record) => $record->name)
+                        //     ->disabled()
+                        //     ->columnSpan(2),
                         Forms\Components\TextInput::make('license_plate')
                             ->label('Biển số xe')
                             ->default(fn (RegistrationEntry $record) => $record->license_plate)
                             ->disabled()
-                            ->columnSpan(2),
+                            ->columnSpan(3),
                         Forms\Components\TextInput::make('guest.fee.vehicle_type')
                             ->label('Loại phương tiện')
                             ->default(fn (RegistrationEntry $record) => $record->guest?->fee?->vehicle_type)
                             ->disabled()
-                            ->columnSpan(2),
-                        Forms\Components\Select::make('id')
+                            ->columnSpan(3),
+                        Forms\Components\TextInput::make('id')
                             ->label('Thẻ')
-                            ->options(fn () => Card::query()
-                                ->where('status', 'inactive')
-                                ->orderBy('card_name')
-                                ->get()
-                                ->mapWithKeys(fn (Card $card) => [
-                                    $card->id => trim($card->card_name.' - '.$card->card_number),
-                                ])
-                                ->toArray())
-                            ->searchable(['card_name', 'card_number'])
-                            ->preload()
-                            ->native(false)
+                            ->autofocus()
                             ->columnSpan(3),
                         Forms\Components\DateTimePicker::make('start_date')
                             ->label('Giờ vào')
@@ -78,18 +68,18 @@ class GiveCardAction
                         if (! empty($data['id'])) {
                             /** @var Card|null $card */
                             $card = Card::query()
-                                ->whereKey($data['id'])
-                                ->lockForUpdate()
+                                ->where('account_id', $data['id'])
                                 ->first();
 
                             if (! $card) {
-                                Notification::make()
-                                    ->title('Không tìm thấy thẻ')
-                                    ->body('Thẻ bạn chọn không tồn tại hoặc đã bị xoá. Vui lòng chọn lại hoặc bỏ trống.')
-                                    ->danger()
-                                    ->send();
-
-                                return;
+                                // Nếu không có thẻ thì tự tạo mới theo mã nhập.
+                                $card = new Card;
+                                $card->account_id = $data['id'];
+                                // Giữ tương thích với schema hiện tại: các cột này là bắt buộc.
+                                $card->card_number = $data['id'];
+                                $card->card_name = 'Thẻ '.$data['id'];
+                                $card->status = 'inactive';
+                                $card->save();
                             }
 
                             if ($card->status === 'active') {
@@ -116,13 +106,12 @@ class GiveCardAction
                             }
                         }
                         $record->save();
+                        Notification::make()
+                            ->title('Thành công')
+                            ->body('Đã chuyển trạng thái cho khách vào')
+                            ->success()
+                            ->send();
                     });
-
-                    Notification::make()
-                        ->title('Thành công')
-                        ->body('Đã chuyển trạng thái cho khách vào')
-                        ->success()
-                        ->send();
                 } catch (\Exception $e) {
                     Notification::make()
                         ->title('Lỗi')

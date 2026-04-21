@@ -7,6 +7,7 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -66,6 +67,13 @@ class InvoicesTable
                 ->label('Có xuất hóa đơn không?')
                 ->badge()
                 ->formatStateUsing(fn ($state) => $state ? 'Có' : 'Không')
+                ->color(fn ($state) => $state ? 'success' : 'danger')
+                ->alignCenter(),
+            TextColumn::make('is_issued')
+                ->label('Đã xuất hóa đơn?')
+                ->badge()
+                ->formatStateUsing(fn ($state) => $state ? 'Đã xuất' : 'Chưa xuất')
+                ->color(fn ($state) => $state ? 'success' : 'warning')
                 ->alignCenter(),
             IconColumn::make('is_paid')
                 ->label('Đã thanh toán')
@@ -129,15 +137,50 @@ class InvoicesTable
     private static function getRecordActions(): array
     {
         return [
-            Action::make('download_pdf')
-                ->label('Xem HĐ')
+            Action::make('view_company')
+                ->label('')
                 ->button()
-                ->icon('heroicon-o-eye')
+                ->tooltip('Xem thông tin xuất hoá đơn')
+                ->color('success')
+                ->icon('heroicon-o-building-office-2')
+                ->visible(fn ($record) => $record->company)
+                ->fillForm(fn ($record) => $record->company->toArray())
+                ->schema([
+                    TextInput::make('tax_code')
+                        ->label('Mã số thuế')
+                        ->disabled(),
+                    TextInput::make('name')
+                        ->label('Tên công ty')
+                        ->disabled(),
+                    TextInput::make('phone')
+                        ->label('Số điện thoại')
+                        ->disabled(),
+                    TextInput::make('address')
+                        ->label('Địa chỉ')
+                        ->disabled(),
+
+                ])
+                ->action(function ($record) {
+                    $record->update([
+                        'is_issued' => true,
+                    ]);
+                    Notification::make()
+                        ->title('Đã xuất hóa đơn')
+                        ->body('Đã xuất hóa đơn cho công ty '.$record->company->name)
+                        ->success()
+                        ->send();
+                })
+                ->modalSubmitActionLabel('Xác nhận xuất hóa đơn!'),
+            Action::make('download_pdf')
+                ->label('')
+                ->button()
+                ->tooltip('Xem vé')
+                ->icon('heroicon-o-document-text')
                 ->url(fn ($record) => $record->file_path ? Storage::url($record->file_path) : null)
                 ->openUrlInNewTab()
                 ->visible(fn ($record) => $record->file_path && Storage::disk('public')->exists($record->file_path)),
             EditAction::make()
-                ->label('Sửa')
+                ->label('')
                 ->button()
                 ->modalHeading('Chỉnh sửa hóa đơn')
                 ->modalDescription('Nhập thông tin hóa đơn cần chỉnh sửa'),

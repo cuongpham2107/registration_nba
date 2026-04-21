@@ -8,11 +8,11 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Width;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -20,7 +20,6 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use WatheqAlshowaiter\FilamentStickyTableHeader\StickyTableHeaderPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -56,29 +55,72 @@ class AdminPanelProvider extends PanelProvider
             ->spa()
             ->topNavigation()
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            ->widgets([
+                Widgets\AccountWidget::class,
+            ])
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => '<script>
+                    window.printFile = function (url) {
+                        const iframe = document.createElement("iframe");
+                        iframe.style.position = "fixed";
+                        iframe.style.right = "0";
+                        iframe.style.bottom = "0";
+                        iframe.style.width = "0";
+                        iframe.style.height = "0";
+                        iframe.style.border = "0";
+            
+                        iframe.src = url;
+                        document.body.appendChild(iframe);
+            
+                        iframe.onload = function () {
+                            iframe.contentWindow.focus();
+                            iframe.contentWindow.print();
+                            
+                            setTimeout(() => {
+                                document.body.removeChild(iframe);
+                            }, 5000);
+                        };
+                    };
+                </script>'
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => '<script>
+                (function () {
+                    let buffer = \'\';
+                    document.addEventListener(\'keydown\', function (e) {
+                        if (e.key === \'Enter\') {
+                            if (buffer.length > 5) {
+                            console.log(buffer)
+                                Livewire.dispatch("card-scanned", { code: buffer });
+                            }
+                            buffer = \'\';
+                        } else if (e.key.length === 1) {
+                            buffer += e.key;
+                        }
+                    });
+                })();
+            </script>'
+            )
             ->plugins([
                 FilamentShieldPlugin::make()
                     ->gridColumns([
                         'default' => 1,
                         'sm' => 2,
-                        'lg' => 4,
+                        'lg' => 3,
                     ])
                     ->sectionColumnSpan(1)
                     ->checkboxListColumns([
                         'default' => 1,
                         'sm' => 2,
-                        'lg' => 2,
+                        'lg' => 4,
                     ])
                     ->resourceCheckboxListColumns([
                         'default' => 1,
                         'sm' => 2,
                     ]),
-                // StickyTableHeaderPlugin::make(),
             ])
-            // ->widgets([
-            //     Widgets\AccountWidget::class,
-            //     Widgets\FilamentInfoWidget::class,
-            // ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

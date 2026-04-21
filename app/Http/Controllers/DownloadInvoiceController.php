@@ -22,6 +22,8 @@ class DownloadInvoiceController extends Controller
             mkdir($directory, 0755, true);
         }
 
+        $logo = public_path('images/ASG.png');
+
         $payload = [
             'record' => $record,
             'vehicle_number' => $record->license_plate,
@@ -51,7 +53,10 @@ class DownloadInvoiceController extends Controller
                 ->margins(0, 0, 0, 0)
                 ->format('A4')
                 ->withBrowsershot(function ($browsershot) {
-                    $browsershot->noSandbox();
+                    $browsershot->setNodeBinary('node')
+                        ->setNpmBinary('npm')
+                        ->noSandbox()
+                        ->addChromiumArguments(['disable-dev-shm-usage', 'disable-setuid-sandbox']);
                 })
                 ->save(storage_path('app/public/'.$filePath));
 

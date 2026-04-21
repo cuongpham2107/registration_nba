@@ -191,6 +191,7 @@ class ListRegistrationEntries extends ListRecords
                         ->label('Loại phương tiện')
                         ->options(Fee::all()->pluck('vehicle_type', 'id')->toArray()
                         )
+                        ->required()
                         ->searchable()
                         ->preload(),
                 ])
@@ -238,5 +239,25 @@ class ListRegistrationEntries extends ListRecords
                 ),
 
         ];
+    }
+
+    #[On('card-scanned')]
+    public function onCardScanned(string $code): void
+    {
+        $record = RegistrationEntry::query()
+            ->whereHas('card', fn ($query) => $query->where('account_id', $code))
+            ->where('status', 'entering')
+            ->first();
+        if (! $record) {
+            Notification::make()
+                ->title('Không tìm thấy bản ghi')
+                ->body("Không tìm thấy đơn đăng ký đang ở trạng thái 'Đang vào' với mã thẻ: {$code}.")
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $this->mountTableAction('return-card', $record->getKey());
     }
 }
