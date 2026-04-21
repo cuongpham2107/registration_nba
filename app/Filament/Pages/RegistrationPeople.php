@@ -14,6 +14,7 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -47,7 +48,10 @@ class RegistrationPeople extends Page implements HasActions, HasSchemas, HasTabl
         return $table
             ->query(fn (): Builder => RegistrationEntry::query()->where('type', 'working'))
             ->columns(RegistrationEntriesTable::columnsForPage())
-            ->filters(RegistrationEntriesTable::filters())
+            ->filters(RegistrationEntriesTable::filters(), layout: FiltersLayout::AboveContentCollapsible)
+            ->filtersFormColumns(1)
+            ->deferLoading()
+            ->deferFilters(false)
             ->defaultSort('created_at', 'asc')
             ->defaultPaginationPageOption(25)
             ->recordActions(RegistrationEntriesTable::recordActions(), position: RecordActionsPosition::BeforeColumns)

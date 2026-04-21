@@ -13,15 +13,23 @@ class GuestImporter implements ToModel, WithHeadingRow
      */
     public function model(array $row)
     {
-        // Chuyển đổi string areas thành array (nếu có dấu phẩy)
-        $areas = isset($row['areas']) ? explode(',', $row['areas']) : [];
-        $areas = array_map('trim', $areas); // Loại bỏ khoảng trắng thừa
+        // Chuyển đổi string areas thành array.
+        // Hỗ trợ nhiều kiểu phân tách thường gặp trong Excel: ",", ";", xuống dòng.
+        $areasRaw = $row['areas'] ?? null;
+        if (is_array($areasRaw)) {
+            $areas = $areasRaw;
+        } else {
+            $areasRaw = (string) ($areasRaw ?? '');
+            $areas = preg_split('/[;,\n\r]+/', $areasRaw) ?: [];
+        }
+
+        $areas = array_values(array_filter(array_map('trim', $areas), static fn ($v) => $v !== ''));
 
         return new Guest([
             'name' => $row['name'] ?? null,
             'papers' => $row['papers'] ?? null,
             'type' => $row['type'] ?? null,
-            'areas' => $areas, // Sử dụng 'areas' và là array
+            'areas' => $areas, // Lưu dưới dạng array (cast JSON/array trên model)
             'license_plate' => $row['license_plate'] ?? null,
             'note' => $row['note'] ?? null,
             'visitor_registration_id' => $row['visitor_registration_id'] ?? null,

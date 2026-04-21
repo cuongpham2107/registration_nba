@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Registrations\Actions;
 
-use App\Models\Fee;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
@@ -17,20 +16,24 @@ class ImportGuestsAction
     {
         return Action::make('import')
             ->label('Import danh sách khách')
-            ->modalDescription(new HtmlString('File Excel phải đúng định dạng theo mẫu. Vui lòng tải về mẫu trước khi import. <br><a href="/template-guests.xlsx" download class="text-primary-600 hover:underline font-semibold">📥 Tải file mẫu tại đây</a>'))
+            ->modalDescription(new HtmlString('File Excel phải đúng định dạng theo mẫu. Vui lòng tải về mẫu trước khi import. <br><a href="/template-guest.xlsx" download class="text-primary-600 hover:underline font-semibold">📥 Tải file mẫu tại đây</a>'))
             ->icon('heroicon-s-arrow-up-on-square')
             ->form([
                 FileUpload::make('file')
                     ->label('File import')
                     ->acceptedFileTypes(['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
+                    ->disk('public')
+                    ->directory('imports')
+                    ->preserveFilenames()
+                    ->maxSize(10240)
                     ->required(),
             ])
             ->action(function (array $data, Set $set, Get $get) {
                 try {
                     $file = $data['file'];
-                    // FileUpload lưu vào storage/app/public với đường dẫn tương đối
-                    // cần thêm prefix 'public/' để truy cập đúng
-                    $filePath = storage_path('app/private/'.$file);
+                    // FileUpload sẽ trả về path tương đối trong disk đã chọn.
+                    // Với disk 'public' đang trỏ tới storage/app/public.
+                    $filePath = storage_path('app/public/'.ltrim($file, '/'));
 
                     if (! file_exists($filePath)) {
                         Notification::make()
@@ -52,9 +55,6 @@ class ImportGuestsAction
                         array_shift($rows);
                     }
 
-                    // Lấy danh sách fees để map vehicle_type -> fee_id
-                    $fees = Fee::all()->pluck('vehicle_type', 'id')->toArray();
-
                     // Chuyển đổi dữ liệu từ Excel
                     $importedGuests = [];
                     foreach ($rows as $row) {
@@ -63,26 +63,13 @@ class ImportGuestsAction
                             continue;
                         }
 
-                        // Tìm fee_id dựa trên vehicle_type (cột F - Loại phương tiện)
-                        $feeId = null;
-                        $vehicleType = $row[5] ?? ''; // Column F - Loại phương tiện
-                        if (! empty($vehicleType)) {
-                            foreach ($fees as $id => $type) {
-                                if (strtolower(trim($type)) === strtolower(trim($vehicleType))) {
-                                    $feeId = $id;
-                                    break;
-                                }
-                            }
-                        }
-
                         $importedGuests[] = [
                             'name' => $row[0] ?? '',           // Column A - Tên khách
                             'phone' => $row[1] ?? '',          // Column B - Số điện thoại
                             'papers' => $row[2] ?? '',         // Column C - Số giấy tờ
                             'type' => $row[3] ?? '',           // Column D - Loại giấy tờ
                             'license_plate' => $row[4] ?? '',  // Column E - Biển số
-                            'fee_id' => $feeId,                // Column F - Loại phương tiện
-                            'note' => $row[6] ?? '',           // Column G - Ghi chú
+                            'note' => $row[5] ?? '',           // Column F - Ghi chú
                         ];
                     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Registrations\Schemas;
 
+use App\Filament\Resources\Registrations\Actions\ImportGuestsAction;
 use App\Models\Area;
 use App\Models\Company;
 use App\Models\Fee;
@@ -218,7 +219,6 @@ class RegistrationForm
                             ->markAsRequired()
                             ->width('150px'),
                         TableColumn::make('Biển số')
-                            ->markAsRequired()
                             ->width('150px'),
                         TableColumn::make('Khu vực')
                             ->width('250px'),
@@ -231,6 +231,7 @@ class RegistrationForm
                     ->relationship('guests')
                     ->label('Khách')
                     ->compact()
+                    ->afterLabel(fn () => ImportGuestsAction::make())
                     ->schema([
                         TextInput::make('name')
                             ->required(),

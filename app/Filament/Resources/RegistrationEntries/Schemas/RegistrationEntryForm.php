@@ -23,16 +23,29 @@ class RegistrationEntryForm
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->label('Họ và tên')
+                            ->hidden(fn ($state, ?Model $record) => $record->type === 'inspection')
                             ->required(),
                         Forms\Components\TextInput::make('papers')
                             ->label('Số CCCD')
-                            ->numeric()
-                            ->required(),
+                            ->hidden(fn ($state, ?Model $record) => $record->type === 'inspection')
+                            ->numeric(),
                         Forms\Components\TextInput::make('license_plate')
                             ->label('Biển kiểm soát')
                             ->prefixIcon('heroicon-o-truck')
                             ->formatStateUsing(fn (?string $state) => $state ? strtoupper(str_replace(' ', '', $state)) : '')
                             ->required(),
+                        // trong tải
+                        Forms\Components\TextInput::make('vehicle_type')
+                            ->label('Trọng tải')
+                            ->dehydrated(false)
+                            ->disabled()
+                            ->formatStateUsing(function ($state, ?Model $record): ?string {
+                                if (! $record) {
+                                    return $state;
+                                }
+
+                                return $record->guest?->fee?->vehicle_type;
+                            }),
                         Forms\Components\TextInput::make('address')
                             ->label('Địa chỉ')
                             ->hidden(fn ($state) => $state === null)
@@ -46,6 +59,7 @@ class RegistrationEntryForm
                             ->searchable(),
                         Forms\Components\Textarea::make('job')
                             ->label('Mục đích công việc')
+                            ->hidden(fn ($state, ?Model $record) => $record->type === 'inspection')
                             ->formatStateUsing(fn (?string $state) => $state ? implode("\n", [
                                 'Loại phương tiện: '.(explode('|', $state)[0] ?? ''),
                                 'Dịch vụ: '.(explode('|', $state)[1] ?? ''),
@@ -89,6 +103,7 @@ class RegistrationEntryForm
                         Forms\Components\Select::make('areas')
                             ->label('Khu vực')
                             ->multiple()
+                            ->hidden(fn ($state, ?Model $record) => $record->type === 'inspection')
                             ->options(Area::all()->pluck('name', 'code'))
                             ->preload()
                             ->columnSpanFull(),
@@ -96,11 +111,13 @@ class RegistrationEntryForm
                             ->displayFormat('d/m/Y h:i')
                             ->seconds(false)
                             ->label('Giờ vào')
+                            ->hidden(fn ($state, ?Model $record) => $record->type === 'inspection')
                             ->required(),
                         Forms\Components\DateTimePicker::make('end_date')
                             ->displayFormat('d/m/Y h:i')
                             ->seconds(false)
                             ->label('Giờ ra dự kiến')
+                            ->hidden(fn ($state, ?Model $record) => $record->type === 'inspection')
                             ->rules([
                                 fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
                                     if ($record['status'] != 'sent') {
