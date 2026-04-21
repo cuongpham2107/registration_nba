@@ -222,9 +222,9 @@ class RegistrationForm
                             ->width('150px'),
                         TableColumn::make('Khu vực')
                             ->width('250px'),
-                        TableColumn::make('Loại phương tiện')
-                            ->markAsRequired()
-                            ->width('250px'),
+                        // TableColumn::make('Loại phương tiện')
+                        //     ->markAsRequired()
+                        //     ->width('250px'),
                         TableColumn::make('Ghi chú')
                             ->width('150px'),
                     ])
@@ -244,11 +244,11 @@ class RegistrationForm
                             ->options(Area::all()->pluck('name', 'code'))
                             ->searchable()
                             ->preload(),
-                        Select::make('fee_id')
-                            ->label('Loại phương tiện')
-                            ->options(Fee::all()->pluck('vehicle_type', 'id')->toArray())
-                            ->searchable()
-                            ->preload(),
+                        // Select::make('fee_id')
+                        //     ->label('Loại phương tiện')
+                        //     ->options(Fee::all()->pluck('vehicle_type', 'id')->toArray())
+                        //     ->searchable()
+                        //     ->preload(),
                         TextInput::make('note'),
                     ])
                     ->defaultItems(1)

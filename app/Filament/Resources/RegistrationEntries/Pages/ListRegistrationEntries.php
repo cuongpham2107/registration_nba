@@ -3,19 +3,19 @@
 namespace App\Filament\Resources\RegistrationEntries\Pages;
 
 use App\Filament\Resources\RegistrationEntries\RegistrationEntryResource;
-use App\Filament\Resources\Registrations\Actions\ImportGuestsAction;
 use App\Models\Fee;
 use App\Models\Guest;
 use App\Models\RegistrationEntry;
+use App\Models\User;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
 
 class ListRegistrationEntries extends ListRecords
@@ -183,6 +183,11 @@ class ListRegistrationEntries extends ListRecords
                 ->label('Tạo đăng ký kiểm hoá')
                 ->modalWidth(Width::Large)
                 ->icon('heroicon-s-plus')
+                ->hidden(function (): bool {
+                    $user = auth()->user();
+
+                    return ! $user || ! $user->can('create', RegistrationEntry::class);
+                })
                 ->schema([
                     TextInput::make('license_plate')
                         ->label('Biển số xe')
@@ -232,6 +237,21 @@ class ListRegistrationEntries extends ListRecords
                             ->title('Có lỗi xảy ra')
                             ->body('Không thể tạo đơn đăng ký. Vui lòng thử lại hoặc liên hệ quản trị viên.')
                             ->send();
+                    }
+
+                    try {
+                        $protectUsers = User::whereHas('roles', fn ($query) => $query->where('name', 'protect'))->get();
+                        foreach ($protectUsers as $user) {
+                            if (! $user instanceof Model) {
+                                continue;
+                            }
+                            Notification::make()
+                                ->title('Đơn xét duyệt đăng ký xe kiểm hoá')
+                                ->success()
+                                ->broadcast($user);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Broadcast notification failed: '.$e->getMessage());
                     }
                 })
                 ->modalSubmitAction(fn (Action $action) => $action

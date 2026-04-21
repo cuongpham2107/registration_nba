@@ -145,21 +145,23 @@ class RegistrationsTable
                 ->weight(FontWeight::Bold)
                 ->badge()
                 ->toggleable()
-                ->color(fn (string $state): string => match ($state) {
+                ->color(fn (?string $state): string => match ($state) {
                     'none' => 'gray',
                     'sent' => 'success',
                     'approve' => 'info',
                     'entering' => 'warning',
                     'exited' => 'gray',
                     'reject' => 'danger',
+                    default => 'gray',
                 })
-                ->formatStateUsing(fn (string $state) => match ($state) {
+                ->formatStateUsing(fn (?string $state) => match ($state) {
                     'none' => 'Chưa gửi',
                     'sent' => 'Đã gửi',
                     'approve' => 'Đã phê duyệt',
                     'entering' => 'Đang vào',
                     'exited' => 'Đã ra',
                     'reject' => 'Đã từ chối',
+                    default => (string) ($state ?? ''),
                 }),
             TextColumn::make('approved_at')
                 ->Label('Ngày duyệt')
@@ -174,7 +176,7 @@ class RegistrationsTable
                 ->color('warning')
                 ->sortable()
                 ->toggleable(),
-            TextColumn::make('user.name')
+            TextColumn::make('creator.name')
                 ->Label('Người tạo')
                 ->badge()
                 ->separator(',')

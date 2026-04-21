@@ -12,6 +12,7 @@ use Filament\Support\Enums\Size;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 use Throwable;
 
 class SendMailRegistrationAction
@@ -23,8 +24,10 @@ class SendMailRegistrationAction
             ->icon('heroicon-m-envelope')
             ->size(Size::Small)
             ->requiresConfirmation()
-            ->hidden(fn (Registration $record) => $record->status === 'sent' || ! Auth::user()->can('SendEmail:Registration'))
-            ->action(function (Registration $record) {
+            ->hidden(fn (Registration $record): bool => in_array($record->status, ['sent', 'approve', 'reject', 'entering', 'exited'], true)
+                || ! Auth::user()?->can('SendEmail:Registration')
+            )
+            ->action(function (Registration $record, Component $livewire): void {
                 try {
                     // Lấy thông tin người phê duyệt từ relationship
                     $approver = $record->approver;
@@ -93,6 +96,9 @@ class SendMailRegistrationAction
 
                     // Cập nhật status
                     $record->update(['status' => 'sent']);
+
+                    // Refresh UI so `hidden()` is re-evaluated immediately.
+                    $livewire->dispatch('$refresh');
                     // Broadcast đến các approver
                     try {
                         $approveVehicleUsers = User::role('approver')->get();

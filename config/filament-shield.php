@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+// use App\Filament\Pages\RegistrationPeople;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
@@ -203,6 +204,7 @@ return [
         'prefix' => 'view',
         'exclude' => [
             Dashboard::class,
+            // RegistrationPeople::class,
         ],
     ],
 

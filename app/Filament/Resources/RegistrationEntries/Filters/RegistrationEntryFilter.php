@@ -43,7 +43,7 @@ class RegistrationEntryFilter extends Filter
                     ->format('d-m-Y'),
                 Toggle::make('is_priority')
                     ->label('Ưu tiên')
-                    ->helperText('Sắp xếp các đăng ký ưu tiên lên đầu')
+                    // ->helperText('Sắp xếp các đăng ký ưu tiên lên đầu')
                     ->inline(false)
                     ->default(true),
             ])

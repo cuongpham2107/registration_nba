@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\RegistrationEntries\Schemas;
 
 use App\Models\Area;
+use App\Models\Card;
 use Carbon\Carbon;
 use Closure;
 use Filament\Forms;
@@ -59,31 +60,32 @@ class RegistrationEntryForm
                             ->relationship(
                                 name: 'card',
                                 titleAttribute: 'card_name',
-                                modifyQueryUsing: fn (Builder $query) => $query->where('status', 'inactive')
+                                modifyQueryUsing: fn (Builder $query, Get $get): Builder => $query
+                                    ->where(function (Builder $query) use ($get): Builder {
+                                        $cardId = $get('card_id');
+
+                                        return $query
+                                            ->where('status', 'inactive')
+                                            ->when(
+                                                filled($cardId),
+                                                fn (Builder $query) => $query->orWhere(function (Builder $query) use ($cardId) {
+                                                    $query->whereKey($cardId);
+                                                }),
+                                            );
+                                    }),
                             )
+                            ->getOptionLabelFromRecordUsing(fn (Model $record): string => (string) ($record->card_name ?? $record->getKey()))
+                            ->getOptionLabelUsing(function ($value): ?string {
+                                if (blank($value)) {
+                                    return null;
+                                }
+
+                                return Card::query()
+                                    ->whereKey($value)
+                                    ->value('card_name');
+                            })
                             ->searchable(['card_name', 'card_number'])
-                            ->preload()
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('account_id')
-                                    ->label('Mã tài khoản')
-                                    ->required(),
-                                Forms\Components\TextInput::make('card_number')
-                                    ->label('Số thẻ')
-                                    ->numeric()
-                                    ->required(),
-                                Forms\Components\TextInput::make('card_name')
-                                    ->label('Tên thẻ')
-                                    ->required(),
-                                Forms\Components\Select::make('status')
-                                    ->label('Trạng thái')
-                                    ->options([
-                                        'active' => 'Đang sử dụng',
-                                        'inactive' => 'Chưa sử dụng',
-                                        'blocked' => 'Bị khóa',
-                                    ])
-                                    ->default('inactive')
-                                    ->required(),
-                            ]),
+                            ->preload(),
                         Forms\Components\Select::make('areas')
                             ->label('Khu vực')
                             ->multiple()

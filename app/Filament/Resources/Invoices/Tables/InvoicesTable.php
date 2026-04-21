@@ -2,21 +2,18 @@
 
 namespace App\Filament\Resources\Invoices\Tables;
 
+use App\Filament\Resources\Invoices\Filters\InvoiceFilter;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\Filter;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 
 class InvoicesTable
@@ -25,7 +22,9 @@ class InvoicesTable
     {
         return $table
             ->columns(self::getColumns())
-            ->filters(self::getFilters())
+            ->filters(self::getFilters(), layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns(5)
+            ->deferFilters(false)
             ->recordActions(self::getRecordActions())
             ->toolbarActions(self::getBulkActions())
             ->groups(self::getGroups())
@@ -103,34 +102,7 @@ class InvoicesTable
     private static function getFilters(): array
     {
         return [
-            TernaryFilter::make('is_paid')
-                ->label('Trạng thái thanh toán')
-                ->placeholder('Tất cả')
-                ->trueLabel('Đã thanh toán')
-                ->falseLabel('Chưa thanh toán'),
-            SelectFilter::make('payment_method')
-                ->label('Phương thức thanh toán')
-                ->options([
-                    'Trả tiền cho bảo vệ' => 'Trả tiền cho bảo vệ',
-                ]),
-            Filter::make('created_at')
-                ->form([
-                    DatePicker::make('created_from')
-                        ->label('Từ ngày'),
-                    DatePicker::make('created_until')
-                        ->label('Đến ngày'),
-                ])
-                ->query(function (Builder $query, array $data): Builder {
-                    return $query
-                        ->when(
-                            $data['created_from'],
-                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
-                        )
-                        ->when(
-                            $data['created_until'],
-                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
-                        );
-                }),
+            InvoiceFilter::make(),
         ];
     }
 

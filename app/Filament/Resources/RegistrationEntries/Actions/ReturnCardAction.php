@@ -3,13 +3,11 @@
 namespace App\Filament\Resources\RegistrationEntries\Actions;
 
 use App\Http\Controllers\DownloadInvoiceController;
-use App\Models\CarCatalog;
 use App\Models\Invoice;
 use App\Models\RegistrationEntry;
 use App\Support\FeeCalculator;
 use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
@@ -53,22 +51,10 @@ class ReturnCardAction
                 $record->status === 'exited'
             )
             ->form([
-                Hidden::make('is_money')
-                    ->label('Trả tiền cho bảo vệ')
-                    ->default(function (RegistrationEntry $record): bool {
-                        $carCatalogExists = CarCatalog::query()
-                            ->where('license_plate', $record->license_plate)
-                            ->exists();
-                        if ($carCatalogExists) {
-                            return true;
-                        }
-
-                        return $carCatalogExists;
-                    })
-                    ->columnSpanFull(),
 
                 Section::make('Thông tin tạm tính')
                     ->description('Thông tin phí tạm tính dựa trên giờ vào và giờ ra hiện tại. Phí chính xác sẽ được tính khi tạo hóa đơn.')
+                    ->visible(fn (RegistrationEntry $record): bool => $record->type === 'inspection')
                     ->columnSpanFull()
                     ->columns(2)
                     ->components([
@@ -138,7 +124,7 @@ class ReturnCardAction
 
                     DB::transaction(function () use ($data, $record, &$downloadUrl, &$feeAmount, &$printUrl) {
                         // nếu guest_id có dữ liệu và type là inspection thì không tính tiền
-                        if ($data['is_money'] === true) {
+                        if ($record->type !== 'inspection') {
                             $feeAmount = 0;
                             $downloadUrl = null;
                         } else {

@@ -6,6 +6,7 @@ use App\Filament\Exports\RegistrationEntryExporter;
 use App\Filament\Resources\RegistrationEntries\Actions\GiveCardAction;
 use App\Filament\Resources\RegistrationEntries\Actions\ReturnCardAction;
 use App\Filament\Resources\RegistrationEntries\Filters\RegistrationEntryFilter;
+use App\Filament\Resources\RegistrationEntries\Schemas\RegistrationEntryForm;
 use App\Models\Area;
 use App\Models\RegistrationEntry;
 use Filament\Actions\ActionGroup;
@@ -15,6 +16,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ExportBulkAction;
 use Filament\Actions\Exports\Models\Export;
 use Filament\Actions\ViewAction;
+use Filament\Schemas\Schema;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\Size;
@@ -33,19 +35,46 @@ class RegistrationEntriesTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->header(view('filament.resources.tables.header'))
+            // ->header(view('filament.resources.tables.header'))
             ->emptyStateHeading('Không có khách hay xe khai thác nào')
             ->emptyStateDescription('Hiện tại chưa có khách hay xe khai thác nào.')
             ->columns(self::getColumns())
             ->defaultSort('created_at', 'asc')
             ->modifyQueryUsing(fn ($query) => self::modifyQuery($query))
-            ->filters(self::getFilters(), layout: FiltersLayout::AboveContent)
+            ->filters(self::getFilters(), layout: FiltersLayout::AboveContentCollapsible)
             ->filtersFormColumns(1)
             ->deferLoading()
             ->deferFilters(false)
             ->defaultPaginationPageOption(25)
             ->recordActions(self::getRecordActions(), position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions(self::getToolbarActions());
+    }
+
+    /**
+     * Reuse the resource table columns in other places (e.g. custom Pages).
+     */
+    public static function columns(): array
+    {
+        return self::getColumns();
+    }
+
+    /**
+     * Columns preset for Pages: hide columns that are toggled hidden by default
+     * (those are typically “optional” columns in the resource table).
+     */
+    public static function columnsForPage(): array
+    {
+        return self::getColumns(isToggledHiddenByDefault: false);
+    }
+
+    public static function filters(): array
+    {
+        return self::getFilters();
+    }
+
+    public static function recordActions(): array
+    {
+        return self::getRecordActions();
     }
 
     private static function modifyQuery($query): Builder
@@ -62,7 +91,7 @@ class RegistrationEntriesTable
         return $query;
     }
 
-    private static function getColumns(): array
+    private static function getColumns(bool $isToggledHiddenByDefault = true): array
     {
         return [
             IconColumn::make('type')
@@ -83,15 +112,18 @@ class RegistrationEntriesTable
                     return isset($parts[1]) ? trim($parts[1]) : '';
                 })
                 ->weight(FontWeight::Bold)
-                ->toggleable(isToggledHiddenByDefault: true),
+                ->searchable()
+                ->toggleable(isToggledHiddenByDefault: $isToggledHiddenByDefault),
             TextColumn::make('papers')
                 ->label('Số CCCD')
                 ->weight(FontWeight::Bold)
-                ->toggleable(isToggledHiddenByDefault: true),
+                ->searchable()
+                ->toggleable(isToggledHiddenByDefault: $isToggledHiddenByDefault),
             TextColumn::make('license_plate')
                 ->label('Biển kiểm soát')
                 ->weight(FontWeight::Bold)
                 ->formatStateUsing(fn (?string $state): string => $state ? strtoupper($state) : '')
+                ->searchable()
                 ->toggleable(),
             TextColumn::make('areas')
                 ->label('Khu vực')
@@ -101,7 +133,7 @@ class RegistrationEntriesTable
                     return $area ? $area->name : '';
                 })
                 ->badge()
-                ->toggleable(isToggledHiddenByDefault: true),
+                ->toggleable(isToggledHiddenByDefault: $isToggledHiddenByDefault),
             TextColumn::make('status')
                 ->label('Trạng thái')
                 ->alignment(Alignment::Center)
@@ -134,7 +166,7 @@ class RegistrationEntriesTable
                 ->icon('heroicon-s-calendar-days')
                 ->sortable()
                 ->alignment(Alignment::Center)
-                ->toggleable(isToggledHiddenByDefault: true),
+                ->toggleable(isToggledHiddenByDefault: $isToggledHiddenByDefault),
             ColumnGroup::make('Thời gian thực tế', [
                 TextColumn::make('actual_date_in')
                     ->label('Giờ vào thực tế')
@@ -159,7 +191,7 @@ class RegistrationEntriesTable
 
                     return isset($parts[1]) ? trim($parts[1]) : '';
                 })
-                ->toggleable(isToggledHiddenByDefault: true),
+                ->toggleable(isToggledHiddenByDefault: $isToggledHiddenByDefault),
             TextColumn::make('card.card_name')
                 ->label('Thẻ')
                 // ->bagde()
@@ -167,7 +199,8 @@ class RegistrationEntriesTable
                 ->numeric(),
             TextColumn::make('invoice.amount')
                 ->label('Số tiền')
-                ->money('VND'),
+                ->money('VND')
+                ->toggleable(isToggledHiddenByDefault: ! $isToggledHiddenByDefault),
             TextColumn::make('invoice.file_path')
                 ->label('Hoá đơn')
                 ->alignment(Alignment::Center)
@@ -175,7 +208,8 @@ class RegistrationEntriesTable
                 ->formatStateUsing(fn (?string $state): string => $state ? 'In vé' : '')
                 ->color('info')
                 ->width('150px')
-                ->url(fn (?string $state): ?string => $state ? "javascript:printFile('".asset('storage/'.$state)."')" : null),
+                ->url(fn (?string $state): ?string => $state ? "javascript:printFile('".asset('storage/'.$state)."')" : null)
+                ->toggleable(isToggledHiddenByDefault: ! $isToggledHiddenByDefault),
             TextColumn::make('created_at')
                 ->label('Ngày tạo')
                 ->dateTime('d/m/Y H:i')
@@ -200,10 +234,12 @@ class RegistrationEntriesTable
             ActionGroup::make([
                 ViewAction::make()
                     ->slideOver()
-                    ->modalWidth(Width::SixExtraLarge),
+                    ->modalWidth(Width::SixExtraLarge)
+                    ->schema(fn (Schema $schema): Schema => RegistrationEntryForm::configure($schema)),
                 EditAction::make()
                     ->slideOver()
                     ->modalWidth(Width::SixExtraLarge)
+                    ->schema(fn (Schema $schema): Schema => RegistrationEntryForm::configure($schema))
                     ->hidden(fn ($record) => $record->status === 'exited'),
                 DeleteAction::make(),
             ])

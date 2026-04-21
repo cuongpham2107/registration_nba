@@ -18,16 +18,13 @@ class ListRegistrations extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label(Auth::user()->hasRole('working') ? 'Đăng ký khách mới' : 'Đăng ký xe kiểm hoá')
+                ->label('Đăng ký khách mới')
                 ->icon('heroicon-o-plus')
-                // ->hidden(fn () => Auth::user() ? ! Auth::user()->hasRole(['inspection', 'working']) : true)
                 ->modalWidth(Width::ScreenTwoExtraLarge)
                 ->modalHeading('Đăng ký khách mới')
                 ->schema(function (Schema $schema) {
-                    $role = Auth::user()?->roles?->pluck('name')?->first();
-
-                    // `registrations.type` is an enum: only 'working' | 'inspection'.
-                    $type = in_array($role, ['working', 'inspection'], true) ? $role : 'working';
+                    // `registrations.type` is an enum: only 'working'.
+                    $type = 'working';
 
                     return RegistrationForm::configure($schema, $type);
                 })
@@ -40,11 +37,7 @@ class ListRegistrations extends ListRecords
                         $data['user_id'] = $user->id;
                         $data['approver_id'] = null;
                     }
-
-                    // Defensive: never allow invalid enum values.
-                    if (! in_array($data['type'] ?? null, ['working', 'inspection'], true)) {
-                        $data['type'] = 'working';
-                    }
+                    $data['type'] = 'working';
 
                     return $data;
                 }),

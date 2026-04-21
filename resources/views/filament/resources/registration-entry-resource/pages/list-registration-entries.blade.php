@@ -14,7 +14,6 @@
                     
                     window.Echo.private('App.Models.User.' + userId)
                         .notification((notification) => {
-
                             if (notification.title && (notification.title.includes('Đăng ký xe kiểm hoá mới') || notification.title.includes('Đơn xét duyệt đăng ký khách mới') || notification.title.includes('Cập nhập thứ tự ra vào cho xe khai thác'))) {
                                 // Dispatch custom event to refresh the table
                                 window.Livewire.dispatch('refresh-table');
