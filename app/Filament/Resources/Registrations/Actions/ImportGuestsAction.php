@@ -70,6 +70,7 @@ class ImportGuestsAction
                             'type' => $row[3] ?? '',           // Column D - Loại giấy tờ
                             'license_plate' => $row[4] ?? '',  // Column E - Biển số
                             'note' => $row[5] ?? '',           // Column F - Ghi chú
+                            'areas' => [],                     // Default empty areas
                         ];
                     }
 
