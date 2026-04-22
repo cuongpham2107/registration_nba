@@ -21,6 +21,7 @@ class CarCatalogsTable
                     ->searchable(),
                 IconColumn::make('is_paid')
                     ->boolean()
+                    ->alignCenter()
                     ->label('Áp dụng không thu phí?'),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -38,6 +39,9 @@ class CarCatalogsTable
                 EditAction::make()
                     ->modalWidth(Width::Large)
                     ->modal(),
+            ])
+            ->headerActions([
+
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

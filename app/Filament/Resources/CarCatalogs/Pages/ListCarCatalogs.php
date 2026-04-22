@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\CarCatalogs\Pages;
 
+use App\Filament\Resources\CarCatalogs\Actions\ImportCarCatalogsAction;
 use App\Filament\Resources\CarCatalogs\CarCatalogResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
@@ -18,6 +19,7 @@ class ListCarCatalogs extends ListRecords
                 ->icon('heroicon-o-plus')
                 ->modalWidth(Width::Large)
                 ->modal(),
+            ImportCarCatalogsAction::make(),
         ];
     }
 }
