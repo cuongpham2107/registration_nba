@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Thông tin đăng ký</title>
-    <meta name="favicon" content="{{ asset('images/ASG.png') }}">
+    <meta name="favicon" content="{{ asset('images/favicon.ico') }}">
 
     <style>
         table {

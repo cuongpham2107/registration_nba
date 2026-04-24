@@ -132,13 +132,17 @@ class UserResource extends Resource implements HasShieldPermissions
                             ->schema([
                                 Forms\Components\Select::make('roles')
                                     ->label('Quyền')
-                                    ->relationship('roles', 'name')
+                                    ->relationship('roles', 'name', modifyQueryUsing: fn (Builder $query) => 
+                                        auth()->user()?->hasRole('super_admin') 
+                                            ? $query 
+                                            : $query->where('name', '!=', 'super_admin')
+                                    )
                                     ->multiple()
                                     ->searchable(['name','email'])
                                     ->preload()
                             ])
                             ->columnSpan('full')
-                            ->hidden(fn () => !auth()->user()?->hasRole('super_admin')),
+                            ->hidden(fn () => !auth()->user()?->hasAnyRole(['super_admin', 'admin'])),
                         Section::make('Hình đại diện')
                             ->schema([
                                 ViewField::make('avatar')
@@ -193,6 +197,13 @@ class UserResource extends Resource implements HasShieldPermissions
                 // Super admin thấy tất cả
                 if ($user->hasRole('super_admin')) {
                     return $query;
+                }
+
+                if($user->hasRole('admin')){
+                    // Admin phê duyệt thấy tất cả trừ super_admin
+                    return $query->whereDoesntHave('roles', function (Builder $q) {
+                        $q->where('name', 'super_admin');
+                    });
                 }
                 // User thường chỉ thấy của mình (người tạo)
                 return $query->where('id', $user->id);

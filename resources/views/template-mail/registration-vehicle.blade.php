@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="favicon" content="{{ asset('images/ASG.png') }}">
+    <meta name="favicon" content="{{ asset('images/favicon.ico') }}">
 
     <title>Thông tin đăng ký xe khai thác</title>
     <style>

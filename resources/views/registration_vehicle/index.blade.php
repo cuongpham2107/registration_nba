@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="favicon" content="{{ asset('images/ASG.png') }}">
+    <meta name="favicon" content="{{ asset('images/favicon.ico') }}">
     <title>Đăng ký xe khai thác</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
@@ -368,7 +368,7 @@
     <div class="container">
         <div class="header">
             <div class="icon">
-                <img style="width: 70px;" src="{{ asset('images/ASG.png') }}" alt="">
+                <img style="width: 70px;" src="{{ asset('images/favicon.ico') }}" alt="">
             </div>
             <h1>Đăng ký xe khai thác</h1>
             <p class="subtitle">Điền thông tin bên dưới</p>

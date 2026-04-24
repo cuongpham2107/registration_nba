@@ -14,15 +14,17 @@ services:
         env_file:
             - .env
         volumes:
-            - app-code:/var/www/html
+            # Mount source để dev/quick edits, nhưng giữ lại build output từ image
+            - ./:/var/www/html
+            - vendor-data:/var/www/html/vendor
+            # Dùng named volume chung để webserver cũng đọc được build assets
+            - public-build:/var/www/html/public/build
             - ./.docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
             - ./.env:/var/www/html/.env
         ports:
             - "8080:8080"
         networks:
             - app-network
-        depends_on:
-            - db
 
     db:
         image: mysql:8.0
@@ -30,7 +32,7 @@ services:
         restart: unless-stopped
         tty: true
         ports:
-            - "3306:3306"
+            - "3307:3306"
         environment:
             MYSQL_DATABASE: registration_nba
             MYSQL_ROOT_PASSWORD: Asg@2025??
@@ -41,15 +43,26 @@ services:
         networks:
             - app-network
     scheduler:
-        build: .
-        container_name: laravel_scheduler
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: registration_nba_scheduler
+        container_name: registration_nba_scheduler
         restart: unless-stopped
-        working_dir: /var/www
+        tty: true
+        env_file:
+            - .env
+        working_dir: /var/www/html
         volumes:
-            - .:/var/www
+            - ./:/var/www/html
+            - vendor-data:/var/www/html/vendor
+            - public-build:/var/www/html/public/build
+            - ./.env:/var/www/html/.env
         depends_on:
             - app
         command: php artisan schedule:work
+        networks:
+            - app-network
     webserver:
         image: nginx:alpine
         container_name: registration_nba_webserver
@@ -59,7 +72,9 @@ services:
             - "80:80"
             - "443:443"
         volumes:
-            - app-code:/var/www/html
+            - ./:/var/www/html
+            # Giữ lại /public/build (Vite manifest + assets) được build trong image
+            - public-build:/var/www/html/public/build
             - ./.docker/nginx/conf.d/app.conf:/etc/nginx/conf.d/default.conf
         networks:
             - app-network
@@ -71,4 +86,10 @@ networks:
 volumes:
     dbdata:
         driver: local
-    app-code:
+
+    vendor-data:
+        driver: local
+
+    public-build:
+        driver: local
+

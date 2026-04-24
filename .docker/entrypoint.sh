@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+# Nếu container được chạy với command riêng (vd: php artisan schedule:work)
+# thì chạy command đó thay vì luôn khởi động php-fpm.
+if [ "$#" -gt 0 ]; then
+	exec "$@"
+fi
+
 # Đảm bảo quyền truy cập cho storage và bootstrap/cache
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
