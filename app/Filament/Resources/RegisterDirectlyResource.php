@@ -65,19 +65,32 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->required(),
                         Forms\Components\TextInput::make('address')
                             ->label('Địa chỉ')
+                            ->hidden(fn ($record) => $record->type === 'vehicle')
                             ->prefixIcon('heroicon-o-map-pin'),
                         Forms\Components\TextInput::make('bks')
                             ->label('Biển kiểm soát')
                             ->prefixIcon('heroicon-o-truck')
                             ->formatStateUsing(fn (?string $state) => $state ? strtoupper(str_replace(' ', '', $state)) : '')
                             ->required(),
+                        Forms\Components\Select::make('fee_id')
+                            ->label('Loại xe / Mức phí')
+                            ->relationship(
+                                name: 'fee',
+                                titleAttribute: 'vehicle_type',
+                            )
+                            ->hidden(fn ($record) => $record->type !== 'vehicle')
+                            ->searchable(['vehicle_type', 'ticket_code'])
+                            ->preload()
+                            ->required(),
                         Forms\Components\TextInput::make('contact_person')
+                            ->hidden(fn ($record) => $record->type === 'vehicle')
                             ->label('Người liên hệ'),
                         Forms\Components\Toggle::make('is_priority')
                             ->label('Ưu tiên')
                             ->helperText('Đánh dấu nếu đây là đơn đăng ký ưu tiên')
                             ->onIcon('heroicon-s-arrow-up')
                             ->offIcon('heroicon-s-arrow-down')
+                            ->hidden(fn ($record) => $record->type !== 'vehicle')
                             ->inline(false),
                         Forms\Components\Textarea::make('job')
                             ->label('Mục đích công việc')
@@ -128,11 +141,13 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->displayFormat('d/m/Y h:i')
                             ->seconds(false)
                             ->label('Giờ vào')
+                            ->hidden(fn ($record) => $record->type === 'vehicle')
                             ->required(),
                         Forms\Components\DateTimePicker::make('end_date')
                             ->displayFormat('d/m/Y h:i')
                             ->seconds(false)
                             ->label('Giờ ra dự kiến')
+                            ->hidden(fn ($record) => $record->type === 'vehicle')
                             ->rules([
                                 fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
                                     if ($record['status'] != 'sent') {
@@ -153,13 +168,13 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ]),
                         Forms\Components\DateTimePicker::make('actual_date_in')
                             ->label('Giờ vào thực tế')
-                            ->displayFormat('d/m/Y H:i A')
+                            ->displayFormat('d/m/Y H:i')
                             ->prefixIcon('heroicon-s-calendar-days')
-                            ->seconds(false)
-                            ->readonly(),
+                            ->seconds(false),
+                        // ->readonly(),
                         Forms\Components\DateTimePicker::make('actual_date_out')
                             ->label('Giờ ra thực tế')
-                            ->displayFormat('d/m/Y H:i A')
+                            ->displayFormat('d/m/Y H:i')
                             ->prefixIcon('heroicon-s-calendar-days')
                             ->seconds(false)
                             ->readonly(),
@@ -193,8 +208,8 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('name')
                     ->label('Họ và tên')
                     ->formatStateUsing(
-                        fn (RegisterDirectly $record): string => isset(explode('|', $record->name)[0]) ? trim(explode('|', mb_convert_case($record->name, MB_CASE_TITLE, "UTF-8"))[0]) : mb_convert_case($record->name, MB_CASE_TITLE, "UTF-8")
-                        
+                        fn (RegisterDirectly $record): string => isset(explode('|', $record->name)[0]) ? trim(explode('|', mb_convert_case($record->name, MB_CASE_TITLE, 'UTF-8'))[0]) : mb_convert_case($record->name, MB_CASE_TITLE, 'UTF-8')
+
                     )
                     ->description(function (RegisterDirectly $record): string {
                         $parts = explode('|', $record->name);
@@ -293,6 +308,13 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('card.card_name')
                     ->label('Thẻ')
                     ->numeric(),
+
+                Tables\Columns\TextColumn::make('invoice.amount')
+                    ->label('Số tiền')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => $state ? number_format($state, 0, ',', '.').' VNĐ' : '')
+                    ->alignment(Alignment::End),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Ngày tạo')
                     ->dateTime('d/m/Y H:i')
@@ -321,14 +343,43 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
             ->paginated([10, 25, 50, 100])
             ->defaultPaginationPageOption(25)
             ->actions([
+                Tables\Actions\Action::make('view_invoice')
+                    ->label('Hóa đơn')
+                    ->icon('heroicon-m-printer')
+                    ->color('success')
+                    ->button()
+                    ->hidden(fn (RegisterDirectly $record) => $record->type !== 'vehicle' || ! $record->invoice)
+                    ->action(function (RegisterDirectly $record, \Livewire\Component $livewire) {
+                        $downloadUrl = route('invoice.download', ['registerDirectly' => $record->id]);
+                        $livewire->js("window.printFile('{$downloadUrl}')");
+                    }),
                 GiveCardAction::make(),
                 ReturnCardAction::make(),
+
                 Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->slideOver()
+                        ->modalWidth(MaxWidth::SixExtraLarge),
                     Tables\Actions\EditAction::make()
                         ->slideOver()
                         ->modalWidth(MaxWidth::SixExtraLarge)
                         ->hidden(fn ($record) => $record->status === 'came_out'),
                     Tables\Actions\DeleteAction::make(),
+                    \Rmsramos\Activitylog\Actions\ActivityLogTimelineTableAction::make('Activities')
+                        ->hidden(fn () => ! auth()->user()->hasRole('super_admin'))
+                        ->label('Lịch sử')
+                        ->icon('heroicon-m-clock')
+                        ->color('info')
+                        ->timelineIcons([
+                            'created' => 'heroicon-m-check-badge',
+                            'updated' => 'heroicon-m-pencil-square',
+                            'deleted' => 'heroicon-m-trash',
+                        ])
+                        ->timelineIconColors([
+                            'created' => 'success',
+                            'updated' => 'warning',
+                            'deleted' => 'danger',
+                        ]),
                 ])
                     ->icon('heroicon-m-adjustments-vertical')
                     ->size(ActionSize::Small)
@@ -350,7 +401,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
     public static function getRelations(): array
     {
         return [
-            //
+            \Rmsramos\Activitylog\RelationManagers\ActivitylogRelationManager::class,
         ];
     }
 
@@ -371,7 +422,6 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
             'create',
             'update',
             'delete',
-            'delete_any',
         ];
     }
 }

@@ -23,13 +23,13 @@ class GiveCardAction
             ->label('Vào')
             ->button()
 
-            ->hidden(fn(RegisterDirectly $record) => $record->status === 'coming_in' || $record->status === 'came_out')
+            ->hidden(fn (RegisterDirectly $record) => $record->status === 'coming_in' || $record->status === 'came_out')
             ->icon('heroicon-o-inbox-arrow-down')
             ->modalHeading(function (RegisterDirectly $record) {
-                if($record->type === 'vehicle') {
-                    return 'Xe: ' . $record->bks;
+                if ($record->type === 'vehicle') {
+                    return 'Xe: '.$record->bks;
                 } else {
-                    return 'Khách: ' . $record->name . ' | CMND: ' . $record->papers;
+                    return 'Khách: '.$record->name.' | CMND: '.$record->papers;
                 }
             })
             ->form([
@@ -37,13 +37,18 @@ class GiveCardAction
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->label('Họ và tên')
-                            ->default(fn(RegisterDirectly $record) => $record->name)
-                            ->disabled()
-                            ->columnSpanFull(),
+                            ->default(fn (RegisterDirectly $record) => $record->name)
+                            ->disabled(),
                         Forms\Components\TextInput::make('bks')
                             ->label('Biển số xe')
-                            ->default(fn(RegisterDirectly $record) => $record->bks)
+                            ->default(fn (RegisterDirectly $record) => $record->bks)
+                            ->disabled(),
+                        Forms\Components\TextInput::make('fee_id')
+                            ->label('Trọng tải')
+                            ->default(fn (RegisterDirectly $record) => $record?->fee?->vehicle_type)
+                            ->hidden(fn (RegisterDirectly $record) => $record->type !== 'vehicle')
                             ->disabled()
+
                             ->columnSpanFull(),
                         Forms\Components\Select::make('id')
                             ->label('Thẻ')
@@ -77,40 +82,40 @@ class GiveCardAction
                         //             }
                         //         }
                         //     ]),
-                    ])->columns(2)
+                    ])->columns(2),
             ])
             ->action(function (array $data, RegisterDirectly $record): void {
                 // try {
-                    DB::transaction(function () use ($data, $record) {
-                        // Update record status and actual_date_in
-                        $record->status = 'coming_in';
-                        $record->actual_date_in = $data['start_date'];
-                        
-                        // Get and update card
-                        $card = Card::where('id', $data['id'])->firstOrFail();
-                        $card->status = 'active';
-                        $card->save();
-                        
-                        // Assign card to record
-                        $record->card_id = $card->id;
-                        
-                        // Update registration vehicle status (guard and update safely)
-                        if ($record->relationLoaded('registrationVehicle') || $record->registrationVehicle) {
-                            $registrationVehicle = $record->registrationVehicle;
-                            if ($registrationVehicle instanceof Model) {
-                                $registrationVehicle->status = 'entering';
-                                $registrationVehicle->save();
-                            }
-                        }
-                        // Save record
-                        $record->save();
-                    });
+                DB::transaction(function () use ($data, $record) {
+                    // Update record status and actual_date_in
+                    $record->status = 'coming_in';
+                    $record->actual_date_in = $data['start_date'];
 
-                    Notification::make()
-                        ->title('Thành công')
-                        ->body('Đã chuyển trạng thái cho khách vào')
-                        ->success()
-                        ->send();
+                    // Get and update card
+                    $card = Card::where('id', $data['id'])->firstOrFail();
+                    $card->status = 'active';
+                    $card->save();
+
+                    // Assign card to record
+                    $record->card_id = $card->id;
+
+                    // Update registration vehicle status (guard and update safely)
+                    if ($record->relationLoaded('registrationVehicle') || $record->registrationVehicle) {
+                        $registrationVehicle = $record->registrationVehicle;
+                        if ($registrationVehicle instanceof Model) {
+                            $registrationVehicle->status = 'entering';
+                            $registrationVehicle->save();
+                        }
+                    }
+                    // Save record
+                    $record->save();
+                });
+
+                Notification::make()
+                    ->title('Thành công')
+                    ->body('Đã chuyển trạng thái cho khách vào')
+                    ->success()
+                    ->send();
                 // } catch (\Exception $e) {
                 //     Notification::make()
                 //         ->title('Thất bại')

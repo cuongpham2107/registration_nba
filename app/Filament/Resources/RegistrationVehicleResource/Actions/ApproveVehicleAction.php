@@ -29,7 +29,7 @@ class ApproveVehicleAction
                 }
 
                 // Ẩn nếu user không phải approve_vehicle
-                if (!$user || !$user->hasRole('approve_vehicle')) {
+                if (! $user || ! $user->hasRole('approve_vehicle') && ! $user->hasRole('super_admin')) {
                     return true;
                 }
 
@@ -37,8 +37,7 @@ class ApproveVehicleAction
             })
             ->modalWidth(\Filament\Support\Enums\MaxWidth::ThreeExtraLarge)
             ->form(
-                fn(Form $form) =>
-                $form->schema([
+                fn (Form $form) => $form->schema([
                     Forms\Components\Select::make('areas')
                         ->label('Chọn khu vực cho người đăng ký')
                         ->options(Area::all()->pluck('name', 'code'))
@@ -50,34 +49,36 @@ class ApproveVehicleAction
                         ->helperText('Đánh dấu nếu đăng ký xe khai thác này là ưu tiên')
                         ->onIcon('heroicon-o-arrow-up')
                         ->offIcon('heroicon-o-arrow-down')
-                        ->inline(false)
+                        ->inline(false),
                 ])->columns(2)
             )
             ->action(function (array $data, RegistrationVehicle $record) {
                 try {
                     // Kiểm tra xem record đã được approve chưa để tránh double-click
                     $record->refresh(); // Reload từ database
-                    
+
                     if ($record->status === 'approve') {
                         Notification::make()
                             ->title('Thông báo')
                             ->warning()
                             ->body('Đăng ký này đã được phê duyệt rồi.')
                             ->send();
+
                         return;
                     }
 
-                    $id = (new \App\Http\Controllers\RegistrationController())->createRegistrationDirectlyFromVehicle($record, $data['areas'], $data['is_priority'] ?? false);
-                    
-                    if (!$id) {
+                    $id = (new \App\Http\Controllers\RegistrationController)->createRegistrationDirectlyFromVehicle($record, $data['areas'], $data['is_priority'] ?? false);
+
+                    if (! $id) {
                         Notification::make()
                             ->title('Lỗi')
                             ->danger()
                             ->body('Không thể tạo bản ghi đăng ký trực tiếp.')
                             ->send();
+
                         return;
                     }
-                    
+
                     $record->update([
                         'status' => 'approve',
                         'is_priority' => $data['is_priority'] ?? false,
@@ -107,7 +108,7 @@ class ApproveVehicleAction
                     Notification::make()
                         ->title('Lỗi phê duyệt')
                         ->danger()
-                        ->body('Có lỗi xảy ra: ' . $e->getMessage())
+                        ->body('Có lỗi xảy ra: '.$e->getMessage())
                         ->send();
                 }
             });

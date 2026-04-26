@@ -15,7 +15,7 @@ class RegistrationVehiclePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->checkPermissionTo('view_any_registration::vehicle');
+        return $user->can('view_any_registration::vehicle');
     }
 
     /**
@@ -23,7 +23,7 @@ class RegistrationVehiclePolicy
      */
     public function view(User $user, RegistrationVehicle $registrationVehicle): bool
     {
-        return $user->checkPermissionTo('view_registration::vehicle');
+        return $user->can('view_registration::vehicle');
     }
 
     /**
@@ -31,7 +31,7 @@ class RegistrationVehiclePolicy
      */
     public function create(User $user): bool
     {
-        return $user->checkPermissionTo('create_registration::vehicle');
+        return $user->can('create_registration::vehicle');
     }
 
     /**
@@ -39,7 +39,7 @@ class RegistrationVehiclePolicy
      */
     public function update(User $user, RegistrationVehicle $registrationVehicle): bool
     {
-        return $user->checkPermissionTo('update_registration::vehicle');
+        return $user->can('update_registration::vehicle');
     }
 
     /**
@@ -47,7 +47,7 @@ class RegistrationVehiclePolicy
      */
     public function delete(User $user, RegistrationVehicle $registrationVehicle): bool
     {
-        return $user->checkPermissionTo('delete_registration::vehicle');
+        return $user->can('delete_registration::vehicle');
     }
 
     /**
@@ -55,7 +55,7 @@ class RegistrationVehiclePolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->checkPermissionTo('delete_any_registration::vehicle');
+        return $user->can('delete_any_registration::vehicle');
     }
 
     /**
@@ -63,7 +63,7 @@ class RegistrationVehiclePolicy
      */
     public function forceDelete(User $user, RegistrationVehicle $registrationVehicle): bool
     {
-        return $user->checkPermissionTo('force_delete_registration::vehicle');
+        return $user->can('{{ ForceDelete }}');
     }
 
     /**
@@ -71,7 +71,7 @@ class RegistrationVehiclePolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->checkPermissionTo('force_delete_any_registration::vehicle');
+        return $user->can('{{ ForceDeleteAny }}');
     }
 
     /**
@@ -79,7 +79,7 @@ class RegistrationVehiclePolicy
      */
     public function restore(User $user, RegistrationVehicle $registrationVehicle): bool
     {
-        return $user->checkPermissionTo('restore_registration::vehicle');
+        return $user->can('{{ Restore }}');
     }
 
     /**
@@ -87,7 +87,7 @@ class RegistrationVehiclePolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->checkPermissionTo('restore_any_registration::vehicle');
+        return $user->can('{{ RestoreAny }}');
     }
 
     /**
@@ -95,7 +95,7 @@ class RegistrationVehiclePolicy
      */
     public function replicate(User $user, RegistrationVehicle $registrationVehicle): bool
     {
-        return $user->checkPermissionTo('replicate_registration::vehicle');
+        return $user->can('{{ Replicate }}');
     }
 
     /**
@@ -103,6 +103,6 @@ class RegistrationVehiclePolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->checkPermissionTo('reorder_registration::vehicle');
+        return $user->can('{{ Reorder }}');
     }
 }

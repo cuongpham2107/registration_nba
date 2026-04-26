@@ -3,25 +3,26 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CardResource\Pages;
-use App\Filament\Resources\CardResource\RelationManagers;
 use App\Models\Card;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 
 class CardResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Card::class;
-     protected static ?string $modelLabel = 'Thẻ';
-    
+
+    protected static ?string $modelLabel = 'Thẻ';
+
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
+
     protected static ?string $navigationLabel = 'Danh sách thẻ';
+
     protected static ?string $navigationGroup = 'Quản lý danh mục';
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
@@ -64,12 +65,12 @@ class CardResource extends Resource implements HasShieldPermissions
                     ->label('Trạng thái')
                     ->searchable()
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'active' => 'success',
                         'inactive' => 'gray',
                         'blocked' => 'danger',
                     })
-                    ->formatStateUsing(fn(string $state) => match ($state) {
+                    ->formatStateUsing(fn (string $state) => match ($state) {
                         'active' => 'Đang sử dụng',
                         'inactive' => 'Chưa sử dụng',
                         'blocked' => 'Bị khóa',
@@ -113,7 +114,6 @@ class CardResource extends Resource implements HasShieldPermissions
             'create',
             'update',
             'delete',
-            'delete_any',
         ];
     }
 }

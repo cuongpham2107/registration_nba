@@ -2,28 +2,29 @@
 
 namespace App\Filament\Resources;
 
-
-use Filament\Tables\Actions\ImportAction;
 use App\Filament\Resources\CustomerResource\Pages;
 use App\Models\Customer;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use App\Filament\Imports\CustomerImporter;
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 
 class CustomerResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Customer::class;
-     protected static ?string $modelLabel = 'Khách';
+
+    protected static ?string $modelLabel = 'Khách';
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
+
     protected static ?string $navigationLabel = 'Danh sách khách';
+
     protected static ?string $navigationGroup = 'Quản lý danh mục';
 
     protected static ?int $navigationSort = 2;
+
     public static function form(Form $form): Form
     {
         return $form
@@ -60,7 +61,7 @@ class CustomerResource extends Resource implements HasShieldPermissions
                     ->label('Giấy tờ')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('type')
-                    ->label('Loại') 
+                    ->label('Loại')
                     ->searchable(),
                 // Tables\Columns\TextColumn::make('area')
                 //     ->label('Khu vực')
@@ -73,7 +74,7 @@ class CustomerResource extends Resource implements HasShieldPermissions
                     ->searchable(),
             ])
             ->headerActions([
-               
+
             ])
             ->filters([
                 //
@@ -81,7 +82,7 @@ class CustomerResource extends Resource implements HasShieldPermissions
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
-           
+
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
@@ -113,7 +114,6 @@ class CustomerResource extends Resource implements HasShieldPermissions
             'create',
             'update',
             'delete',
-            'delete_any',
         ];
     }
 }

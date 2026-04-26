@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\RegistrationResource\Actions;
 
 use App\Models\Registration;
+use App\Models\User;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\ActionSize;
 use Filament\Tables\Actions\Action;
@@ -18,6 +19,7 @@ class ApproveRegistrationAction
             ->color('success')
             ->requiresConfirmation()
             ->hidden(function (Registration $record) {
+                /** @var User $user */
                 $user = auth()->user();
 
                 // Ẩn nếu chưa gửi hoặc đã duyệt/từ chối
@@ -25,8 +27,13 @@ class ApproveRegistrationAction
                     return true;
                 }
 
+                // Cho phép super_admin thấy
+                if ($user && $user->hasRole('super_admin')) {
+                    return false;
+                }
+
                 // Ẩn nếu user không phải approver
-                if (!$user || !$user->hasRole('approver')) {
+                if (! $user || ! $user->hasRole('approver')) {
                     return true;
                 }
 
@@ -43,14 +50,14 @@ class ApproveRegistrationAction
                     'type_date' => now(),
                 ]);
 
-                (new \App\Http\Controllers\RegistrationController())->createRegistrationRirectly($record);
+                (new \App\Http\Controllers\RegistrationController)->createRegistrationRirectly($record);
 
                 Notification::make()
                     ->title('Phê duyệt thành công')
                     ->success()
                     ->body('Đăng ký khách đã được phê duyệt.')
                     ->send();
-                    
+
                 try {
                     $protectUsers = \App\Models\User::role('protect')->get();
                     foreach ($protectUsers as $user) {
@@ -61,7 +68,7 @@ class ApproveRegistrationAction
                             ->broadcast($user);
                     }
                 } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('Broadcast notification failed: ' . $e->getMessage());
+                    \Illuminate\Support\Facades\Log::error('Broadcast notification failed: '.$e->getMessage());
                 }
             });
     }

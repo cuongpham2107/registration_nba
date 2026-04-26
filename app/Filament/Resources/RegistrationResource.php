@@ -2,48 +2,49 @@
 
 namespace App\Filament\Resources;
 
-use App\Models\Customer;
-use App\Models\Registration;
-use App\Models\Area;
-use App\Filament\Resources\RegistrationResource\Pages;
-use App\Filament\Resources\RegistrationResource\Actions\SendMailAction;
-use App\Filament\Resources\RegistrationResource\Actions\ApproveRegistrationAction;
-use App\Filament\Resources\RegistrationResource\Actions\RefuseRegistrationAction;
-use App\Filament\Resources\RegistrationResource\Actions\ImportCustomersAction;
 use App\Filament\Exports\RegistrationExporter;
+use App\Filament\Resources\RegistrationResource\Actions\ApproveRegistrationAction;
+use App\Filament\Resources\RegistrationResource\Actions\ImportCustomersAction;
+use App\Filament\Resources\RegistrationResource\Actions\RefuseRegistrationAction;
+use App\Filament\Resources\RegistrationResource\Actions\SendMailAction;
 use App\Filament\Resources\RegistrationResource\Filters\RegistrationFilter;
-use Illuminate\Database\Eloquent\Model;
-use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Support\Enums\ActionSize;
-use Filament\Support\Enums\FontWeight;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Support\Enums\Alignment;
-use Filament\Support\Enums\MaxWidth;
-use Filament\Tables\Actions\ExportBulkAction;
-use Filament\Actions\Exports\Models\Export;
-use Filament\Forms\Get;
+use App\Filament\Resources\RegistrationResource\Pages;
+use App\Models\Area;
+use App\Models\Registration;
 use Awcodes\TableRepeater\Components\TableRepeater;
 use Awcodes\TableRepeater\Header;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
-use Throwable;
-use Closure;
 use Carbon\Carbon;
+use Closure;
+use Filament\Actions\Exports\Models\Export;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Resources\Resource;
+use Filament\Support\Enums\ActionSize;
+use Filament\Support\Enums\Alignment;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\MaxWidth;
+use Filament\Tables;
+use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Enums\FiltersLayout;
-
-
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class RegistrationResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Registration::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-user-plus';
+
     protected static ?string $navigationLabel = 'Đăng ký khách';
-     protected static ?string $modelLabel = 'Đăng ký khách';
-     
+
+    protected static ?string $modelLabel = 'Đăng ký khách';
+
     protected static ?string $recordTitleAttribute = 'name';
+
     protected static ?int $navigationSort = 1;
+
     public static function form(Form $form): Form
     {
         return $form
@@ -55,6 +56,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ])->columnSpanFull(),
             ]);
     }
+
     protected static function formWizardStepRegistration()
     {
         return Forms\Components\Tabs\Tab::make('Đăng ký khách')
@@ -101,7 +103,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ->label('Giờ ra dự kiến')
                     ->required()
                     ->rules([
-                        fn(Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
+                        fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
                             if (($record['status'] ?? null) != 'sent') {
                                 if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->isBefore(Carbon::parse($get('start_date'), 'Asia/Ho_Chi_Minh'))) {
                                     $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ bắt đầu.');
@@ -109,14 +111,14 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                             }
 
                         },
-                        fn(Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
+                        fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($record) {
                             if (($record['status'] ?? null) != 'sent') {
                                 if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->lessThanOrEqualTo(Carbon::now('Asia/Ho_Chi_Minh'))) {
                                     $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ hiện tại.');
                                 }
                             }
 
-                        }
+                        },
                     ])
                     ->columnSpan([
                         'sm' => 1,
@@ -163,6 +165,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                 'lg' => 6,
             ]);
     }
+
     protected static function formWizardStepInfoCustomer()
     {
         return Forms\Components\Tabs\Tab::make('Thông tin khách')
@@ -203,44 +206,46 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ->defaultItems(1)
                     ->columns(6)
                     ->extraActions([
-                        ImportCustomersAction::make()
-                    ])
+                        ImportCustomersAction::make(),
+                    ]),
             ]);
     }
+
     public static function table(Table $table): Table
     {
         return $table
             ->header(view('filament.resources.tables.header'))
             ->description(function () {
                 $user = auth()->user();
-                if (!$user || !$user->hasRole('approver')) {
+                if (! $user || ! $user->hasRole('approver')) {
                     return '';
                 }
                 $count = Registration::where('approver_id', $user->id)
                     ->where('status', 'sent')
                     ->whereNull('type')
                     ->count();
-                    
+
                 if ($count > 0) {
                     // Tạo URL filter cho các bản ghi chưa duyệt (status=sent, type=null)
                     $filterUrl = route('filament.admin.resources.registrations.index', [
                         'tableFilters' => [
                             'date_range' => [
                                 'status' => 'sent',
-                                'type' => 'none', 
-                            ]
-                        ]
+                                'type' => 'none',
+                            ],
+                        ],
                     ]);
-                    
+
                     return new \Illuminate\Support\HtmlString(
-                        '<a href="' . $filterUrl . '" style="display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: linear-gradient(135deg, #ff6b6b 0%, #ffa5a5 100%); color: white; border-radius: 8px; font-weight: 500; font-size: 0.875rem; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\'; this.style.boxShadow=\'0 4px 12px rgba(255, 107, 107, 0.4)\';" onmouseout="this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'none\';">
+                        '<a href="'.$filterUrl.'" style="display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: linear-gradient(135deg, #ff6b6b 0%, #ffa5a5 100%); color: white; border-radius: 8px; font-weight: 500; font-size: 0.875rem; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\'; this.style.boxShadow=\'0 4px 12px rgba(255, 107, 107, 0.4)\';" onmouseout="this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'none\';">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px; flex-shrink: 0;">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                             </svg>
-                            <span>Bạn có <strong style="font-size: 1em; padding: 0 2px;">' . $count . '</strong> yêu cầu đăng ký đang chờ phê duyệt </span>
+                            <span>Bạn có <strong style="font-size: 1em; padding: 0 2px;">'.$count.'</strong> yêu cầu đăng ký đang chờ phê duyệt </span>
                         </a>'
                     );
                 }
+
                 return '';
             })
             ->emptyStateHeading('Không có đơn đăng ký khách nào')
@@ -248,7 +253,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
             ->emptyStateDescription('Hiện tại chưa có đơn đăng ký khách nào được tạo. Vui lòng nhấn nút "Đăng ký khách mới" để tạo mới.')
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                    ->label("Mã ĐK")
+                    ->label('Mã ĐK')
                     ->width('1%')
                     ->alignment(Alignment::Center)
                     ->sortable()
@@ -293,11 +298,11 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ->weight(FontWeight::Bold)
                     ->badge()
                     ->toggleable()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'sent' => 'success',
                         'not_yet_sent' => 'danger',
                     })
-                    ->formatStateUsing(fn(string $state) => match ($state) {
+                    ->formatStateUsing(fn (string $state) => match ($state) {
                         'sent' => 'Đã gửi',
                         'not_yet_sent' => 'Chưa gửi',
                     }),
@@ -306,11 +311,11 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ->weight(FontWeight::ExtraBold)
                     ->badge()
                     ->toggleable()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'browse' => 'success',
                         'refuse' => 'danger',
                     })
-                    ->formatStateUsing(fn(string $state) => match ($state) {
+                    ->formatStateUsing(fn (string $state) => match ($state) {
                         'browse' => 'Duyệt',
                         'refuse' => 'Từ chối',
                     }),
@@ -349,7 +354,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
             ->modifyQueryUsing(function ($query) {
                 $user = auth()->user();
                 // Nếu chưa login, return query rỗng
-                if (!$user) {
+                if (! $user) {
                     return $query->whereRaw('1 = 0');
                 }
                 // Super admin thấy tất cả
@@ -360,6 +365,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                 if ($user->hasRole('approver')) {
                     return $query->where('approver_id', $user->id);
                 }
+
                 // User thường chỉ thấy của mình (người tạo)
                 return $query->where('user_id', $user->id);
             })// phân quyền đến từng dòng dữ liệu
@@ -372,10 +378,10 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make()
                         ->modalWidth(MaxWidth::SixExtraLarge)
-                        ->hidden(fn(Registration $record) => $record->status === 'sent' && $record->type === 'browse' || $record->type === 'refuse' || $record->user_id !== auth()->id()),
+                        ->hidden(fn (Registration $record) => $record->status === 'sent' && $record->type === 'browse' || $record->type === 'refuse' || $record->user_id !== auth()->id()),
                     Tables\Actions\ViewAction::make()->modalWidth(MaxWidth::SixExtraLarge),
                     Tables\Actions\DeleteAction::make()
-                        ->hidden(fn(Registration $record) => $record->status === 'sent' && $record->type === 'browse' || $record->type === 'refuse' || $record->user_id !== auth()->id()),
+                        ->hidden(fn (Registration $record) => $record->status === 'sent' && $record->type === 'browse' || $record->type === 'refuse' || $record->user_id !== auth()->id()),
                     ApproveRegistrationAction::make(),
                     RefuseRegistrationAction::make(),
                 ])->icon('heroicon-m-adjustments-vertical')
@@ -385,21 +391,21 @@ class RegistrationResource extends Resource implements HasShieldPermissions
 
             ], position: \Filament\Tables\Enums\ActionsPosition::BeforeColumns)
             ->bulkActions([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    ExportBulkAction::make()
-                        ->label('Xuất Excel')
-                        ->modalHeading('Xuất Excel đăng ký khách')
-                        ->icon('heroicon-o-inbox-arrow-down')
-                        ->color('success')
-                        ->fileName(fn (Export $export): string => "Danh sách đăng ký khách-{$export->getKey()}.csv")
-                        ->exporter(RegistrationExporter::class),
-                ]);
+                Tables\Actions\DeleteBulkAction::make(),
+                ExportBulkAction::make()
+                    ->label('Xuất Excel')
+                    ->modalHeading('Xuất Excel đăng ký khách')
+                    ->icon('heroicon-o-inbox-arrow-down')
+                    ->color('success')
+                    ->fileName(fn (Export $export): string => "Danh sách đăng ký khách-{$export->getKey()}.csv")
+                    ->exporter(RegistrationExporter::class),
+            ]);
     }
 
     public static function getRelations(): array
     {
         return [
-            //
+            \Rmsramos\Activitylog\RelationManagers\ActivitylogRelationManager::class,
         ];
     }
 
@@ -420,8 +426,6 @@ class RegistrationResource extends Resource implements HasShieldPermissions
             'create',
             'update',
             'delete',
-            'delete_any',
         ];
     }
 }
-

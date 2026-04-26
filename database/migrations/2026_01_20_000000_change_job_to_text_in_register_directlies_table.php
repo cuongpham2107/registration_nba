@@ -1,19 +1,13 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     /**
-     * Run the migrations.
-     *
-     * This migration attempts to ALTER the existing `job` column to TEXT
-     * using a direct SQL statement for supported drivers (MySQL / PostgreSQL).
-     * For other drivers (e.g. SQLite), it will throw an informative exception
-     * so you can decide how to proceed.
+     * Run the migrations (MySQL only).
      */
     public function up(): void
     {
@@ -24,26 +18,21 @@ return new class extends Migration
         try {
             $driver = DB::connection()->getPdo()->getAttribute(\PDO::ATTR_DRIVER_NAME);
         } catch (\Throwable $e) {
-            throw new \RuntimeException('Unable to determine DB driver: ' . $e->getMessage());
+            // Unable to determine driver; skip
+            return;
         }
 
-        try {
-            if ($driver === 'mysql') {
-                // MySQL: change column type to TEXT
-                DB::statement('ALTER TABLE `register_directlies` MODIFY `job` TEXT NULL');
-            } elseif ($driver === 'pgsql') {
-                // PostgreSQL: change column type to text
-                DB::statement('ALTER TABLE register_directlies ALTER COLUMN job TYPE TEXT');
-            } else {
-                throw new \RuntimeException('Direct ALTER of column type is not supported for your DB driver ('. $driver .'). If you need to proceed, either install doctrine/dbal and use Schema::table(...->change()), or run a migration that copies data to a new column.');
-            }
-        } catch (\Throwable $e) {
-            throw new \RuntimeException('Failed to alter `job` column to TEXT: ' . $e->getMessage());
+        if ($driver !== 'mysql') {
+            // This migration contains MySQL-specific SQL. Skip on other drivers.
+            return;
         }
+
+        // MySQL: change column type to TEXT
+        DB::statement('ALTER TABLE `register_directlies` MODIFY `job` TEXT NULL');
     }
 
     /**
-     * Reverse the migrations.
+     * Reverse the migrations (MySQL only).
      */
     public function down(): void
     {
@@ -54,19 +43,17 @@ return new class extends Migration
         try {
             $driver = DB::connection()->getPdo()->getAttribute(\PDO::ATTR_DRIVER_NAME);
         } catch (\Throwable $e) {
-            throw new \RuntimeException('Unable to determine DB driver: ' . $e->getMessage());
+            // Unable to determine driver; skip
+            return;
         }
 
-        try {
-            if ($driver === 'mysql') {
-                DB::statement('ALTER TABLE `register_directlies` MODIFY `job` VARCHAR(255) NULL');
-            } elseif ($driver === 'pgsql') {
-                DB::statement('ALTER TABLE register_directlies ALTER COLUMN job TYPE VARCHAR(255)');
-            } else {
-                throw new \RuntimeException('Direct ALTER of column type is not supported for your DB driver ('. $driver .').');
-            }
-        } catch (\Throwable $e) {
-            throw new \RuntimeException('Failed to revert `job` column to VARCHAR(255): ' . $e->getMessage());
+        if ($driver !== 'mysql') {
+            // Only handle MySQL here.
+            return;
         }
+
+        // Truncate values longer than 255 to avoid ALTER failures, then change column back to VARCHAR(255)
+        DB::statement('UPDATE register_directlies SET job = LEFT(job, 255) WHERE job IS NOT NULL AND CHAR_LENGTH(job) > 255');
+        DB::statement('ALTER TABLE `register_directlies` MODIFY `job` VARCHAR(255) NULL');
     }
 };

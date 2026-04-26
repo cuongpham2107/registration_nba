@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Filament\Notifications\Notification;
-use Illuminate\Http\Request;
 use App\Models\RegisterDirectly;
 use App\Models\Registration;
 use App\Models\RegistrationVehicle;
-use App\Services\HawbService;
 use App\Services\RegistrationService;
+use Carbon\Carbon;
+use Filament\Notifications\Notification;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class RegistrationController extends Controller
 {
@@ -25,12 +22,13 @@ class RegistrationController extends Controller
         $registration = Registration::with('customers')->where('id', $id)->first();
         // Kiểm tra xem đã được xử lý chưa
         if ($registration->type !== null) {
-            $status = "Lỗi";
-            $message = "Đăng ký này đã được thực hiện phê duyệt rồi";
+            $status = 'Lỗi';
+            $message = 'Đăng ký này đã được thực hiện phê duyệt rồi';
+
             return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
         }
 
-        (new RegistrationService())->createRegistrationDirectly($registration);
+        (new RegistrationService)->createRegistrationDirectly($registration);
         $registration->type = 'browse';
         $registration->type_date = now();
         $registration->save();
@@ -53,24 +51,24 @@ class RegistrationController extends Controller
                         'requestor' => $registration->user->name ?? 'N/A',
                         'customer_unit' => $registration->name,
                         'purpose' => $registration->purpose,
-                        'quantity' => $customers->count() . ' người',
+                        'quantity' => $customers->count().' người',
                         'area' => $customers->pluck('areas')->flatten()->unique()->implode(', '),
                         'request_time' => Carbon::parse($registration->created_at)->format('H:i:s d-m-Y'),
-                        'approver' => $name_manager . ($job_title_manager ? ' (' . $job_title_manager . ')' : ''),
+                        'approver' => $name_manager.($job_title_manager ? ' ('.$job_title_manager.')' : ''),
                         'approve_time' => now()->format('H:i d-m-Y'),
-                    ]
+                    ],
                 ];
 
                 \Illuminate\Support\Facades\Http::timeout(10)
                     ->post(config('services.zalo.webhook_url'), $zaloData);
 
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Zalo notification failed: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('Zalo notification failed: '.$e->getMessage());
             }
         }
 
-        $status = "Duyệt";
-        $message = "Đăng ký khách đã được phê duyệt thành công";
+        $status = 'Duyệt';
+        $message = 'Đăng ký khách đã được phê duyệt thành công';
         try {
             // Gửi thông báo đến người có role "protect"
             $approveVehicleUsers = \App\Models\User::role('protect')->get();
@@ -83,8 +81,9 @@ class RegistrationController extends Controller
                     ->broadcast($user);
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Notification sending failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Notification sending failed: '.$e->getMessage());
         }
+
         return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
     }
 
@@ -97,14 +96,15 @@ class RegistrationController extends Controller
 
         // Kiểm tra xem đã được xử lý chưa
         if ($registration->type !== null) {
-            $status = "Lỗi";
-            $message = "Đăng ký này đã được thực hiện phê duyệt rồi";
+            $status = 'Lỗi';
+            $message = 'Đăng ký này đã được thực hiện phê duyệt rồi';
+
             return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
         }
 
         $registration->update([
             'type' => 'refuse',
-            'type_date' => now()
+            'type_date' => now(),
         ]);
 
         // Gửi thông báo Zalo sau khi từ chối
@@ -125,31 +125,31 @@ class RegistrationController extends Controller
                         'requestor' => $registration->user->name ?? 'N/A',
                         'customer_unit' => $registration->name,
                         'purpose' => $registration->purpose,
-                        'quantity' => $customers->count() . ' người',
+                        'quantity' => $customers->count().' người',
                         'area' => $customers->pluck('areas')->flatten()->unique()->implode(', '),
                         'request_time' => \Carbon\Carbon::parse($registration->created_at)->format('H:i:s d-m-Y'),
-                        'approver' => $name_manager . ($job_title_manager ? ' (' . $job_title_manager . ')' : ''),
+                        'approver' => $name_manager.($job_title_manager ? ' ('.$job_title_manager.')' : ''),
                         'reject_time' => now()->format('H:i:s d-m-Y'),
-                    ]
+                    ],
                 ];
 
                 \Illuminate\Support\Facades\Http::timeout(10)
                     ->post('http://192.168.1.70:5678/webhook/send-registration', $zaloData);
 
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Zalo notification failed: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('Zalo notification failed: '.$e->getMessage());
             }
         }
 
-        $status = "Từ chối";
-        $message = "Đăng ký khách đã bị từ chối";
+        $status = 'Từ chối';
+        $message = 'Đăng ký khách đã bị từ chối';
+
         return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
     }
 
-
     public function createRegistrationRirectly(Registration $registration)
     {
-        
+
         $startDate = Carbon::parse($registration->start_date, 'Asia/Ho_Chi_Minh');
         $endDate = Carbon::parse($registration->end_date, 'Asia/Ho_Chi_Minh');
 
@@ -182,7 +182,7 @@ class RegistrationController extends Controller
             elseif ($customers->count() == 1) {
                 $customer = $customers->first();
                 RegisterDirectly::create([
-                    'name' => $customer->name . '|' . $registration->name,
+                    'name' => $customer->name.'|'.$registration->name,
                     'papers' => $customer->papers,
                     'address' => '',
                     'bks' => $customer->license_plate ? $customer->license_plate : $registration->bks ?? '',
@@ -199,7 +199,7 @@ class RegistrationController extends Controller
             else {
                 foreach ($customers as $customer) {
                     RegisterDirectly::create([
-                        'name' => $customer->name . '|' . $registration->name,
+                        'name' => $customer->name.'|'.$registration->name,
                         'papers' => $customer->papers,
                         'address' => '',
                         'bks' => $customer->license_plate ? $customer->license_plate : $registration->bks ?? '',
@@ -225,8 +225,8 @@ class RegistrationController extends Controller
         return DB::transaction(function () use ($registration, $areas, $is_priority) {
             // Lock bản ghi registration để tránh race condition
             $lockedRegistration = RegistrationVehicle::where('id', $registration->id)->lockForUpdate()->first();
-            
-            if (!$lockedRegistration) {
+
+            if (! $lockedRegistration) {
                 throw new \Exception('Không tìm thấy bản ghi đăng ký');
             }
 
@@ -245,25 +245,25 @@ class RegistrationController extends Controller
             $existingRecord = RegisterDirectly::where('id_registration_vehicle', $registration->id)
                 ->where('created_at', '>=', now()->subMinutes(2))
                 ->first();
-                
+
             if ($existingRecord) {
                 // Trả về ID của bản ghi đã tồn tại thay vì tạo mới
                 return $existingRecord->id;
             }
 
             // Kiểm tra xem đã có bản ghi nào với cùng thông tin trong vòng 5 phút (tăng từ 1 phút)
-            $duplicateCheck = RegisterDirectly::where('name', $registration->driver_name . ' | ' . $registration->name)
+            $duplicateCheck = RegisterDirectly::where('name', $registration->driver_name.' | '.$registration->name)
                 ->where('papers', $registration->driver_id_card ?? '')
                 ->where('bks', $registration->vehicle_number ?? '')
                 ->where('created_at', '>=', now()->subMinutes(5))
                 ->first();
-                
+
             if ($duplicateCheck) {
                 return $duplicateCheck->id;
             }
 
             // Tạo bản ghi mới trong transaction
-            
+
             // Format HAWB number - check if it's JSON array
             $hawbDisplay = $registration->hawb_number ?? '';
             if (is_string($hawbDisplay) && (str_starts_with(trim($hawbDisplay), '[') || str_starts_with(trim($hawbDisplay), '{'))) {
@@ -273,24 +273,25 @@ class RegistrationController extends Controller
                     foreach ($decoded as $item) {
                         if (is_array($item) && isset($item['hawb_number'])) {
                             $hawb = strtoupper($item['hawb_number']);
-                            if (isset($item['pcs']) && !empty($item['pcs'])) {
-                                $hawb .= ' (' . $item['pcs'] . ' PCS)';
+                            if (isset($item['pcs']) && ! empty($item['pcs'])) {
+                                $hawb .= ' ('.$item['pcs'].' PCS)';
                             }
                             $hawbList[] = $hawb;
                         }
                     }
-                    $hawbDisplay = !empty($hawbList) ? implode(', ', $hawbList) : $hawbDisplay;
+                    $hawbDisplay = ! empty($hawbList) ? implode(', ', $hawbList) : $hawbDisplay;
                 }
             }
-            
+
             $record = RegisterDirectly::create([
-                'name' => $registration->driver_name . ' | ' . $registration->name,
+                'name' => $registration->driver_name.' | '.$registration->name,
                 'papers' => $registration->driver_id_card ?? '',
                 'address' => '',
                 'bks' => $registration->vehicle_number ?? '',
+                'fee_id' => $registration->fee_id ?: null,
                 'contact_person' => '',
-                'job' => 'Số HAWB: ' . $hawbDisplay .
-                    ($registration->notes ? ' | Ghi chú: ' . $registration->notes : ''),
+                'job' => 'Số HAWB: '.$hawbDisplay.
+                    ($registration->notes ? ' | Ghi chú: '.$registration->notes : ''),
                 'start_date' => $startDate,
                 'end_date' => null,
                 'is_priority' => $is_priority,
@@ -335,7 +336,7 @@ class RegistrationController extends Controller
 
         // Kiểm tra trùng lặp với điều kiện thời gian 30 phút
         $newExpectedTime = Carbon::parse($validated['expected_in_at']);
-        
+
         $existingRegistration = RegistrationVehicle::where('name', $validated['name'])
             ->where('driver_name', $validated['driver_name'])
             ->where('driver_phone', $validated['driver_phone'])
@@ -343,13 +344,13 @@ class RegistrationController extends Controller
             ->where('vehicle_number', $validated['vehicle_number'])
             ->where('hawb_number', $validated['hawb_number'])
             // ->where('pcs', $validated['pcs'])
-            ->orderBy('expected_in_at', 'desc') 
+            ->orderBy('expected_in_at', 'desc')
             ->first();
-        
+
         if ($existingRegistration) {
             $existingTime = Carbon::parse($existingRegistration->expected_in_at);
             $minutesDifference = $newExpectedTime->diffInMinutes($existingTime, false);
-            
+
             // Kiểm tra nếu thời gian mới không cách thời gian cũ ít nhất 30 phút
             if (abs($minutesDifference) < 30) {
                 return redirect()->back()
@@ -371,7 +372,7 @@ class RegistrationController extends Controller
                 })->orWhereHas('permissions', function ($query) {
                     $query->where('name', 'approve_vehicle');
                 })->get();
-                
+
                 if ($approvers->isEmpty()) {
                     return redirect()->back()->with('error', 'Đăng ký xe đã được tạo nhưng không tìm thấy người phê duyệt.');
                 }
@@ -379,9 +380,9 @@ class RegistrationController extends Controller
                 $mailSent = false;
                 foreach ($approvers as $user) {
                     if ($user->email) {
-                        $mail = (new \App\Services\MailService())->sendMailWithTemplate(
+                        $mail = (new \App\Services\MailService)->sendMailWithTemplate(
                             $user->email,
-                            'Đăng ký xe khai thác: ' . $record->driver_name . ' | ' . $record->vehicle_number . ' | ' . date('Y-m-d H:i:s'),
+                            'Đăng ký xe khai thác: '.$record->driver_name.' | '.$record->vehicle_number.' | '.date('Y-m-d H:i:s'),
                             'template-mail.registration-vehicle',
                             ['registration' => $record]
                         );
@@ -394,7 +395,7 @@ class RegistrationController extends Controller
 
                 if ($mailSent) {
                     $record->update(['status' => 'sent']);
-                    
+
                     try {
                         // Gửi thông báo đến người có role "approve_vehicle"
                         $approveVehicleUsers = \App\Models\User::role('approve_vehicle')->get();
@@ -407,9 +408,9 @@ class RegistrationController extends Controller
                                 ->broadcast($user);
                         }
                     } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::error('Notification sending failed: ' . $e->getMessage());
+                        \Illuminate\Support\Facades\Log::error('Notification sending failed: '.$e->getMessage());
                     }
-                    
+
                     // Redirect to success page with registration data
                     return redirect()->route('registration-vehicle.success')
                         ->with('registration_data', $validated);
@@ -417,10 +418,10 @@ class RegistrationController extends Controller
 
                 return redirect()->back()->with('error', 'Đăng ký xe đã được tạo nhưng không thể gửi email.');
             } catch (\Exception $e) {
-                return redirect()->back()->with('error', 'Lỗi: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'Lỗi: '.$e->getMessage());
             }
         }
+
         return redirect()->back()->with('success', 'Đăng ký xe đã được tạo thành công!');
     }
-
 }

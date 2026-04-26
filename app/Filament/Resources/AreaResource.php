@@ -3,26 +3,27 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\AreaResource\Pages;
-use App\Filament\Resources\AreaResource\RelationManagers;
 use App\Models\Area;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 
 class AreaResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Area::class;
-     protected static ?string $modelLabel = 'Khu vực';
-    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
-    protected static ?string $navigationLabel = 'Khu vực';
-    protected static ?string $navigationGroup = 'Quản lý danh mục';
-    protected static ?int $navigationSort = 3;
 
+    protected static ?string $modelLabel = 'Khu vực';
+
+    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+
+    protected static ?string $navigationLabel = 'Khu vực';
+
+    protected static ?string $navigationGroup = 'Quản lý danh mục';
+
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
@@ -98,7 +99,6 @@ class AreaResource extends Resource implements HasShieldPermissions
             'create',
             'update',
             'delete',
-            'delete_any',
         ];
     }
 }

@@ -62,8 +62,8 @@ class RegistrationVehicleForm extends Component implements HasForms
     {
         $query = RegistrationVehicle::whereDate('created_at', now()->toDateString())
             ->whereIn('status', ['sent', 'approve'])
-            ->orderByRaw("CASE 
-                WHEN status = 'approve' THEN 1 
+            ->orderByRaw("CASE
+                WHEN status = 'approve' THEN 1
                 WHEN status = 'sent' THEN 2
             END ASC")
             ->orderBy('created_at', 'desc');
@@ -71,7 +71,7 @@ class RegistrationVehicleForm extends Component implements HasForms
         if (! empty($this->searchDriver)) {
             $query->where(function ($q) {
                 $q->where('driver_name', 'like', '%'.$this->searchDriver.'%')
-                ->orWhere('vehicle_number', 'like', '%'.$this->searchDriver.'%');
+                    ->orWhere('vehicle_number', 'like', '%'.$this->searchDriver.'%');
             });
         }
 
@@ -183,7 +183,13 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ])
                     ->maxLength(255)
                     ->columnSpan(2),
-
+                Select::make('fee_id')
+                    ->label('Loại xe, trọng tải')
+                    ->options(\App\Models\Fee::pluck('vehicle_type', 'id'))
+                    ->required()
+                    ->extraAttributes(['class' => '!bg-gray-100'])
+                    ->columnSpan(2)
+                    ->native(false),
                 Select::make('name')
                     ->label('Tên đơn vị')
                     ->native(false)
@@ -354,6 +360,11 @@ class RegistrationVehicleForm extends Component implements HasForms
 
         // Process data before saving
         $processedData = $data;
+
+        // Normalize license plate
+        if (! empty($processedData['vehicle_number'])) {
+            $processedData['vehicle_number'] = \App\Models\Invoice::normalizeLicensePlate($processedData['vehicle_number']);
+        }
 
         // Convert name array to comma-separated string
         if (isset($processedData['name']) && is_array($processedData['name'])) {

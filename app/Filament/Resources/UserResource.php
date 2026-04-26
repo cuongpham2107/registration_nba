@@ -3,30 +3,37 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\ViewField;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Components\ViewField;
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 
 class UserResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
+
     protected static ?string $navigationGroup = 'Quản lý người dùng';
+
     protected static ?string $pluralModelLabel = 'Danh sách tài khoản';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->hasAnyRole(['super_admin', 'admin']);
+    }
+
     public static function getNavigationSort(): ?int
     {
         return 10;
     }
+
     public static function getNavigationGroup(): ?string
     {
         return __('filament-shield::filament-shield.nav.group') ?? '';
@@ -36,6 +43,7 @@ class UserResource extends Resource implements HasShieldPermissions
     {
         return __(key: 'filament-panels::pages/users/navigation.label') ?? '';
     }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -72,7 +80,7 @@ class UserResource extends Resource implements HasShieldPermissions
                                 'md' => 1,
                                 'lg' => 2,
                             ]),
-                            Forms\Components\TextInput::make('asgl_id')
+                        Forms\Components\TextInput::make('asgl_id')
                             ->label('Mã nhân viên ASG')
                             ->columnSpan([
                                 'sm' => 1,
@@ -98,7 +106,7 @@ class UserResource extends Resource implements HasShieldPermissions
                                 'md' => 1,
                                 'lg' => 2,
                             ]),
-                        
+
                         Forms\Components\TextInput::make('department_name')
                             ->label('Phòng ban')
                             ->columnSpan([
@@ -132,17 +140,16 @@ class UserResource extends Resource implements HasShieldPermissions
                             ->schema([
                                 Forms\Components\Select::make('roles')
                                     ->label('Quyền')
-                                    ->relationship('roles', 'name', modifyQueryUsing: fn (Builder $query) => 
-                                        auth()->user()?->hasRole('super_admin') 
-                                            ? $query 
+                                    ->relationship('roles', 'name', modifyQueryUsing: fn (Builder $query) => auth()->user()?->hasRole('super_admin')
+                                            ? $query
                                             : $query->where('name', '!=', 'super_admin')
                                     )
                                     ->multiple()
-                                    ->searchable(['name','email'])
-                                    ->preload()
+                                    ->searchable(['name', 'email'])
+                                    ->preload(),
                             ])
                             ->columnSpan('full')
-                            ->hidden(fn () => !auth()->user()?->hasAnyRole(['super_admin', 'admin'])),
+                            ->hidden(fn () => ! auth()->user()?->hasAnyRole(['super_admin', 'admin'])),
                         Section::make('Hình đại diện')
                             ->schema([
                                 ViewField::make('avatar')
@@ -179,19 +186,18 @@ class UserResource extends Resource implements HasShieldPermissions
                     ->searchable(),
                 Tables\Columns\TextColumn::make('roles.name')
                     ->label('Quyền')
-                    ->badge()
-                    ->sortable(),
+                    ->badge(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Ngày tạo')
                     ->dateTime()
                     ->sortable(),
-                    // ->toggleable(isToggledHiddenByDefault: true),
+                // ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->modifyQueryUsing(function (Builder $query) {
                 $user = auth()->user();
-                
+
                 // Nếu chưa login, return query rỗng
-                if (!$user) {
+                if (! $user) {
                     return $query->whereRaw('1 = 0');
                 }
                 // Super admin thấy tất cả
@@ -199,12 +205,13 @@ class UserResource extends Resource implements HasShieldPermissions
                     return $query;
                 }
 
-                if($user->hasRole('admin')){
+                if ($user->hasRole('admin')) {
                     // Admin phê duyệt thấy tất cả trừ super_admin
                     return $query->whereDoesntHave('roles', function (Builder $q) {
                         $q->where('name', 'super_admin');
                     });
                 }
+
                 // User thường chỉ thấy của mình (người tạo)
                 return $query->where('id', $user->id);
             })
@@ -225,7 +232,7 @@ class UserResource extends Resource implements HasShieldPermissions
     public static function getRelations(): array
     {
         return [
-            //
+            \Rmsramos\Activitylog\RelationManagers\ActivitylogRelationManager::class,
         ];
     }
 
@@ -246,7 +253,6 @@ class UserResource extends Resource implements HasShieldPermissions
             'create',
             'update',
             'delete',
-            'delete_any',
         ];
     }
 }
