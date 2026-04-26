@@ -73,7 +73,18 @@ class ReturnCardAction
                                     ->columnSpanFull(),
                                 \Filament\Forms\Components\Placeholder::make('note')
                                     ->label('Trạng thái')
-                                    ->content(new HtmlString('<div class="flex items-center gap-2 font-bold text-success-600">'.svg('heroicon-o-check-circle', 'w-5 h-5')->toHtml().'Xe thu phí trả sau - Miễn thu phí</div>'))
+                                    ->content(new HtmlString('<div class="flex items-center gap-2 font-bold text-success-600">'.svg('heroicon-o-check-circle', 'w-5 h-5')->toHtml().'Xe thu phí trả sau - Không thu tiền</div>'))
+                                    ->columnSpanFull(),
+                                \Filament\Forms\Components\Placeholder::make('fee_preview')
+                                    ->label('Số tiền: ')
+                                    ->inlineLabel(true)
+                                    ->content(function (RegisterDirectly $record): HtmlString {
+                                        $calculator = new FeeCalculator;
+                                        $amount = (int) $calculator->calculateFeePublic($record);
+                                        $formatted = number_format((int) $amount, 0, ',', '.').' đ';
+
+                                        return new HtmlString('<div class="flex items-center justify-end w-full"><strong class="text-lg text-primary-600">'.$formatted.'</strong></div>');
+                                    })
                                     ->columnSpanFull(),
                             ]),
                     ];
@@ -157,7 +168,9 @@ class ReturnCardAction
             })
             ->action(function (RegisterDirectly $record, array $data, Component $livewire): void {
                 try {
-                    DB::transaction(function () use ($record, $data) {
+                    $shouldDownloadInvoice = true;
+
+                    DB::transaction(function () use ($record, $data, &$shouldDownloadInvoice) {
                         if ($record->type === 'vehicle') {
                             // Chuẩn hóa biển số và tìm car_catalog
                             $normalizedBks = Invoice::normalizeLicensePlate($record->bks);
@@ -166,12 +179,16 @@ class ReturnCardAction
 
                             // Tính phí
                             $calculator = new FeeCalculator;
-                            $feeAmount = $isPostpaid ? 0 : $calculator->calculateFeePublic($record);
+                            $feeAmount = $calculator->calculateFeePublic($record);
 
                             // Xác định trạng thái thanh toán dựa trên billing_type
                             $isPaid = false;
                             $paidAt = null;
                             $paymentMethod = $data['payment_method'] ?? null;
+
+                            if ($feeAmount == 0 || $isPostpaid) {
+                                $shouldDownloadInvoice = false;
+                            }
 
                             if ($carCatalog === null || ($carCatalog && $carCatalog->billing_type === 'prepaid')) {
                                 // Xe chưa đăng ký hoặc thanh toán trước → đã thanh toán
@@ -189,7 +206,7 @@ class ReturnCardAction
                             $invoiceCode = Invoice::generateInvoiceCode();
 
                             // Gán tạm thời actual_date_out để render HTML chính xác
-                            $record->actual_date_out = \Carbon\Carbon::now('Asia/Ho_Chi_Minh');
+                            $record->actual_date_out = Carbon::now('Asia/Ho_Chi_Minh');
 
                             // Lưu trữ hóa đơn dưới dạng HTML file
                             $invoiceHtml = (new \App\Http\Controllers\InvoiceFee)->getInvoiceHtml($record);
@@ -244,23 +261,27 @@ class ReturnCardAction
                         ->success();
 
                     if ($record->type === 'vehicle') {
-                        // Tạo URL download cho PDF invoice - TODO: verify route exists
-                        $downloadUrl = route('invoice.download', [
-                            'registerDirectly' => $record->id,
-                        ]);
+                        if ($shouldDownloadInvoice) {
+                            // Tạo URL download cho PDF invoice - TODO: verify route exists
+                            $downloadUrl = route('invoice.download', [
+                                'registerDirectly' => $record->id,
+                            ]);
 
-                        $livewire->js("window.printFile('{$downloadUrl}')");
+                            $livewire->js("window.printFile('{$downloadUrl}')");
 
-                        $notification->body('Hóa đơn đã được tạo. Nhấn để tải về.')
-                            ->actions([
-                                \Filament\Notifications\Actions\Action::make('download_invoice')
-                                    ->label('Tải hóa đơn')
-                                    ->icon('heroicon-o-arrow-down-tray')
-                                    ->url($downloadUrl)
-                                    ->openUrlInNewTab(),
-                            ])
-                            ->duration(5000)
-                            ->persistent();
+                            $notification->body('Hóa đơn đã được tạo. Nhấn để tải về.')
+                                ->actions([
+                                    \Filament\Notifications\Actions\Action::make('download_invoice')
+                                        ->label('Tải hóa đơn')
+                                        ->icon('heroicon-o-arrow-down-tray')
+                                        ->url($downloadUrl)
+                                        ->openUrlInNewTab(),
+                                ])
+                                ->duration(5000)
+                                ->persistent();
+                        } else {
+                            $notification->body('Xe ra thành công. Không cần tải hóa đơn.');
+                        }
                     } else {
                         $notification->body('Khách đã ra khỏi khu vực kiểm soát.');
                     }

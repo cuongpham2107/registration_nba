@@ -2,3 +2,69 @@
 
 
 @config 'tailwind.config.js';
+
+.table-repeater-header-column {
+    background-color: #f3f4f6;
+    color: #111827;
+    border-color: #e5e7eb;
+}
+
+.dark .table-repeater-header-column {
+    background-color: #374151;
+    color: #ffffff;
+    border-color: #4b5563;
+}
+
+.fi-tabs {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.dark .fi-tabs {
+    border-bottom-color: #374151 !important;
+    background: transparent !important;
+}
+
+.fi-tabs-item {
+    background: transparent !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 0 !important;
+    padding: 1rem 1.5rem !important;
+    transition: all 0.2s !important;
+    margin-bottom: -1px !important;
+}
+
+.fi-tabs-item.fi-active {
+    border-bottom-color: var(--primary-600) !important;
+    color: var(--primary-600) !important;
+}
+
+.fi-tabs-item.fi-active .fi-tabs-item-label {
+    color: var(--primary-600) !important;
+}
+
+.fi-tabs-item:hover:not(.fi-active) {
+    color: var(--primary-600) !important;
+    border-bottom-color: #e5e7eb !important;
+}
+
+.dark .fi-tabs-item:hover:not(.fi-active) {
+    border-bottom-color: #4b5563 !important;
+}
+
+.fi-tabs-item-label {
+    color: #6b7280 !important;
+    /* gray-500 */
+    font-weight: 500 !important;
+}
+
+.dark .fi-tabs-item-label {
+    color: #9ca3af !important;
+    /* gray-400 */
+}

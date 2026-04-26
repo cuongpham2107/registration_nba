@@ -78,12 +78,12 @@ class AdminPanelProvider extends PanelProvider
                     ]),
                 TutorialsPlugin::make(),
                 \Rmsramos\Activitylog\ActivitylogPlugin::make()
-                    ->navigationGroup('Hệ thống')
+                    ->navigationGroup('Quản lý danh mục')
                     ->navigationCountBadge(true)
                     ->label('Nhật ký hoạt động')
                     ->pluralLabel('Nhật ký hoạt động')
                     ->translateSubject(fn ($label) => __('models.'.$label))
-                    ->navigationSort(3)
+                    ->navigationSort(6)
                     ->navigationIcon('heroicon-o-book-open')
                     ->authorize(fn () => auth()->user()?->can('view_any_activitylog')),
                 //  StickyTableHeaderPlugin::make(),
