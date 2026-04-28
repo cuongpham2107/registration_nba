@@ -53,7 +53,7 @@ class GiveCardAction
                         Forms\Components\Select::make('id')
                             ->label('Thẻ')
                             ->options(Card::all()->pluck('card_name', 'id'))
-                            ->required()
+                            // ->required()
                             ->searchable(['card_name', 'card_number'])
                             ->preload(),
                         Forms\Components\DateTimePicker::make('start_date')

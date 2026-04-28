@@ -248,11 +248,10 @@ class ReturnCardAction
                             }
                         }
 
-                        // Update record - remove card_id and set status to came_out
+                        // Update record
                         $record->update([
                             'status' => 'came_out',
                             'actual_date_out' => Carbon::now('Asia/Ho_Chi_Minh'),
-                            'card_id' => null,
                         ]);
                     });
 
