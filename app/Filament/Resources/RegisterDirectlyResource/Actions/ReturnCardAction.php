@@ -237,7 +237,9 @@ class ReturnCardAction
                         }
 
                         // Update card status to inactive
-                        $record->card->update(['status' => 'inactive']);
+                        if ($record->card) {
+                            $record->card->update(['status' => 'inactive']);
+                        }
 
                         // Update registration vehicle status (guard and update safely)
                         if ($record->relationLoaded('registrationVehicle') || $record->registrationVehicle) {

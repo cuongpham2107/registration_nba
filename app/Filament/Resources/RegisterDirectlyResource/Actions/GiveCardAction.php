@@ -92,12 +92,16 @@ class GiveCardAction
                     $record->actual_date_in = $data['start_date'];
 
                     // Get and update card
-                    $card = Card::where('id', $data['id'])->firstOrFail();
-                    $card->status = 'active';
-                    $card->save();
+                    if (!empty($data['id'])) {
+                        $card = Card::where('id', $data['id'])->firstOrFail();
+                        $card->status = 'active';
+                        $card->save();
 
-                    // Assign card to record
-                    $record->card_id = $card->id;
+                        // Assign card to record
+                        $record->card_id = $card->id;
+                    } else {
+                        $record->card_id = null;
+                    }
 
                     // Update registration vehicle status (guard and update safely)
                     if ($record->relationLoaded('registrationVehicle') || $record->registrationVehicle) {
