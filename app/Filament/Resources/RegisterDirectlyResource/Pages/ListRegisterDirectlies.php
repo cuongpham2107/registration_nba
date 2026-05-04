@@ -68,19 +68,12 @@ class ListRegisterDirectlies extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            // Actions\CreateAction::make()
-            //     ->label('Thêm đăng ký mới')
-            //     ->modalHeading('Thêm đăng ký trực tiếp')
-            //     ->modalWidth(MaxWidth::ScreenExtraLarge)
-            //     ->slideOver()
-            //     ->mutateFormDataUsing(function (array $data): array {
-
-            //         $card = Card::where('id', $data['card_id'])->first();
-            //         $card->status = 'active';
-            //         $card->save();
-
-            //         return $data;
-            //     }),
+            Actions\CreateAction::make()
+                ->label('Thêm đăng ký mới')
+                ->modalHeading('Thêm đăng ký trực tiếp')
+                ->modalWidth(MaxWidth::ScreenExtraLarge)
+                ->slideOver()
+                ->hidden(fn() => ! auth()->user()->hasRole('super_admin')),
         ];
     }
 

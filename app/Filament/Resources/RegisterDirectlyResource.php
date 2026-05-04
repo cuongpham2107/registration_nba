@@ -65,7 +65,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->required(),
                         Forms\Components\TextInput::make('address')
                             ->label('Địa chỉ')
-                            ->hidden(fn ($record) => $record->type === 'vehicle')
+                            ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
                             ->prefixIcon('heroicon-o-map-pin'),
                         Forms\Components\TextInput::make('bks')
                             ->label('Biển kiểm soát')
@@ -78,19 +78,19 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                                 name: 'fee',
                                 titleAttribute: 'vehicle_type',
                             )
-                            ->hidden(fn ($record) => $record->type !== 'vehicle')
+                            ->hidden(fn (?Model $record) => $record?->type !== 'vehicle')
                             ->searchable(['vehicle_type', 'ticket_code'])
                             ->preload()
                             ->required(),
                         Forms\Components\TextInput::make('contact_person')
-                            ->hidden(fn ($record) => $record->type === 'vehicle')
+                            ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
                             ->label('Người liên hệ'),
                         Forms\Components\Toggle::make('is_priority')
                             ->label('Ưu tiên')
                             ->helperText('Đánh dấu nếu đây là đơn đăng ký ưu tiên')
                             ->onIcon('heroicon-s-arrow-up')
                             ->offIcon('heroicon-s-arrow-down')
-                            ->hidden(fn ($record) => $record->type !== 'vehicle')
+                            ->hidden(fn (?Model $record) => $record?->type !== 'vehicle')
                             ->inline(false),
                         Forms\Components\Textarea::make('job')
                             ->label('Mục đích công việc')
@@ -141,16 +141,16 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->displayFormat('d/m/Y h:i')
                             ->seconds(false)
                             ->label('Giờ vào')
-                            ->hidden(fn ($record) => $record->type === 'vehicle')
+                            ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
                             ->required(),
                         Forms\Components\DateTimePicker::make('end_date')
                             ->displayFormat('d/m/Y h:i')
                             ->seconds(false)
                             ->label('Giờ ra dự kiến')
-                            ->hidden(fn ($record) => $record->type === 'vehicle')
+                            ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
                             ->rules([
                                 fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
-                                    if ($record['status'] != 'sent') {
+                                    if (($record['status'] ?? null) != 'sent') {
                                         if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->isBefore(Carbon::parse($get('start_date'), 'Asia/Ho_Chi_Minh'))) {
                                             $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ bắt đầu.');
                                         }
@@ -158,7 +158,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
 
                                 },
                                 fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($record) {
-                                    if ($record['status'] != 'sent') {
+                                    if (($record['status'] ?? null) != 'sent') {
                                         if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->lessThanOrEqualTo(Carbon::now('Asia/Ho_Chi_Minh'))) {
                                             $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ hiện tại.');
                                         }

@@ -33,40 +33,6 @@ class RegistrationController extends Controller
         $registration->type_date = now();
         $registration->save();
 
-        // Gửi thông báo Zalo sau khi phê duyệt thành công
-        $approver = $registration->approver;
-        if ($approver) {
-            try {
-                $customers = $registration->customers;
-
-                // Tạm thời lấy từ config, không sử dụng zalo_user_id
-                $zaloId = config('services.zalo.default_user_id', '3948439024214471746');
-
-                $zaloData = [
-                    'type' => 'approved',
-                    'zalo_id_user_approve' => $zaloId,
-                    'data' => [
-                        'action' => 'Đăng ký khách đã được phê duyệt',
-                        'customer_number' => (string) $registration->id,
-                        'requestor' => $registration->user->name ?? 'N/A',
-                        'customer_unit' => $registration->name,
-                        'purpose' => $registration->purpose,
-                        'quantity' => $customers->count().' người',
-                        'area' => $customers->pluck('areas')->flatten()->unique()->implode(', '),
-                        'request_time' => Carbon::parse($registration->created_at)->format('H:i:s d-m-Y'),
-                        'approver' => $name_manager.($job_title_manager ? ' ('.$job_title_manager.')' : ''),
-                        'approve_time' => now()->format('H:i d-m-Y'),
-                    ],
-                ];
-
-                \Illuminate\Support\Facades\Http::timeout(10)
-                    ->post(config('services.zalo.webhook_url'), $zaloData);
-
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Zalo notification failed: '.$e->getMessage());
-            }
-        }
-
         $status = 'Duyệt';
         $message = 'Đăng ký khách đã được phê duyệt thành công';
         try {
@@ -106,48 +72,13 @@ class RegistrationController extends Controller
             'type' => 'refuse',
             'type_date' => now(),
         ]);
-
-        // Gửi thông báo Zalo sau khi từ chối
-        $approver = $registration->approver;
-        if ($approver) {
-            try {
-                $customers = $registration->customers;
-
-                // Tạm thời lấy từ config, không sử dụng zalo_user_id
-                $zaloId = config('services.zalo.default_user_id', '3948439024214471746');
-
-                $zaloData = [
-                    'type' => 'rejected',
-                    'zalo_id_user_approve' => $zaloId,
-                    'data' => [
-                        'action' => 'Đăng ký khách đã bị từ chối',
-                        'customer_number' => (string) $registration->id,
-                        'requestor' => $registration->user->name ?? 'N/A',
-                        'customer_unit' => $registration->name,
-                        'purpose' => $registration->purpose,
-                        'quantity' => $customers->count().' người',
-                        'area' => $customers->pluck('areas')->flatten()->unique()->implode(', '),
-                        'request_time' => \Carbon\Carbon::parse($registration->created_at)->format('H:i:s d-m-Y'),
-                        'approver' => $name_manager.($job_title_manager ? ' ('.$job_title_manager.')' : ''),
-                        'reject_time' => now()->format('H:i:s d-m-Y'),
-                    ],
-                ];
-
-                \Illuminate\Support\Facades\Http::timeout(10)
-                    ->post('http://192.168.1.70:5678/webhook/send-registration', $zaloData);
-
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Zalo notification failed: '.$e->getMessage());
-            }
-        }
-
         $status = 'Từ chối';
         $message = 'Đăng ký khách đã bị từ chối';
 
         return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
     }
 
-    public function createRegistrationRirectly(Registration $registration)
+    public function createRegistrationDirectly(Registration $registration)
     {
 
         $startDate = Carbon::parse($registration->start_date, 'Asia/Ho_Chi_Minh');
