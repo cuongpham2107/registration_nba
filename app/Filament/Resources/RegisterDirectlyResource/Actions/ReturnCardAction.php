@@ -49,6 +49,10 @@ class ReturnCardAction
                 $record->status === 'came_out'
             )
             ->form(function (RegisterDirectly $record) {
+                // Nếu IS_PRICE trong env là false thì không hiển thị phần thông tin phí tạm tính.
+                if (env('IS_PRICE', false) === false) {
+                    return [];
+                }
                 if ($record->type !== 'vehicle') {
                     return [];
                 }
@@ -171,7 +175,7 @@ class ReturnCardAction
                     $shouldDownloadInvoice = true;
 
                     DB::transaction(function () use ($record, $data, &$shouldDownloadInvoice) {
-                        if ($record->type === 'vehicle') {
+                        if ($record->type === 'vehicle' && env('IS_PRICE', false) !== false) {
                             // Chuẩn hóa biển số và tìm car_catalog
                             $normalizedBks = Invoice::normalizeLicensePlate($record->bks);
                             $carCatalog = CarCatalog::where('license_plate', $normalizedBks)->first();
@@ -262,26 +266,30 @@ class ReturnCardAction
                         ->success();
 
                     if ($record->type === 'vehicle') {
-                        if ($shouldDownloadInvoice) {
-                            // Tạo URL download cho PDF invoice - TODO: verify route exists
-                            $downloadUrl = route('invoice.download', [
-                                'registerDirectly' => $record->id,
-                            ]);
+                        if (env('IS_PRICE', false) !== false) {
+                            if ($shouldDownloadInvoice) {
+                                // Tạo URL download cho PDF invoice - TODO: verify route exists
+                                $downloadUrl = route('invoice.download', [
+                                    'registerDirectly' => $record->id,
+                                ]);
 
-                            $livewire->js("window.printFile('{$downloadUrl}')");
+                                $livewire->js("window.printFile('{$downloadUrl}')");
 
-                            $notification->body('Hóa đơn đã được tạo. Nhấn để tải về.')
-                                ->actions([
-                                    \Filament\Notifications\Actions\Action::make('download_invoice')
-                                        ->label('Tải hóa đơn')
-                                        ->icon('heroicon-o-arrow-down-tray')
-                                        ->url($downloadUrl)
-                                        ->openUrlInNewTab(),
-                                ])
-                                ->duration(5000)
-                                ->persistent();
+                                $notification->body('Hóa đơn đã được tạo. Nhấn để tải về.')
+                                    ->actions([
+                                        \Filament\Notifications\Actions\Action::make('download_invoice')
+                                            ->label('Tải hóa đơn')
+                                            ->icon('heroicon-o-arrow-down-tray')
+                                            ->url($downloadUrl)
+                                            ->openUrlInNewTab(),
+                                    ])
+                                    ->duration(5000)
+                                    ->persistent();
+                            } else {
+                                $notification->body('Xe ra thành công. Không cần tải hóa đơn.');
+                            }
                         } else {
-                            $notification->body('Xe ra thành công. Không cần tải hóa đơn.');
+                            $notification->body('Xe ra thành công.');
                         }
                     } else {
                         $notification->body('Khách đã ra khỏi khu vực kiểm soát.');
