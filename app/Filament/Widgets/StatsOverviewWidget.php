@@ -28,7 +28,15 @@ class StatsOverviewWidget extends BaseWidget
         $todayDate = $now->toDateString();
 
         $todayIn = RegisterDirectly::whereDate('actual_date_in', $todayDate)->count();
-        $todayOut = RegisterDirectly::whereDate('actual_date_out', $todayDate)->count();
+        // Xe ra hôm nay: ưu tiên actual_date_out, fallback về updated_at khi actual_date_out bị NULL
+        $todayOut = RegisterDirectly::where('status', 'came_out')
+            ->where(function ($q) use ($todayDate) {
+                $q->whereDate('actual_date_out', $todayDate)
+                  ->orWhere(function ($q2) use ($todayDate) {
+                      $q2->whereNull('actual_date_out')
+                         ->whereDate('updated_at', $todayDate);
+                  });
+            })->count();
         $todayRevenue = Invoice::where('is_paid', true)
             ->whereDate('paid_at', $todayDate)
             ->sum('amount');
@@ -94,7 +102,14 @@ class StatsOverviewWidget extends BaseWidget
         $outChart = [];
         for ($i = 6; $i >= 0; $i--) {
             $day = $now->copy()->subDays($i)->toDateString();
-            $outChart[] = RegisterDirectly::whereDate('actual_date_out', $day)->count();
+            $outChart[] = RegisterDirectly::where('status', 'came_out')
+                ->where(function ($q) use ($day) {
+                    $q->whereDate('actual_date_out', $day)
+                      ->orWhere(function ($q2) use ($day) {
+                          $q2->whereNull('actual_date_out')
+                             ->whereDate('updated_at', $day);
+                      });
+                })->count();
         }
 
         return [

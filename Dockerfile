@@ -1,5 +1,5 @@
 # Giai đoạn 1: Build PHP dependencies
-FROM php:8.3-fpm as vendor
+FROM php:8.4-fpm as vendor
 
 WORKDIR /var/www/html
 
@@ -53,7 +53,7 @@ COPY . .
 RUN bun run build
 
 # Giai đoạn 3: Final runtime image
-FROM php:8.3-fpm
+FROM php:8.4-fpm
 
 WORKDIR /var/www/html
 

@@ -74,20 +74,41 @@ class ListFilterRegisterDirectly extends Filter
                         }
                     )
                     ->when(
-                        $data['start_date'] && !$data['end_date'],
-                        fn (Builder $query) => 
-                            $query->whereDate('start_date', Carbon::parse($data['start_date'], 'Asia/Ho_Chi_Minh'))
-                    )
-                    ->when(
-                        $data['start_date'] && $data['end_date'],
-                        fn (Builder $query) => 
-                            $query->whereBetween(
-                                'start_date', 
-                                [
-                                    Carbon::parse($data['start_date'], 'Asia/Ho_Chi_Minh')->startOfDay(), 
-                                    Carbon::parse($data['end_date'], 'Asia/Ho_Chi_Minh')->endOfDay()
-                                ]
-                            )
+                        $data['start_date'] || $data['end_date'],
+                        function (Builder $query) use ($data) {
+                            $startDate = $data['start_date'] ? Carbon::parse($data['start_date'], 'Asia/Ho_Chi_Minh')->startOfDay() : null;
+                            $endDate = $data['end_date'] ? Carbon::parse($data['end_date'], 'Asia/Ho_Chi_Minh')->endOfDay() : null;
+                            
+                            $status = $data['status'] ?? null;
+                            
+                            // Xác định cột ngày để lọc dựa vào trạng thái
+                            $dateColumn = 'start_date';
+                            if ($status === 'came_out') {
+                                // Lọc theo ngày ra
+                                return $query->where(function ($q) use ($startDate, $endDate) {
+                                    if ($startDate && !$endDate) {
+                                        $q->whereDate('actual_date_out', $startDate)
+                                          ->orWhere(function ($q2) use ($startDate) {
+                                              $q2->whereNull('actual_date_out')->whereDate('updated_at', $startDate);
+                                          });
+                                    } elseif ($startDate && $endDate) {
+                                        $q->whereBetween('actual_date_out', [$startDate, $endDate])
+                                          ->orWhere(function ($q2) use ($startDate, $endDate) {
+                                              $q2->whereNull('actual_date_out')->whereBetween('updated_at', [$startDate, $endDate]);
+                                          });
+                                    }
+                                });
+                            } elseif ($status === 'coming_in') {
+                                $dateColumn = 'actual_date_in';
+                            }
+
+                            if ($startDate && !$endDate) {
+                                return $query->whereDate($dateColumn, $startDate);
+                            }
+                            if ($startDate && $endDate) {
+                                return $query->whereBetween($dateColumn, [$startDate, $endDate]);
+                            }
+                        }
                     );
 
             })
