@@ -69,7 +69,7 @@ return [
         'enabled' => true,
 
         'pages' => [
-            'Dashboard',
+            'App\\Filament\\Pages\\Dashboard',
         ],
 
         'widgets' => [

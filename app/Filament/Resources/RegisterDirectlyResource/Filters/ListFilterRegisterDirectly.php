@@ -91,6 +91,11 @@ class ListFilterRegisterDirectly extends Filter
                                           ->orWhere(function ($q2) use ($startDate) {
                                               $q2->whereNull('actual_date_out')->whereDate('updated_at', $startDate);
                                           });
+                                    } elseif (!$startDate && $endDate) {
+                                        $q->where('actual_date_out', '<=', $endDate)
+                                          ->orWhere(function ($q2) use ($endDate) {
+                                              $q2->whereNull('actual_date_out')->where('updated_at', '<=', $endDate);
+                                          });
                                     } elseif ($startDate && $endDate) {
                                         $q->whereBetween('actual_date_out', [$startDate, $endDate])
                                           ->orWhere(function ($q2) use ($startDate, $endDate) {
@@ -104,6 +109,9 @@ class ListFilterRegisterDirectly extends Filter
 
                             if ($startDate && !$endDate) {
                                 return $query->whereDate($dateColumn, $startDate);
+                            }
+                            if (!$startDate && $endDate) {
+                                return $query->where($dateColumn, '<=', $endDate);
                             }
                             if ($startDate && $endDate) {
                                 return $query->whereBetween($dateColumn, [$startDate, $endDate]);

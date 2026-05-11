@@ -12,7 +12,7 @@ class RevenueChartWidget extends ChartWidget
 
     protected static ?int $sort = 2;
 
-    protected int|string|array $columnSpan = 1;
+    protected int|string|array $columnSpan = 6;
 
     public ?string $filter = 'week';
 

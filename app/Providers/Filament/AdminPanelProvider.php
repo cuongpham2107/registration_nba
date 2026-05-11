@@ -2,7 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Login;
 use App\Filament\Pages\UserProfile;
 use Filament\FontProviders\LocalFontProvider;
@@ -51,9 +50,6 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogoHeight('2rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            ->pages([
-                Dashboard::class,
-            ])
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->spa()
             ->topNavigation()
