@@ -3,17 +3,24 @@
 namespace App\Filament\Resources\Invoices\Tables;
 
 use App\Filament\Resources\Invoices\Filters\InvoiceFilter;
+use App\Models\Company;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Icon;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 class InvoicesTable
@@ -25,7 +32,7 @@ class InvoicesTable
             ->filters(self::getFilters(), layout: FiltersLayout::AboveContent)
             ->filtersFormColumns(5)
             ->deferFilters(false)
-            ->recordActions(self::getRecordActions())
+            ->recordActions(self::getRecordActions(), position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions(self::getBulkActions())
             ->groups(self::getGroups())
             ->defaultSort('created_at', 'desc');
@@ -114,35 +121,101 @@ class InvoicesTable
                 ->button()
                 ->tooltip('Xem thông tin xuất hoá đơn')
                 ->color('success')
+                ->modalHeading('Thông tin công ty xuất hóa đơn')
+                ->modalDescription('Cơ quan/Tổ chức cần xuất hóa đơn tài chính')
+                ->modalWidth(Width::Large)
                 ->icon('heroicon-o-building-office-2')
-                ->visible(fn ($record) => $record->company)
-                ->fillForm(fn ($record) => $record->company->toArray())
+                // ->visible(fn ($record) => $record->company)
+                ->fillForm(fn ($record) => $record->company?->toArray() ?? [])
                 ->schema([
                     TextInput::make('tax_code')
                         ->label('Mã số thuế')
-                        ->disabled(),
+                        ->live(onBlur: true)
+                        ->aboveErrorMessage([
+                            Icon::make(Heroicon::ArrowPath)
+                                ->extraAttributes([
+                                    'wire:loading' => true,
+                                    'class' => 'animate-spin inline-block mr-1 h-4 w-4',
+                                ]),
+                            'Đang lấy thông tin công ty...',
+                        ])
+                        ->afterStateUpdated(function ($state, Set $set) {
+                            if (empty($state)) {
+                                return;
+                            }
+
+                            $taxCode = preg_replace('/\D+/', '', (string) $state);
+
+                            if (strlen($taxCode) < 10) {
+                                return;
+                            }
+
+                            try {
+                                $response = Http::timeout(8)
+                                    ->withHeaders([
+                                        'Accept' => '*/*',
+                                    ])
+                                    ->get("https://api.vietqr.io/v2/business/{$taxCode}");
+
+                                $json = $response->json();
+                                $data = $json['data'] ?? null;
+
+                                if (is_array($data)) {
+                                    $set('name', $data['name'] ?? null);
+                                    $set('address', $data['address'] ?? null);
+                                }
+                            } catch (\Throwable $e) {
+                                // Silent fail
+                            }
+                        })
+                        ->disabled(fn ($record) => $record->is_issued),
                     TextInput::make('name')
                         ->label('Tên công ty')
-                        ->disabled(),
+                        ->disabled(fn ($record) => $record->is_issued),
                     TextInput::make('phone')
                         ->label('Số điện thoại')
-                        ->disabled(),
+                        ->disabled(fn ($record) => $record->is_issued),
                     TextInput::make('address')
                         ->label('Địa chỉ')
-                        ->disabled(),
+                        ->disabled(fn ($record) => $record->is_issued),
 
                 ])
-                ->action(function ($record) {
+                ->action(function ($record, array $data) {
+                    if ($record->is_issued) {
+                        return;
+                    }
+
+                    if ($record->company) {
+                        $record->company->update($data);
+                    } else {
+                        $company = null;
+                        if (! empty($data['tax_code'])) {
+                            $company = Company::updateOrCreate(
+                                ['tax_code' => $data['tax_code']],
+                                $data
+                            );
+                        } elseif (! empty($data['name'])) {
+                            $company = Company::create($data);
+                        }
+
+                        if ($company) {
+                            $record->update(['company_id' => $company->id]);
+                        }
+                    }
+
                     $record->update([
                         'is_issued' => true,
                     ]);
+
+                    $record->refresh();
+
                     Notification::make()
                         ->title('Đã xuất hóa đơn')
-                        ->body('Đã xuất hóa đơn cho công ty '.$record->company->name)
+                        ->body('Đã xuất hóa đơn cho công ty '.($record->company?->name ?? $data['name'] ?? ''))
                         ->success()
                         ->send();
                 })
-                ->modalSubmitActionLabel('Xác nhận xuất hóa đơn!'),
+                ->modalSubmitActionLabel(fn ($record) => $record->is_issued ? 'Đã xuất hóa đơn' : 'Xác nhận xuất hóa đơn!'),
             Action::make('download_pdf')
                 ->label('')
                 ->button()

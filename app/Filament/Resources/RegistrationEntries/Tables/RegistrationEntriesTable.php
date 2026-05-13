@@ -240,7 +240,7 @@ class RegistrationEntriesTable
                     ->slideOver()
                     ->modalWidth(Width::SixExtraLarge)
                     ->schema(fn (Schema $schema): Schema => RegistrationEntryForm::configure($schema))
-                    ->hidden(fn ($record) => $record->status === 'exited'),
+                    ->hidden(fn () => ! auth()->user()?->hasRole('super_admin')),
                 DeleteAction::make(),
             ])
                 ->icon('heroicon-m-adjustments-vertical')

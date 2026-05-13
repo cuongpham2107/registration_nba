@@ -72,6 +72,17 @@ class GiveCardAction
                                 ->first();
 
                             if (! $card) {
+                                // Kiểm tra độ dài thẻ mới
+                                if (strlen($data['id']) <= 8) {
+                                    Notification::make()
+                                        ->title('Thẻ không hợp lệ')
+                                        ->body('Mã thẻ mới không hợp lệ. Vui lòng quét mã thẻ có độ dài lớn hơn 8 ký tự.')
+                                        ->danger()
+                                        ->send();
+
+                                    return;
+                                }
+
                                 // Nếu không có thẻ thì tự tạo mới theo mã nhập.
                                 $card = new Card;
                                 $card->account_id = $data['id'];

@@ -130,58 +130,29 @@ class FeeCalculator
 
     private static function calculateShiftBlocks(Fee $fee, Carbon $entry, Carbon $exit): int
     {
+        $dayFee = (int) ($fee->full_day_fee ?? 0);
+        $nightFee = (int) ($fee->night_fee ?? 0);
         $total = 0;
 
-        // Iterate day by day, summing overlap minutes with day shift and night shift.
-        // Day shift: 07:00 -> 17:00
-        // Night shift: 17:00 -> 07:00 next day
-        $cursorDay = $entry->copy()->startOfDay();
-        $endDay = $exit->copy()->startOfDay();
-
-        while ($cursorDay->lessThanOrEqualTo($endDay)) {
-            $dayStart = $cursorDay->copy()->setTime(7, 0);
-            $dayEnd = $cursorDay->copy()->setTime(17, 0);
-            $nightStart = $dayEnd->copy();
-            $nightEnd = $cursorDay->copy()->addDay()->setTime(7, 0);
-
-            $dayMinutes = self::overlapMinutes($entry, $exit, $dayStart, $dayEnd);
-            if ($dayMinutes > 0) {
-                $blocks = (int) ceil($dayMinutes / 240);
-                $total += $blocks * (int) ($fee->full_day_fee ?? 0);
+        $cursor = $entry->copy();
+        while ($cursor->lessThan($exit)) {
+            // Điểm kết thúc của block này (tối đa 4h hoặc dừng tại thời điểm ra)
+            $blockEnd = $cursor->copy()->addHours(4);
+            if ($blockEnd->greaterThan($exit)) {
+                $blockEnd = $exit->copy();
             }
 
-            $nightMinutes = self::overlapMinutes($entry, $exit, $nightStart, $nightEnd);
-            if ($nightMinutes > 0) {
-                $blocks = (int) ceil($nightMinutes / 240);
-                $total += $blocks * (int) ($fee->night_fee ?? 0);
-            }
+            // Xác định giá của block dựa trên giờ kết thúc của nó
+            $hour = (int) $blockEnd->format('G'); // 0-23
+            $isNight = $hour < 7 || $hour >= 17;
 
-            $cursorDay->addDay();
+            $total += $isNight ? $nightFee : $dayFee;
+
+            // Nhảy sang block tiếp theo
+            $cursor->addHours(4);
         }
 
         return $total;
-    }
-
-    private static function overlapMinutes(Carbon $aStart, Carbon $aEnd, Carbon $bStart, Carbon $bEnd): int
-    {
-        if (! self::overlaps($aStart, $aEnd, $bStart, $bEnd)) {
-            return 0;
-        }
-
-        $start = $aStart->copy()->max($bStart);
-        $end = $aEnd->copy()->min($bEnd);
-
-        // Làm tròn lên theo phút cho phần overlap.
-        // Tránh case vào/ra trong vài giây => diffInMinutes() = 0 => không tính block => 0đ.
-        $seconds = $start->diffInSeconds($end);
-        $minutes = (int) ceil($seconds / 60);
-
-        return max(0, $minutes);
-    }
-
-    private static function overlaps(Carbon $aStart, Carbon $aEnd, Carbon $bStart, Carbon $bEnd): bool
-    {
-        return $aStart->lessThan($bEnd) && $aEnd->greaterThan($bStart);
     }
 
     private static function empty(): array

@@ -144,8 +144,7 @@ class RegistrationEntryForm
                             ->label('Giờ ra thực tế')
                             ->displayFormat('d/m/Y H:i A')
                             ->prefixIcon('heroicon-s-calendar-days')
-                            ->seconds(false)
-                            ->readonly(),
+                            ->seconds(false),
                         Forms\Components\Select::make('status')
                             ->options([
                                 'none' => 'Chưa vào',

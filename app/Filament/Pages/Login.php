@@ -29,6 +29,7 @@ use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use SensitiveParameter;
+use Spatie\Permission\Models\Role;
 
 class Login extends SimplePage
 {
@@ -64,7 +65,8 @@ class Login extends SimplePage
 
         $data = $this->form->getState();
 
-        if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
+        if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false) && ! Filament::auth()->attempt($this->getEmailCredentialsFromFormData($data), $data['remember'] ?? false)) {
+
             $loginAsgl = Http::withHeaders([
                 'Content-Type' => 'application/json',
             ])->post('https://id.asgl.net.vn/api/auth/login', [
@@ -98,10 +100,16 @@ class Login extends SimplePage
                     'mobile_phone' => $userResponse['mobile_phone'],
                     'asgl_id' => $userResponse['id'],
                     'avatar' => $userResponse['avatar'],
-                    'email' => $userResponse['email'] ?? $userResponse['username'],
+                    'email' => $userResponse['email'] ?? $userResponse['username'].'@asgl.net.vn',
                     'password' => Str::password(),
                     'department_name' => $userResponse['positions'][0]['department']['short_code'] ?? null,
                 ]);
+                // Ensure the panel_user role exists and assign it to the new user
+                if (! Role::where('name', 'panel_user')->exists()) {
+                    Role::create(['name' => 'panel_user']);
+                }
+
+                $user->assignRole('panel_user');
             }
 
             Filament::auth()->login($user);
@@ -235,6 +243,18 @@ class Login extends SimplePage
     {
         return [
             'username' => $data['username'],
+            'password' => $data['password'],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function getEmailCredentialsFromFormData(#[SensitiveParameter] array $data): array
+    {
+        return [
+            'email' => $data['username'],
             'password' => $data['password'],
         ];
     }

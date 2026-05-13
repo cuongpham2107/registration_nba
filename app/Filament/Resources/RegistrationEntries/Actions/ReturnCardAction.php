@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\RegistrationEntries\Actions;
 
 use App\Http\Controllers\DownloadInvoiceController;
+use App\Models\CarCatalog;
 use App\Models\Invoice;
 use App\Models\RegistrationEntry;
 use App\Support\FeeCalculator;
@@ -33,14 +34,23 @@ class ReturnCardAction
             ->modalIcon('heroicon-o-arrow-uturn-up')
             ->modalHeading(function (RegistrationEntry $record) {
                 if ($record->type === 'inspection') {
-                    return 'Xe ra: '.$record->license_plate.' | Họ tên: '.$record->name;
+                    return 'Xe ra: '.$record->license_plate;
                 } else {
                     return 'Người ra: '.$record->name.' | CMND: '.$record->papers;
                 }
             })
             ->modalDescription(function (RegistrationEntry $record) {
                 if ($record->type === 'inspection') {
-                    return 'Xe ra khỏi khu vực kiểm soát, thẻ sẽ được trả lại hệ thống.';
+                    $normalizedBks = Invoice::normalizeLicensePlate($record->license_plate);
+                    $isCarCatalog = CarCatalog::where('license_plate', $normalizedBks)->exists();
+
+                    $message = 'Xe ra khỏi khu vực kiểm soát, thẻ sẽ được trả lại hệ thống.';
+
+                    if ($isCarCatalog) {
+                        return $message.' Xe có trong danh mục (Miễn phí).';
+                    }
+
+                    return $message;
                 } else {
                     return 'Người ra khỏi khu vực kiểm soát, thẻ sẽ được trả lại hệ thống.';
                 }
@@ -54,7 +64,15 @@ class ReturnCardAction
 
                 Section::make('Thông tin tạm tính')
                     ->description('Thông tin phí tạm tính dựa trên giờ vào và giờ ra hiện tại. Phí chính xác sẽ được tính khi tạo hóa đơn.')
-                    ->visible(fn (RegistrationEntry $record): bool => $record->type === 'inspection')
+                    ->visible(function (RegistrationEntry $record): bool {
+                        if ($record->type !== 'inspection') {
+                            return false;
+                        }
+
+                        $normalizedBks = Invoice::normalizeLicensePlate($record->license_plate);
+
+                        return ! CarCatalog::where('license_plate', $normalizedBks)->exists();
+                    })
                     ->columnSpanFull()
                     ->columns(2)
                     ->components([
@@ -122,17 +140,26 @@ class ReturnCardAction
                     $feeAmount = null;
                     $printUrl = null;
 
-                    DB::transaction(function () use ($data, $record, &$downloadUrl, &$feeAmount, &$printUrl) {
+                    $isCarCatalog = false;
+
+                    DB::transaction(function () use ($data, $record, &$downloadUrl, &$feeAmount, &$printUrl, &$isCarCatalog) {
                         // nếu guest_id có dữ liệu và type là inspection thì không tính tiền
+                        $normalizedBks = Invoice::normalizeLicensePlate($record->license_plate);
+                        $carCatalogExit = CarCatalog::where('license_plate', $normalizedBks)->first();
+
                         if ($record->type !== 'inspection') {
                             $feeAmount = 0;
                             $downloadUrl = null;
+                        } elseif ($carCatalogExit) {
+                            $feeAmount = 0;
+                            $downloadUrl = null;
+                            $printUrl = null;
+                            $isCarCatalog = true;
                         } else {
                             $controller = new DownloadInvoiceController;
                             $filePath = $controller->generateInvoice($record);
                             $printUrl = asset('storage/'.$filePath);
 
-                            $normalizedBks = Invoice::normalizeLicensePlate($record->license_plate);
                             $feeAmount = (int) (FeeCalculator::forRegistrationEntry($record)['total'] ?? 0);
 
                             $existingInvoice = $record->invoice;
@@ -145,7 +172,7 @@ class ReturnCardAction
                                 'paid_at' => now(),
                                 'payment_method' => $data['payment_method'],
                                 'file_path' => $filePath,
-                                'notes' => $record->type === 'working' ? 'Khách ra vào trả thẻ ra thành công' : 'Xe ra khỏi bãi thành công',
+                                'notes' => 'Xe ra khỏi bãi thành công',
                             ];
 
                             if ($existingInvoice) {
@@ -202,14 +229,18 @@ class ReturnCardAction
                             ->persistent()
                             ->send();
                     } else {
+                        $title = 'Trả thẻ thành công';
                         $body = 'Trả thẻ thành công.';
 
-                        if ($feeAmount === 0) {
+                        if ($isCarCatalog) {
+                            $title = 'Xe đã ra khỏi bãi';
+                            $body = 'Xe có trong danh mục (Miễn phí). Đã cập nhật trạng thái xe.';
+                        } elseif ($feeAmount === 0) {
                             $body = 'Trả thẻ thành công. Không phát sinh phí nên không tạo hóa đơn.';
                         }
 
                         Notification::make()
-                            ->title('Trả thẻ thành công')
+                            ->title($title)
                             ->body($body)
                             ->success()
                             ->duration(4000)

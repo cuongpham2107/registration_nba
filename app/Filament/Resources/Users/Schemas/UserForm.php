@@ -34,7 +34,6 @@ class UserForm
                         Forms\Components\TextInput::make('email')
                             ->label('Địa chỉ Email')
                             ->prefixIcon('heroicon-o-envelope')
-                            ->required()
                             ->columnSpan([
                                 'sm' => 1,
                                 'md' => 2,
