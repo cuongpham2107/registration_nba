@@ -204,6 +204,19 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                         'vehicle' => 'heroicon-o-truck',
                         default => 'heroicon-o-user',
                     })
+                    ->sortable(
+                        query: function (Builder $query, string $direction): Builder {
+                            $direction = strtolower($direction) === 'desc' ? 'DESC' : 'ASC';
+
+                            return $query->orderByRaw(
+                                "CASE type
+                                    WHEN 'passenger' THEN 1
+                                    WHEN 'vehicle' THEN 2
+                                    ELSE 3
+                                END {$direction}"
+                            );
+                        }
+                    )
                     ->label('Loại'),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Họ và tên')
@@ -240,7 +253,19 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Trạng thái')
-                    ->sortable()
+                    ->sortable(
+                        query: function (Builder $query, string $direction): Builder {
+                            $direction = strtolower($direction) === 'desc' ? 'DESC' : 'ASC';
+
+                            return $query->orderByRaw(
+                                "CASE status
+                                    WHEN 'coming_in' THEN 1
+                                    WHEN 'came_out' THEN 2
+                                    ELSE 3
+                                END {$direction}"
+                            );
+                        }
+                    )
                     ->badge()
                     ->color(function ($state) {
                         if (is_null($state) || $state === 'none' || $state === '') {
@@ -323,18 +348,6 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     ->toggleable(),
             ])
             ->defaultSort('sort', 'asc')
-            ->modifyQueryUsing(function (Builder $query) {
-                // Lấy filter data từ request
-                $tableFilters = request()->input('tableFilters', []);
-                $isPriorityEnabled = $tableFilters['date_range']['is_priority'] ?? false;
-
-                // Nếu filter is_priority được bật, sắp xếp theo is_priority trước
-                if ($isPriorityEnabled === true) {
-                    return $query->orderByRaw('is_priority DESC, sort ASC, created_at DESC');
-                }
-
-                return $query;
-            })
             ->filters([
                 ListFilterRegisterDirectly::make(),
             ], layout: FiltersLayout::AboveContent)

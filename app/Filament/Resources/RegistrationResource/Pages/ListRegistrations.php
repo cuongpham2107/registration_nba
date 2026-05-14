@@ -53,7 +53,6 @@ class ListRegistrations extends ListRecords
                     $user = Auth::user();
                     // Nếu là approver: tạo bản ghi trực tiếp và duyệt luôn
                     if ($user && $user->hasRole('approver')) {
-                        dd(1);
                         try {
                             (new RegistrationService())->createRegistrationDirectly($record);
                             $record->type = 'browse';

@@ -380,8 +380,8 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                         ->modalWidth(MaxWidth::SixExtraLarge)
                         ->hidden(fn (Registration $record) => $record->status === 'sent' && $record->type === 'browse' || $record->type === 'refuse' || $record->user_id !== auth()->id()),
                     Tables\Actions\ViewAction::make()->modalWidth(MaxWidth::SixExtraLarge),
-                    Tables\Actions\DeleteAction::make()
-                        ->hidden(fn (Registration $record) => $record->status === 'sent' && $record->type === 'browse' || $record->type === 'refuse' || $record->user_id !== auth()->id()),
+                    Tables\Actions\DeleteAction::make(),
+                        // ->hidden(fn (Registration $record) => $record->status === 'sent' && $record->type === 'browse' || $record->type === 'refuse' || $record->user_id !== auth()->id()),
                     ApproveRegistrationAction::make(),
                     RefuseRegistrationAction::make(),
                 ])->icon('heroicon-m-adjustments-vertical')

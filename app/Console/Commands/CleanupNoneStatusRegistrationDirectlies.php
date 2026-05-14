@@ -28,6 +28,7 @@ class CleanupNoneStatusRegistrationDirectlies extends Command
     {
         // lấy bản ghi có status = none,created_at trong ngày hôm nay và created_at < 1 tiếng
         $deleted = RegisterDirectly::where('status', 'none')
+            ->where('type', 'vehicle')
             ->whereBetween('created_at', [
                 now()->startOfDay(),
                 now()->subHour(),

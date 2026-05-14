@@ -29,10 +29,14 @@ class ListRegisterDirectlies extends ListRecords
     {
         $query = parent::applyFiltersToTableQuery($query);
 
+        // Respect user-selected column sorting from Filament.
+        if ($this->getTableSortColumn()) {
+            return $query;
+        }
+
         // Lấy filter data
         $filterData = $this->tableFilters['date_range'] ?? [];
         $isPriorityEnabled = $filterData['is_priority'] ?? false;
-        $searchTerm = $filterData['search'] ?? null;
 
         // Xóa order by cũ và thêm order mới
         $query->getQuery()->orders = null;

@@ -80,55 +80,38 @@ class RegistrationController extends Controller
 
     public function createRegistrationDirectly(Registration $registration)
     {
+        try{
+            $startDate = Carbon::parse($registration->start_date, 'Asia/Ho_Chi_Minh');
+            $endDate = Carbon::parse($registration->end_date, 'Asia/Ho_Chi_Minh');
 
-        $startDate = Carbon::parse($registration->start_date, 'Asia/Ho_Chi_Minh');
-        $endDate = Carbon::parse($registration->end_date, 'Asia/Ho_Chi_Minh');
+            $customers = $registration->customers;
 
-        $customers = $registration->customers;
+            $currentDate = $startDate->copy()->startOfDay();
 
-        $currentDate = $startDate->copy()->startOfDay();
+            while ($currentDate->lte($endDate->endOfDay())) {
+                // Xác định thời gian bắt đầu và kết thúc cho ngày hiện tại
+                $startOfDay = $currentDate->isSameDay($startDate) ? $startDate->copy() : $currentDate->copy()->startOfDay();
+                $endOfDay = $currentDate->isSameDay($endDate) ? $endDate->copy() : $currentDate->copy()->endOfDay();
 
-        while ($currentDate->lte($endDate->endOfDay())) {
-            // Xác định thời gian bắt đầu và kết thúc cho ngày hiện tại
-            $startOfDay = $currentDate->isSameDay($startDate) ? $startDate->copy() : $currentDate->copy()->startOfDay();
-            $endOfDay = $currentDate->isSameDay($endDate) ? $endDate->copy() : $currentDate->copy()->endOfDay();
-
-            // Nếu không có khách, tạo bản ghi với thông tin đơn vị
-            if ($customers->count() == 0) {
-                RegisterDirectly::create([
-                    'name' => $registration->name,
-                    'papers' => '',
-                    'address' => '',
-                    'bks' => $registration->bks ?? '',
-                    'contact_person' => '',
-                    'job' => $registration->purpose,
-                    'start_date' => $startOfDay,
-                    'end_date' => $endOfDay,
-                    'type' => 'passenger',
-                    'areas' => '',
-                    'status' => 'none',
-                ]);
-            }
-            // Nếu có 1 khách, tạo 1 bản ghi với thông tin khách đó
-            elseif ($customers->count() == 1) {
-                $customer = $customers->first();
-                RegisterDirectly::create([
-                    'name' => $customer->name.'|'.$registration->name,
-                    'papers' => $customer->papers,
-                    'address' => '',
-                    'bks' => $customer->license_plate ? $customer->license_plate : $registration->bks ?? '',
-                    'contact_person' => '',
-                    'job' => $registration->purpose,
-                    'start_date' => $startOfDay,
-                    'end_date' => $endOfDay,
-                    'type' => 'passenger',
-                    'areas' => $customer->areas,
-                    'status' => 'none',
-                ]);
-            }
-            // Nếu có nhiều khách, tạo nhiều bản ghi
-            else {
-                foreach ($customers as $customer) {
+                // Nếu không có khách, tạo bản ghi với thông tin đơn vị
+                if ($customers->count() == 0) {
+                    RegisterDirectly::create([
+                        'name' => $registration->name,
+                        'papers' => '',
+                        'address' => '',
+                        'bks' => $registration->bks ?? '',
+                        'contact_person' => '',
+                        'job' => $registration->purpose,
+                        'start_date' => $startOfDay,
+                        'end_date' => $endOfDay,
+                        'type' => 'passenger',
+                        'areas' => '',
+                        'status' => 'none',
+                    ]);
+                }
+                // Nếu có 1 khách, tạo 1 bản ghi với thông tin khách đó
+                elseif ($customers->count() == 1) {
+                    $customer = $customers->first();
                     RegisterDirectly::create([
                         'name' => $customer->name.'|'.$registration->name,
                         'papers' => $customer->papers,
@@ -143,11 +126,34 @@ class RegistrationController extends Controller
                         'status' => 'none',
                     ]);
                 }
+                // Nếu có nhiều khách, tạo nhiều bản ghi
+                else {
+                    foreach ($customers as $customer) {
+                        RegisterDirectly::create([
+                            'name' => $customer->name.'|'.$registration->name,
+                            'papers' => $customer->papers,
+                            'address' => '',
+                            'bks' => $customer->license_plate ? $customer->license_plate : $registration->bks ?? '',
+                            'contact_person' => '',
+                            'job' => $registration->purpose,
+                            'start_date' => $startOfDay,
+                            'end_date' => $endOfDay,
+                        'type' => 'passenger',
+                        'areas' => $customer->areas,
+                        'status' => 'none',
+                    ]);
+                }
             }
 
             // Chuyển sang ngày tiếp theo
             $currentDate->addDay()->startOfDay();
         }
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error creating RegisterDirectly: '.$e->getMessage());
+             throw $e; // Ném lại lỗi để có thể xử lý ở cấp cao hơn nếu cần
+        }
+        
     }
 
     public function createRegistrationDirectlyFromVehicle(RegistrationVehicle $registration, array $areas, bool $is_priority = false)

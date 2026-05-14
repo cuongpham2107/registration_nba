@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
@@ -38,6 +39,8 @@ class UserProfile extends Page implements HasForms
             'mobile_phone' => $user->mobile_phone,
             'asgl_id' => $user->asgl_id,
             'department_name' => $user->department_name,
+            'approvers' => $user->approvers()->pluck('id')->toArray(),
+            
         ]);
     }
 
@@ -73,6 +76,13 @@ class UserProfile extends Page implements HasForms
                                 TextInput::make('department_name')
                                     ->label('Phòng ban')
                                     ->disabled(),
+                                Select::make('approvers')
+                                    ->label('Người phê duyệt')
+                                    ->options(fn () => \App\Models\User::whereHas('roles', fn ($q) => $q->where('name', 'approver'))->pluck('name', 'id')->toArray())
+                                    ->multiple()
+                                    ->searchable()
+                                    ->preload()
+                                    ->columnSpanFull(),
                             ])
                             ->columnSpan(2),
                         Section::make('Đổi mật khẩu')
@@ -114,9 +124,15 @@ class UserProfile extends Page implements HasForms
         $data = $this->form->getState();
         $user = auth()->user();
 
+        $update = [
+            'name' => $data['name'] ?? $user->name,
+            'email' => $data['email'] ?? $user->email,
+            'mobile_phone' => $data['mobile_phone'] ?? $user->mobile_phone,
+        ];
+
         // Kiểm tra mật khẩu hiện tại nếu muốn đổi mật khẩu
-        if ($data['new_password']) {
-            if (! $data['current_password'] || ! Hash::check($data['current_password'], $user->password)) {
+        if (! empty($data['new_password'])) {
+            if (empty($data['current_password']) || ! Hash::check($data['current_password'], $user->password)) {
                 Notification::make()
                     ->title('Lỗi')
                     ->body('Mật khẩu hiện tại không chính xác.')
@@ -125,14 +141,16 @@ class UserProfile extends Page implements HasForms
 
                 return;
             }
-            $user->password = Hash::make($data['new_password']);
+
+            $update['password'] = Hash::make($data['new_password']);
         }
 
-        $user->update([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'mobile_phone' => $data['mobile_phone'],
-        ]);
+        $user->update($update);
+
+        // Sync approvers (belongsToMany)
+        if (isset($data['approvers'])) {
+            $user->approvers()->sync($data['approvers']);
+        }
 
         Notification::make()
             ->title('Thành công')
@@ -140,6 +158,7 @@ class UserProfile extends Page implements HasForms
             ->success()
             ->send();
 
+        $this->data = $data;
         $this->form->fill($this->data);
     }
 }
