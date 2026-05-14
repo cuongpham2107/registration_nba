@@ -25,7 +25,7 @@ class SendMailRegistrationAction
             ->size(Size::Small)
             ->requiresConfirmation()
             ->hidden(fn (Registration $record): bool => in_array($record->status, ['sent', 'approve', 'reject', 'entering', 'exited'], true)
-                || ! Auth::user()?->can('SendEmail:Registration')
+                || ! Auth::user()?->can('sendEmail', $record)
             )
             ->action(function (Registration $record, Component $livewire): void {
                 try {

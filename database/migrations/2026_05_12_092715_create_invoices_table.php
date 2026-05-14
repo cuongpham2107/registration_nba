@@ -15,9 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('invoice_code')->unique()->comment('Mã hóa đơn');
             $table->foreignId('registration_entry_id')->constrained('registration_entries')->onDelete('cascade');
+            $table->foreignId('company_id')
+                ->nullable()
+                ->constrained('companies')
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
             $table->string('normalized_license_plate')->nullable()->comment('Biển số chuẩn hóa');
             $table->decimal('amount', 12, 2)->default(0)->comment('Số tiền hóa đơn');
             $table->boolean('is_paid')->default(false)->comment('Đã thanh toán chưa');
+            $table->boolean('is_issued')->default(false)->comment('Đã xuất hóa đơn hay chưa');
             $table->datetime('paid_at')->nullable()->comment('Thời gian thanh toán');
             $table->string('payment_method')->nullable()->comment('Phương thức thanh toán');
             $table->string('file_path')->nullable()->comment('Đường dẫn file PDF hóa đơn');
@@ -26,6 +32,7 @@ return new class extends Migration
 
             // Indexes
             $table->index(['registration_entry_id', 'is_paid']);
+            $table->index('company_id');
             $table->index('normalized_license_plate');
             $table->index('invoice_code');
         });

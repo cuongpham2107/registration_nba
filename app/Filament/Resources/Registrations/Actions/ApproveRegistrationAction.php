@@ -29,8 +29,8 @@ class ApproveRegistrationAction
                     return true;
                 }
 
-                // Ẩn nếu user không có quyền Approver
-                if (! $user || ! $user->can('Approver:Registration')) {
+                // Ẩn nếu user không có quyền Approver (dùng policy authorization)
+                if (! $user || ! $user->can('approver', $record)) {
                     return true;
                 }
 

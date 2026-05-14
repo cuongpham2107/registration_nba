@@ -2,6 +2,7 @@
 
 @php
  use SimpleSoftwareIO\QrCode\Facades\QrCode;
+ 
 @endphp
 
 <!doctype html>
@@ -189,8 +190,13 @@
 
         <!-- QR Code large -->
         <div class="ticket-qr">
-             <img src="https://qr.sepay.vn/img?acc=113604245888&bank=ICB&amount={{ $fee ?? 0 }}&des={{ urlencode(($vehicle_number ?? '') . ' thanh toan tien ve xe') }}" style="width: 35mm; height: 35mm;" />
-               <div class="text-[8px] italic">({{ $vehicle_number ?? '' }} thanh toan tien ve xe)</div>
+            @php
+                $invoiceCompanyUrl = "https://qr.sepay.vn/img?acc=113604245888&bank=ICB&amount={{ $fee ?? 0 }}&des={{ urlencode(($vehicle_number ?? '') . ' thanh toan tien ve xe') }}";
+                $qrPng = QrCode::format('png')->size(135)->margin(0)->generate($invoiceCompanyUrl);
+                $qrBase64 = base64_encode($qrPng);
+            @endphp
+             <img src="data:image/png;base64,{{ $qrBase64 }}" style="width: 35mm; height: 35mm;" />
+               <div style="font-size: 8px; font-style: italic;">({{ $vehicle_number ?? '' }} thanh toan tien ve xe)</div>
         </div>
 
         <!-- Dữ liệu -->

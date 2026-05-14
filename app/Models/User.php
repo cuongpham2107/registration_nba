@@ -50,6 +50,13 @@ class User extends Authenticatable implements FilamentUser, HasName
         'password' => 'hashed',
     ];
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope('active', function (Builder $builder) {
+            $builder->where('is_active', true);
+        });
+    }
+
     public function getAvatarAttribute(): ?string
     {
         $avatar = $this->getAttributeFromArray('avatar');
@@ -265,6 +272,12 @@ class User extends Authenticatable implements FilamentUser, HasName
 
     public function can($ability, $arguments = []): bool
     {
+        // Check Laravel's native policy authorization first
+        if (parent::can($ability, $arguments)) {
+            return true;
+        }
+
+        // Fallback to Spatie string-based permission check
         return $this->hasPermissionTo($ability);
     }
 
