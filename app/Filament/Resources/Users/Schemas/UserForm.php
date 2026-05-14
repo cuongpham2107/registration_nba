@@ -23,7 +23,7 @@ class UserForm
                         'lg' => 4,
                     ])
                     ->schema([
-                        Forms\Components\TextInput::make('name')
+                        Forms\Components\TextInput::make('full_name')
                             ->label('Họ và tên')
                             ->required()
                             ->columnSpan([
@@ -80,22 +80,22 @@ class UserForm
                                 'md' => 2,
                                 'lg' => 2,
                             ]),
-                        Select::make('approver_id')
-                            ->label('Người phê duyệt')
-                            ->relationship(
-                                name: 'approver',
-                                titleAttribute: 'name',
-                                modifyQueryUsing: fn (Builder $query) => $query->whereHas('roles', function (Builder $query) {
-                                    $query->where('name', 'approver');
-                                })
-                            )
-                            ->searchable()
-                            ->preload()
-                            ->columnSpan([
-                                'sm' => 1,
-                                'md' => 2,
-                                'lg' => 2,
-                            ]),
+                        // Select::make('approver_id')
+                        //     ->label('Người phê duyệt')
+                        //     ->relationship(
+                        //         name: 'approver',
+                        //         titleAttribute: 'name',
+                        //         modifyQueryUsing: fn (Builder $query) => $query->whereHas('roles', function (Builder $query) {
+                        //             $query->where('name', 'approver');
+                        //         })
+                        //     )
+                        //     ->searchable()
+                        //     ->preload()
+                        //     ->columnSpan([
+                        //         'sm' => 1,
+                        //         'md' => 2,
+                        //         'lg' => 2,
+                        //     ]),
                     ])
                     ->columnSpan('full'),
                 Section::make('Phân quyền')

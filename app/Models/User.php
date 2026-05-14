@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
+use Illuminate\Database\Connection;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens; // ← thêm interface này
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -48,78 +50,259 @@ class User extends Authenticatable implements FilamentUser, HasName
         'password' => 'hashed',
     ];
 
-    /**
-     * Determine if the user can access the Filament panel.
-     */
+    public function getAvatarAttribute(): ?string
+    {
+        $avatar = $this->getAttributeFromArray('avatar');
+
+        if (! is_null($avatar) && $avatar !== '') {
+            return 'https://id.asgl.net.vn/avatar/'.strtoupper($this->asgl_id);
+        }
+
+        $name = str($this->full_name)
+            ->trim()
+            ->explode(' ')
+            ->map(fn (string $segment): string => filled($segment) ? mb_substr($segment, 0, 1) : '')
+            ->join(' ');
+
+        return 'https://ui-avatars.com/api/?name='.urlencode($name).'&color=FFFFFF&background=71717b';
+    }
+
+    // ----------------------------------------------------------------
+    // Filament
+    // ----------------------------------------------------------------
+
+    public function getFilamentName(): string
+    {
+        return $this->full_name
+            ?? $this->name
+            ?? $this->email
+            ?? 'Unknown';
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return true;
     }
 
-    public function approver()
+    // ----------------------------------------------------------------
+    // Helpers dùng chung — query vào DB A (mysql)
+    // ----------------------------------------------------------------
+
+    private function dbA(): Connection
     {
-        return $this->belongsTo(User::class, 'approver_id');
+        return DB::connection('mysql');
     }
 
-    // Relationship ngược lại: Những user mà user này phê duyệt
-    public function approving()
+    private function getRoleIdsFromNames(array $names): Collection
     {
-        return $this->hasMany(User::class, 'approver_id');
+        return $this->dbA()
+            ->table('roles')
+            ->whereIn('name', $names)
+            ->pluck('id');
     }
 
-    // User model
-
-    // ✅ Override roles()
-    public function roles(): BelongsToMany
+    private function getUserRoleIds(): Collection
     {
-        $registrar = app(PermissionRegistrar::class);
+        return $this->dbA()
+            ->table('model_has_roles')
+            ->where('model_type', static::class)
+            ->where('model_id', $this->id)
+            ->pluck('role_id');
+    }
 
-        // Giờ config đã có prefix rồi, dùng thẳng config là đủ
-        $relation = $this->morphToMany(
-            config('permission.models.role'),
-            'model',
-            config('permission.table_names.model_has_roles'), // → "registration_nba.model_has_roles"
-            config('permission.column_names.model_morph_key'),
-            $registrar->pivotRole
-        );
+    private function getUserPermissionIds(): Collection
+    {
+        return $this->dbA()
+            ->table('model_has_permissions')
+            ->where('model_type', static::class)
+            ->where('model_id', $this->id)
+            ->pluck('permission_id');
+    }
 
-        if (! $registrar->teams) {
-            return $relation;
+    // ----------------------------------------------------------------
+    // Override Spatie HasRoles methods
+    // ----------------------------------------------------------------
+
+    public function getRoleNames(): Collection
+    {
+        return $this->dbA()
+            ->table('roles')
+            ->whereIn('id', $this->getUserRoleIds())
+            ->pluck('name');
+    }
+
+    public function hasRole($roles, ?string $guard = null): bool
+    {
+        $roles = is_array($roles) ? $roles : [$roles];
+        $roleIds = $this->getRoleIdsFromNames($roles);
+
+        if ($roleIds->isEmpty()) {
+            return false;
         }
 
-        $teamsKey = $registrar->teamsKey;
-        $teamField = config('permission.table_names.roles').'.'.$teamsKey;
-
-        return $relation
-            ->withPivot($teamsKey)
-            ->wherePivot($teamsKey, getPermissionsTeamId())
-            ->where(fn ($q) => $q->whereNull($teamField)
-                ->orWhere($teamField, getPermissionsTeamId()));
+        return $this->dbA()
+            ->table('model_has_roles')
+            ->where('model_type', static::class)
+            ->where('model_id', $this->id)
+            ->whereIn('role_id', $roleIds)
+            ->exists();
     }
 
-    public function permissions(): BelongsToMany
+    public function hasAnyRole($roles): bool
     {
-        $registrar = app(PermissionRegistrar::class);
-
-        return $this->morphToMany(
-            config('permission.models.permission'),
-            'model',
-            config('permission.table_names.model_has_permissions'), // → "registration_nba.model_has_permissions"
-            config('permission.column_names.model_morph_key'),
-            $registrar->pivotPermission
+        return $this->hasRole(
+            is_array($roles) ? $roles : [$roles]
         );
     }
 
-    /**
-     * Filament dùng method này để hiển thị tên user trên UI
-     * Đổi 'full_name' thành tên field thực tế trong DB B
-     */
-    public function getFilamentName(): string
+    public function hasAllRoles($roles, ?string $guard = null): bool
     {
-        return $this->full_name          // thử các field phổ biến
-            ?? $this->display_name
-            ?? $this->username
-            ?? $this->email
-            ?? 'Unknown';
+        $roles = is_array($roles) ? $roles : [$roles];
+        foreach ($roles as $role) {
+            if (! $this->hasRole($role)) {
+                return false;
+            }
+        }
+
+        return true;
     }
+
+    public function assignRole(...$roles): static
+    {
+        $roles = collect($roles)->flatten()->toArray();
+
+        foreach ($roles as $role) {
+            $roleModel = $this->dbA()
+                ->table('roles')
+                ->where('name', $role)
+                ->first();
+
+            if (! $roleModel) {
+                continue;
+            }
+
+            $this->dbA()
+                ->table('model_has_roles')
+                ->insertOrIgnore([
+                    'role_id' => $roleModel->id,
+                    'model_type' => static::class,
+                    'model_id' => $this->id,
+                ]);
+        }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        return $this;
+    }
+
+    public function removeRole($role): static
+    {
+        $roleModel = $this->dbA()
+            ->table('roles')
+            ->where('name', $role)
+            ->first();
+
+        if ($roleModel) {
+            $this->dbA()
+                ->table('model_has_roles')
+                ->where('model_type', static::class)
+                ->where('model_id', $this->id)
+                ->where('role_id', $roleModel->id)
+                ->delete();
+        }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        return $this;
+    }
+
+    public function syncRoles(...$roles): static
+    {
+        // Xóa hết role cũ
+        $this->dbA()
+            ->table('model_has_roles')
+            ->where('model_type', static::class)
+            ->where('model_id', $this->id)
+            ->delete();
+
+        // Gán role mới
+        return $this->assignRole(collect($roles)->flatten()->toArray());
+    }
+
+    public function hasPermissionTo($permission, $guardName = null): bool
+    {
+        // Check direct permission
+        $permId = $this->dbA()
+            ->table('permissions')
+            ->where('name', $permission)
+            ->value('id');
+
+        if (! $permId) {
+            return false;
+        }
+
+        // Check direct
+        $hasDirect = $this->dbA()
+            ->table('model_has_permissions')
+            ->where('model_type', static::class)
+            ->where('model_id', $this->id)
+            ->where('permission_id', $permId)
+            ->exists();
+
+        if ($hasDirect) {
+            return true;
+        }
+
+        // Check qua roles
+        $roleIds = $this->getUserRoleIds();
+
+        return $this->dbA()
+            ->table('role_has_permissions')
+            ->whereIn('role_id', $roleIds)
+            ->where('permission_id', $permId)
+            ->exists();
+    }
+
+    public function can($ability, $arguments = []): bool
+    {
+        return $this->hasPermissionTo($ability);
+    }
+
+    // ----------------------------------------------------------------
+    // Scopes cho Filament list/filter
+    // ----------------------------------------------------------------
+
+    public function scopeRole(Builder $query, $roles, $guard = null, $without = false): Builder
+    {
+        $roleIds = $this->getRoleIdsFromNames((array) $roles);
+
+        $userIds = $this->dbA()
+            ->table('model_has_roles')
+            ->where('model_type', static::class)
+            ->whereIn('role_id', $roleIds)
+            ->pluck('model_id');
+
+        return $without
+            ? $query->whereNotIn('id', $userIds)
+            : $query->whereIn('id', $userIds);
+    }
+
+    public function scopeWithoutRole(Builder $query, $roles, $guard = null): Builder
+    {
+        return $this->scopeRole($query, $roles, $guard, true);
+    }
+
+    // // ----------------------------------------------------------------
+    // // Relationships khác
+    // // ----------------------------------------------------------------
+
+    // public function approver()
+    // {
+    //     return $this->belongsTo(User::class, 'approver_id');
+    // }
+
+    // public function approving()
+    // {
+    //     return $this->hasMany(User::class, 'approver_id');
+    // }
 }

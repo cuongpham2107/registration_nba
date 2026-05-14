@@ -2,12 +2,16 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class UsersTable
 {
@@ -28,7 +32,7 @@ class UsersTable
                 ->width(40)
                 ->circular()
                 ->searchable(),
-            TextColumn::make('name')
+            TextColumn::make('full_name')
                 ->label('Họ và tên')
                 ->searchable(),
             TextColumn::make('username')
@@ -37,8 +41,8 @@ class UsersTable
             TextColumn::make('email')
                 ->label('Địa chỉ Email')
                 ->searchable(),
-            TextColumn::make('department_name')
-                ->label('Phòng ban')
+            TextColumn::make('mobile_phone')
+                ->label('Số điện thoại')
                 ->searchable(),
             TextColumn::make('roles.name')
                 ->label('Quyền')
@@ -69,7 +73,56 @@ class UsersTable
     private static function getRecordActions(): array
     {
         return [
-            EditAction::make(),
+            Action::make('grant_role_for_user')
+                ->label('Cấp quyền')
+                ->icon('heroicon-o-shield-check')
+                ->modal()
+                ->modalWidth('md')
+                ->hidden(fn ($record) => ! Auth::user()?->hasRole('super_admin'))
+                ->fillForm(function ($record): array {
+                    // Load role hiện tại của user để pre-select
+                    $currentRoleIds = DB::connection('mysql')
+                        ->table('model_has_roles')
+                        ->where('model_type', User::class)
+                        ->where('model_id', $record->id)
+                        ->pluck('role_id')
+                        ->toArray();
+
+                    return [
+                        'roles' => $currentRoleIds,
+                    ];
+                })
+                ->schema([
+                    Select::make('roles')
+                        ->label('Vai trò')
+                        ->options(function () {
+                            // Load roles thẳng từ mysql — không qua relationship
+                            return DB::connection('mysql')
+                                ->table('roles')
+                                ->pluck('name', 'id')
+                                ->toArray();
+                        })
+                        ->multiple()
+                        ->preload()
+                        ->searchable(),
+                ])
+                ->action(function ($record, array $data): void {
+                    // $data['roles'] là array of role IDs
+                    $roleNames = DB::connection('mysql')
+                        ->table('roles')
+                        ->whereIn('id', $data['roles'] ?? [])
+                        ->pluck('name')
+                        ->toArray();
+
+                    // Dùng override syncRoles đã viết trong User model
+                    $record->syncRoles($roleNames);
+
+                    Notification::make()
+                        ->title('Cấp quyền thành công')
+                        ->success()
+                        ->send();
+                }),
+
         ];
     }
 
