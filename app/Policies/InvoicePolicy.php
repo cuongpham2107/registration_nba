@@ -14,61 +14,61 @@ class InvoicePolicy
 
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('ViewAny:Invoice') || $authUser->hasRole('super_admin');
+        return $authUser->can('ViewAny:Invoice');
     }
 
     public function view(AuthUser $authUser, Invoice $invoice): bool
     {
-        return $authUser->hasPermissionTo('View:Invoice') || $authUser->hasRole('super_admin');
+        return $authUser->can('View:Invoice');
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('Create:Invoice') || $authUser->hasRole('super_admin');
+        return $authUser->can('Create:Invoice');
     }
 
     public function update(AuthUser $authUser, Invoice $invoice): bool
     {
-        return $authUser->hasPermissionTo('Update:Invoice') || $authUser->hasRole('super_admin');
+        return $authUser->can('Update:Invoice');
     }
 
     public function delete(AuthUser $authUser, Invoice $invoice): bool
     {
-        return $authUser->hasPermissionTo('Delete:Invoice') || $authUser->hasRole('super_admin');
+        return $authUser->can('Delete:Invoice');
     }
 
     public function deleteAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('DeleteAny:Invoice') || $authUser->hasRole('super_admin');
+        return $authUser->can('DeleteAny:Invoice');
     }
 
     public function restore(AuthUser $authUser, Invoice $invoice): bool
     {
-        return $authUser->hasPermissionTo('Restore:Invoice') || $authUser->hasRole('super_admin');
+        return $authUser->can('Restore:Invoice');
     }
 
     public function forceDelete(AuthUser $authUser, Invoice $invoice): bool
     {
-        return $authUser->hasPermissionTo('ForceDelete:Invoice') || $authUser->hasRole('super_admin');
+        return $authUser->can('ForceDelete:Invoice');
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('ForceDeleteAny:Invoice') || $authUser->hasRole('super_admin');
+        return $authUser->can('ForceDeleteAny:Invoice');
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('RestoreAny:Invoice') || $authUser->hasRole('super_admin');
+        return $authUser->can('RestoreAny:Invoice');
     }
 
     public function replicate(AuthUser $authUser, Invoice $invoice): bool
     {
-        return $authUser->hasPermissionTo('Replicate:Invoice') || $authUser->hasRole('super_admin');
+        return $authUser->can('Replicate:Invoice');
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('Reorder:Invoice') || $authUser->hasRole('super_admin');
+        return $authUser->can('Reorder:Invoice');
     }
 }

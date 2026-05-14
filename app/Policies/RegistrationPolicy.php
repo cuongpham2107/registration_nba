@@ -14,71 +14,71 @@ class RegistrationPolicy
 
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('ViewAny:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('ViewAny:Registration');
     }
 
     public function view(AuthUser $authUser, Registration $registration): bool
     {
-        return $authUser->hasPermissionTo('View:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('View:Registration');
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('Create:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('Create:Registration');
     }
 
     public function update(AuthUser $authUser, Registration $registration): bool
     {
-        return $authUser->hasPermissionTo('Update:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('Update:Registration');
     }
 
     public function delete(AuthUser $authUser, Registration $registration): bool
     {
-        return $authUser->hasPermissionTo('Delete:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('Delete:Registration');
     }
 
     public function deleteAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('DeleteAny:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('DeleteAny:Registration');
     }
 
     public function restore(AuthUser $authUser, Registration $registration): bool
     {
-        return $authUser->hasPermissionTo('Restore:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('Restore:Registration');
     }
 
     public function forceDelete(AuthUser $authUser, Registration $registration): bool
     {
-        return $authUser->hasPermissionTo('ForceDelete:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('ForceDelete:Registration');
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('ForceDeleteAny:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('ForceDeleteAny:Registration');
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('RestoreAny:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('RestoreAny:Registration');
     }
 
     public function replicate(AuthUser $authUser, Registration $registration): bool
     {
-        return $authUser->hasPermissionTo('Replicate:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('Replicate:Registration');
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('Reorder:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('Reorder:Registration');
     }
 
     public function approver(AuthUser $authUser, Registration $registration): bool
     {
-        return $authUser->hasPermissionTo('Approver:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('Approver:Registration');
     }
 
     public function sendEmail(AuthUser $authUser, Registration $registration): bool
     {
-        return $authUser->hasPermissionTo('SendEmail:Registration') || $authUser->hasRole('super_admin');
+        return $authUser->can('SendEmail:Registration');
     }
 }

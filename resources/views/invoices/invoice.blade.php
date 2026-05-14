@@ -1,10 +1,5 @@
 
 
-@php
- use SimpleSoftwareIO\QrCode\Facades\QrCode;
- 
-@endphp
-
 <!doctype html>
 <html lang="vi">
   <head>
@@ -191,12 +186,18 @@
         <!-- QR Code large -->
         <div class="ticket-qr">
             @php
-                $invoiceCompanyUrl = "https://qr.sepay.vn/img?acc=113604245888&bank=ICB&amount={{ $fee ?? 0 }}&des={{ urlencode(($vehicle_number ?? '') . ' thanh toan tien ve xe') }}";
-                $qrPng = QrCode::format('png')->size(135)->margin(0)->generate($invoiceCompanyUrl);
-                $qrBase64 = base64_encode($qrPng);
+                $invoiceQrImageUrl = 'https://qr.sepay.vn/img?' . http_build_query([
+                    'acc' => '113604245888',
+                    'bank' => 'ICB',
+                    'amount' => $fee ?? 0,
+                    'template' => 'qronly',
+                    'des' => trim(($vehicle_number ?? '') . ' thanh toan tien ve xe'),
+                ]);
             @endphp
-             <img src="data:image/png;base64,{{ $qrBase64 }}" style="width: 35mm; height: 35mm;" />
-               <div style="font-size: 8px; font-style: italic;">({{ $vehicle_number ?? '' }} thanh toan tien ve xe)</div>
+            <div style="width: 35mm; height: 35mm;">
+                <img src="{{ $invoiceQrImageUrl }}" alt="QR Code" style="width: 35mm; height: 35mm; display:block;" />
+            </div>
+            <div style="font-size: 8px; font-style: italic;">({{ $vehicle_number ?? '' }} thanh toan tien ve xe)</div>
         </div>
 
         <!-- Dữ liệu -->
@@ -247,7 +248,7 @@
         <div class="ticket-footer">(Đã bao gồm thuế GTGT)</div>
         <div style="border-top: 1px dashed #000; padding: 4px; display:flex; flex-direction: column; align-items: center;">
             <div style="margin-top: 4px;">
-                {!! QrCode::size(45)->margin(0)->generate($invoiceCompanyUrl) !!}
+                {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(45)->margin(0)->generate($invoiceCompanyUrl) !!}
             </div>
             <span style="font-size: 7pt; font-style: italic; margin-top: 3px;">Yêu cầu xuất hóa đơn tại đây</span>
         </div>

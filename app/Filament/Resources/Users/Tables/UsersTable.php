@@ -73,8 +73,8 @@ class UsersTable
     private static function getRecordActions(): array
     {
         return [
-            Action::make('grant_role_for_user')
-                ->label('Cấp quyền')
+            Action::make('grant_role_and_approver')
+                ->label('Cấp quyền & Người phê duyệt')
                 ->icon('heroicon-o-shield-check')
                 ->modal()
                 ->modalWidth('md')
@@ -88,15 +88,21 @@ class UsersTable
                         ->pluck('role_id')
                         ->toArray();
 
+                    // Load approver hiện tại
+                    $approverId = DB::connection('mysql')
+                        ->table('user_approvers')
+                        ->where('user_id', $record->id)
+                        ->value('approver_id');
+
                     return [
                         'roles' => $currentRoleIds,
+                        'approver_id' => $approverId,
                     ];
                 })
                 ->schema([
                     Select::make('roles')
                         ->label('Vai trò')
                         ->options(function () {
-                            // Load roles thẳng từ mysql — không qua relationship
                             return DB::connection('mysql')
                                 ->table('roles')
                                 ->pluck('name', 'id')
@@ -105,20 +111,46 @@ class UsersTable
                         ->multiple()
                         ->preload()
                         ->searchable(),
+                    Select::make('approver_id')
+                        ->label('Người phê duyệt')
+                        ->options(function () {
+                            return DB::connection('id_db')
+                                ->table('users')
+                                ->where('is_active', true)
+                                ->orderBy('full_name')
+                                ->get(['id', 'full_name', 'username'])
+                                ->mapWithKeys(function ($user): array {
+                                    $label = "{$user->full_name} - {$user->username}";
+
+                                    return [$user->id => $label];
+                                })
+                                ->toArray();
+                        })
+                        ->searchable()
+                        ->preload(),
                 ])
                 ->action(function ($record, array $data): void {
-                    // $data['roles'] là array of role IDs
+                    // Xử lý roles
                     $roleNames = DB::connection('mysql')
                         ->table('roles')
                         ->whereIn('id', $data['roles'] ?? [])
                         ->pluck('name')
                         ->toArray();
 
-                    // Dùng override syncRoles đã viết trong User model
                     $record->syncRoles($roleNames);
 
+                    // Xử lý approver
+                    $approverId = $data['approver_id'] ?? null;
+
+                    DB::connection('mysql')
+                        ->table('user_approvers')
+                        ->updateOrInsert(
+                            ['user_id' => $record->id],
+                            ['approver_id' => $approverId, 'updated_at' => now(), 'created_at' => now()]
+                        );
+
                     Notification::make()
-                        ->title('Cấp quyền thành công')
+                        ->title('Cập nhật vai trò & người phê duyệt thành công')
                         ->success()
                         ->send();
                 }),

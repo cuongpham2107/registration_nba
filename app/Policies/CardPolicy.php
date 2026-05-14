@@ -14,61 +14,61 @@ class CardPolicy
 
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('ViewAny:Card') || $authUser->hasRole('super_admin');
+        return $authUser->can('ViewAny:Card');
     }
 
     public function view(AuthUser $authUser, Card $card): bool
     {
-        return $authUser->hasPermissionTo('View:Card') || $authUser->hasRole('super_admin');
+        return $authUser->can('View:Card');
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('Create:Card') || $authUser->hasRole('super_admin');
+        return $authUser->can('Create:Card');
     }
 
     public function update(AuthUser $authUser, Card $card): bool
     {
-        return $authUser->hasPermissionTo('Update:Card') || $authUser->hasRole('super_admin');
+        return $authUser->can('Update:Card');
     }
 
     public function delete(AuthUser $authUser, Card $card): bool
     {
-        return $authUser->hasPermissionTo('Delete:Card') || $authUser->hasRole('super_admin');
+        return $authUser->can('Delete:Card');
     }
 
     public function deleteAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('DeleteAny:Card') || $authUser->hasRole('super_admin');
+        return $authUser->can('DeleteAny:Card');
     }
 
     public function restore(AuthUser $authUser, Card $card): bool
     {
-        return $authUser->hasPermissionTo('Restore:Card') || $authUser->hasRole('super_admin');
+        return $authUser->can('Restore:Card');
     }
 
     public function forceDelete(AuthUser $authUser, Card $card): bool
     {
-        return $authUser->hasPermissionTo('ForceDelete:Card') || $authUser->hasRole('super_admin');
+        return $authUser->can('ForceDelete:Card');
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('ForceDeleteAny:Card') || $authUser->hasRole('super_admin');
+        return $authUser->can('ForceDeleteAny:Card');
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('RestoreAny:Card') || $authUser->hasRole('super_admin');
+        return $authUser->can('RestoreAny:Card');
     }
 
     public function replicate(AuthUser $authUser, Card $card): bool
     {
-        return $authUser->hasPermissionTo('Replicate:Card') || $authUser->hasRole('super_admin');
+        return $authUser->can('Replicate:Card');
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('Reorder:Card') || $authUser->hasRole('super_admin');
+        return $authUser->can('Reorder:Card');
     }
 }

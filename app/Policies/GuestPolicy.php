@@ -14,61 +14,61 @@ class GuestPolicy
 
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('ViewAny:Guest') || $authUser->hasRole('super_admin');
+        return $authUser->can('ViewAny:Guest');
     }
 
     public function view(AuthUser $authUser, Guest $guest): bool
     {
-        return $authUser->hasPermissionTo('View:Guest') || $authUser->hasRole('super_admin');
+        return $authUser->can('View:Guest');
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('Create:Guest') || $authUser->hasRole('super_admin');
+        return $authUser->can('Create:Guest');
     }
 
     public function update(AuthUser $authUser, Guest $guest): bool
     {
-        return $authUser->hasPermissionTo('Update:Guest') || $authUser->hasRole('super_admin');
+        return $authUser->can('Update:Guest');
     }
 
     public function delete(AuthUser $authUser, Guest $guest): bool
     {
-        return $authUser->hasPermissionTo('Delete:Guest') || $authUser->hasRole('super_admin');
+        return $authUser->can('Delete:Guest');
     }
 
     public function deleteAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('DeleteAny:Guest') || $authUser->hasRole('super_admin');
+        return $authUser->can('DeleteAny:Guest');
     }
 
     public function restore(AuthUser $authUser, Guest $guest): bool
     {
-        return $authUser->hasPermissionTo('Restore:Guest') || $authUser->hasRole('super_admin');
+        return $authUser->can('Restore:Guest');
     }
 
     public function forceDelete(AuthUser $authUser, Guest $guest): bool
     {
-        return $authUser->hasPermissionTo('ForceDelete:Guest') || $authUser->hasRole('super_admin');
+        return $authUser->can('ForceDelete:Guest');
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('ForceDeleteAny:Guest') || $authUser->hasRole('super_admin');
+        return $authUser->can('ForceDeleteAny:Guest');
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('RestoreAny:Guest') || $authUser->hasRole('super_admin');
+        return $authUser->can('RestoreAny:Guest');
     }
 
     public function replicate(AuthUser $authUser, Guest $guest): bool
     {
-        return $authUser->hasPermissionTo('Replicate:Guest') || $authUser->hasRole('super_admin');
+        return $authUser->can('Replicate:Guest');
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('Reorder:Guest') || $authUser->hasRole('super_admin');
+        return $authUser->can('Reorder:Guest');
     }
 }

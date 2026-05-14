@@ -169,14 +169,14 @@ class RegistrationsTable
                 ->searchable()
                 ->sortable()
                 ->toggleable(),
-            TextColumn::make('approver.name')
+            TextColumn::make('approver.full_name')
                 ->Label('Người duyệt')
                 ->searchable()
                 ->badge()
                 ->color('warning')
                 ->sortable()
                 ->toggleable(),
-            TextColumn::make('creator.name')
+            TextColumn::make('creator.full_name')
                 ->Label('Người tạo')
                 ->badge()
                 ->separator(',')

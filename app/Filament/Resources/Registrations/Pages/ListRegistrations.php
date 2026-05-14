@@ -8,7 +8,6 @@ use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
-use Illuminate\Support\Facades\Auth;
 
 class ListRegistrations extends ListRecords
 {
@@ -27,19 +26,6 @@ class ListRegistrations extends ListRecords
                     $type = 'working';
 
                     return RegistrationForm::configure($schema, $type);
-                })
-                ->mutateDataUsing(function (array $data): array {
-                    $user = Auth::user();
-                    if ($user && $user->approver) {
-                        $data['user_id'] = $user->id;
-                        $data['approver_id'] = $user->approver->id;
-                    } else {
-                        $data['user_id'] = $user->id;
-                        $data['approver_id'] = null;
-                    }
-                    $data['type'] = 'working';
-
-                    return $data;
                 }),
         ];
     }

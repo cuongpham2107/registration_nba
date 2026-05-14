@@ -19,6 +19,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class RegistrationForm
 {
@@ -49,6 +50,10 @@ class RegistrationForm
                     ]),
                 Forms\Components\Hidden::make('type')
                     ->default($type),
+                Forms\Components\Hidden::make('user_id')
+                    ->default(fn () => Auth::id()),
+                Forms\Components\Hidden::make('approver_id')
+                    ->default(fn () => Auth::user()?->approver?->id),
                 Forms\Components\Textarea::make('purpose')
                     ->label('Mục đích')
                     ->required()

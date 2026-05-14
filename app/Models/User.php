@@ -305,17 +305,39 @@ class User extends Authenticatable implements FilamentUser, HasName
         return $this->scopeRole($query, $roles, $guard, true);
     }
 
-    // // ----------------------------------------------------------------
-    // // Relationships khác
-    // // ----------------------------------------------------------------
+    /**
+     * Cấu hình phê duyệt của user này
+     */
+    public function approverConfig()
+    {
+        return $this->hasOne(UserApprover::class, 'user_id');
+    }
 
-    // public function approver()
-    // {
-    //     return $this->belongsTo(User::class, 'approver_id');
-    // }
+    /**
+     * Lấy thông tin người phê duyệt
+     */
+    public function getApproverAttribute(): ?User
+    {
+        $approverId = UserApprover::query()
+            ->where('user_id', $this->id)
+            ->value('approver_id');
 
-    // public function approving()
-    // {
-    //     return $this->hasMany(User::class, 'approver_id');
-    // }
+        if (! $approverId) {
+            return null;
+        }
+
+        return User::on('id_db')->withoutGlobalScopes()->find($approverId);
+    }
+
+    /**
+     * Những user mà user này phê duyệt
+     */
+    public function getApprovingAttribute(): Collection
+    {
+        $userIds = UserApprover::query()
+            ->where('approver_id', $this->id)
+            ->pluck('user_id');
+
+        return User::on('id_db')->withoutGlobalScopes()->whereIn('id', $userIds)->get();
+    }
 }

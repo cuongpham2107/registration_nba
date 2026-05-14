@@ -14,61 +14,61 @@ class CarCatalogPolicy
 
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('ViewAny:CarCatalog') || $authUser->hasRole('super_admin');
+        return $authUser->can('ViewAny:CarCatalog');
     }
 
     public function view(AuthUser $authUser, CarCatalog $carCatalog): bool
     {
-        return $authUser->hasPermissionTo('View:CarCatalog') || $authUser->hasRole('super_admin');
+        return $authUser->can('View:CarCatalog');
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('Create:CarCatalog') || $authUser->hasRole('super_admin');
+        return $authUser->can('Create:CarCatalog');
     }
 
     public function update(AuthUser $authUser, CarCatalog $carCatalog): bool
     {
-        return $authUser->hasPermissionTo('Update:CarCatalog') || $authUser->hasRole('super_admin');
+        return $authUser->can('Update:CarCatalog');
     }
 
     public function delete(AuthUser $authUser, CarCatalog $carCatalog): bool
     {
-        return $authUser->hasPermissionTo('Delete:CarCatalog') || $authUser->hasRole('super_admin');
+        return $authUser->can('Delete:CarCatalog');
     }
 
     public function deleteAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('DeleteAny:CarCatalog') || $authUser->hasRole('super_admin');
+        return $authUser->can('DeleteAny:CarCatalog');
     }
 
     public function restore(AuthUser $authUser, CarCatalog $carCatalog): bool
     {
-        return $authUser->hasPermissionTo('Restore:CarCatalog') || $authUser->hasRole('super_admin');
+        return $authUser->can('Restore:CarCatalog');
     }
 
     public function forceDelete(AuthUser $authUser, CarCatalog $carCatalog): bool
     {
-        return $authUser->hasPermissionTo('ForceDelete:CarCatalog') || $authUser->hasRole('super_admin');
+        return $authUser->can('ForceDelete:CarCatalog');
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('ForceDeleteAny:CarCatalog') || $authUser->hasRole('super_admin');
+        return $authUser->can('ForceDeleteAny:CarCatalog');
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('RestoreAny:CarCatalog') || $authUser->hasRole('super_admin');
+        return $authUser->can('RestoreAny:CarCatalog');
     }
 
     public function replicate(AuthUser $authUser, CarCatalog $carCatalog): bool
     {
-        return $authUser->hasPermissionTo('Replicate:CarCatalog') || $authUser->hasRole('super_admin');
+        return $authUser->can('Replicate:CarCatalog');
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $authUser->hasPermissionTo('Reorder:CarCatalog') || $authUser->hasRole('super_admin');
+        return $authUser->can('Reorder:CarCatalog');
     }
 }
