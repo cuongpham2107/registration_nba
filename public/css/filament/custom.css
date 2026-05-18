@@ -1,12 +1,14 @@
 /* Light Mode - Header */
-table.fi-ta-table thead tr{
+table.fi-ta-table thead tr {
     background-color: #5287ad !important;
     border: 1px solid white !important;
 }
-table.fi-ta-table thead tr .fi-ta-header-cell-label{
+
+table.fi-ta-table thead tr .fi-ta-header-cell-label {
     color: #ffffff !important;
 }
-table.fi-ta-table thead tr .fi-table-header-group-cell span{
+
+table.fi-ta-table thead tr .fi-table-header-group-cell span {
     color: #ffffff !important;
 }
 
@@ -15,14 +17,16 @@ table.fi-ta-table tbody {
 }
 
 /* Dark Mode - Header */
-.dark table.fi-ta-table thead tr{
+.dark table.fi-ta-table thead tr {
     background-color: #1e3a5f !important;
     border: 1px solid #374151 !important;
 }
-.dark table.fi-ta-table thead tr .fi-ta-header-cell-label{
+
+.dark table.fi-ta-table thead tr .fi-ta-header-cell-label {
     color: #f3f4f6 !important;
 }
-.dark table.fi-ta-table thead tr .fi-table-header-group-cell span{
+
+.dark table.fi-ta-table thead tr .fi-table-header-group-cell span {
     color: #f3f4f6 !important;
 }
 
@@ -165,8 +169,12 @@ table.fi-ta-table tbody {
     background: #6b7280 !important;
 }
 
-.fi-fo-field-wrp-error-message{
+.fi-fo-field-wrp-error-message {
     color: #dc2626 !important;
     font-size: 0.875rem !important;
     line-height: 1.25rem !important;
+}
+
+.fi-simple-header .fi-logo {
+    height: 5rem !important;
 }

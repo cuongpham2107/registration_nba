@@ -26,6 +26,12 @@ class ListFilterRegisterDirectly extends Filter
                         TextInput::make('search')
                             ->label('Tìm kiếm')
                             ->placeholder('Tên, CCCD, biển số xe...'),
+                        Select::make('type')
+                            ->label('Loại')
+                            ->options([
+                                'vehicle' => 'Xe ra vào',
+                                'passenger' => 'Khách ra vào'
+                            ]),
                         Select::make('status')
                             ->label('Trạng thái')
                             ->options([
@@ -33,7 +39,7 @@ class ListFilterRegisterDirectly extends Filter
                                 'coming_in' => 'Đang vào',
                                 'came_out' => 'Đã ra'
                             ]),
-                       
+                        
                         DatePicker::make('start_date')
                             ->label('Từ ngày')
                             ->placeholder('Chọn ngày bắt đầu')
@@ -49,7 +55,7 @@ class ListFilterRegisterDirectly extends Filter
                             ->inline(false)
                             ->default(true), 
                
-            ])->columns(5)
+            ])->columns(6)
             ->query(function (Builder $query, array $data): Builder {
                 return $query
                     ->when(
@@ -72,6 +78,10 @@ class ListFilterRegisterDirectly extends Filter
                             }
                             return $query->where('status', $data['status']);
                         }
+                    )
+                    ->when(
+                        isset($data['type']),
+                        fn (Builder $query) => $query->where('type', $data['type'])
                     )
                     ->when(
                         $data['start_date'] || $data['end_date'],
@@ -135,6 +145,15 @@ class ListFilterRegisterDirectly extends Filter
                     };
                     $indicators[] = Indicator::make('Trạng thái: ' . $statusText)
                         ->removeField('status');
+                }
+                if ($data['type'] ?? null) {
+                    $typeText = match ($data['type']) {
+                        'vehicle' => 'Phương tiện',
+                        'passenger' => 'Hành khách',
+                        default => $data['type'],
+                    };
+                    $indicators[] = Indicator::make('Loại: ' . $typeText)
+                        ->removeField('type');
                 }
                 if ($data['start_date'] ?? null) {
                     $indicators[] = Indicator::make('Từ ngày: ' . Carbon::parse($data['start_date'], 'Asia/Ho_Chi_Minh')->format('d/m/Y'))

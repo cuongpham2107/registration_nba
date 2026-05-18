@@ -68,3 +68,7 @@
     color: #9ca3af !important;
     /* gray-400 */
 }
+
+.fi-simple-header .fi-logo {
+    height: 5rem;
+}

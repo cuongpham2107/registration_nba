@@ -45,7 +45,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             // ->font('Roboto', provider: LocalFontProvider::class)
             ->brandName('ASG')
-            ->brandLogo(asset('images/favicon.ico'))
+            ->brandLogo(asset('images/ASG.png'))
             ->favicon(asset('images/favicon.ico'))
             ->brandLogoHeight('2rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

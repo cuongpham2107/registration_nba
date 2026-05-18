@@ -37,6 +37,12 @@ class ListRegistrations extends ListRecords
                 ->icon('heroicon-o-plus')
                 ->modalWidth(MaxWidth::SixExtraLarge)
                 ->modalHeading('Đăng ký khách mới')
+                ->extraModalFooterActions(fn (Actions\CreateAction $action): array => [
+                    $action->makeModalSubmitAction('createAndSendMail', arguments: ['send_mail' => true])
+                        ->label('Tạo và gửi phê duyệt')
+                        ->color('success')
+                        ->icon('heroicon-m-envelope'),
+                ])
                 ->mutateFormDataUsing(function (array $data): array {
                     $user = Auth::user();
                     if ($user) {
@@ -49,29 +55,34 @@ class ListRegistrations extends ListRecords
                     }
                     return $data;
                 })
-                ->after(function (Registration $record): void {
+                ->after(function (Registration $record, Actions\CreateAction $action): void {
                     $user = Auth::user();
                     // Nếu là approver: tạo bản ghi trực tiếp và duyệt luôn
                     if ($user && $user->hasRole('approver')) {
                         try {
-                            (new RegistrationService())->createRegistrationDirectly($record);
+                            (new \App\Services\RegistrationService())->createRegistrationDirectly($record);
                             $record->type = 'browse';
                             $record->type_date = now();
                             $record->status = 'sent';
                             $record->save();
 
-                            Notification::make()
+                            \Filament\Notifications\Notification::make()
                                 ->title('Đăng ký thành công')
                                 ->success()
                                 ->body('Đăng ký đã được tạo và phê duyệt tự động.')
                                 ->send();
                         } catch (\Throwable $e) {
                             \Illuminate\Support\Facades\Log::error('Auto approve failed: ' . $e->getMessage());
-                            Notification::make()
+                            \Filament\Notifications\Notification::make()
                                 ->title('Lỗi tạo bản ghi')
                                 ->danger()
                                 ->body('Đăng ký đã tạo nhưng không thể phê duyệt tự động: ' . $e->getMessage())
                                 ->send();
+                        }
+                    } else {
+                        // Nếu người dùng không phải approver và nhấn "Tạo và gửi mail luôn"
+                        if ($action->getArguments()['send_mail'] ?? false) {
+                            (new \App\Services\RegistrationService())->sendMailForRegistration($record);
                         }
                     }
                 }),
