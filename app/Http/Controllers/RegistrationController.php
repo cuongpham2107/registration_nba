@@ -19,6 +19,7 @@ class RegistrationController extends Controller
         $job_title_manager = $request->query('job_title_manager');
         $id = Crypt::decryptString($id);
         $registration = Registration::with('guests')->where('id', $id)->first();
+        $user = User::find($registration?->user_id);
 
         if (! $registration) {
             $status = 'Lỗi';
@@ -27,8 +28,8 @@ class RegistrationController extends Controller
             return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
         }
 
-    // Kiểm tra xem đã được xử lý chưa
-    if (in_array($registration->status, ['approve', 'reject'], true) || filled($registration->approved_at)) {
+        // Kiểm tra xem đã được xử lý chưa
+        if (in_array($registration->status, ['approve', 'reject'], true) || filled($registration->approved_at)) {
             $status = 'Lỗi';
             $message = 'Đăng ký này đã được thực hiện phê duyệt rồi';
 
@@ -41,6 +42,61 @@ class RegistrationController extends Controller
             'status' => 'approve',
             'approved_at' => now(),
         ]);
+
+        $areas = $registration->guests
+            ->pluck('areas')
+            ->flatten()
+            ->filter()
+            ->unique()
+            ->implode(', ');
+
+        $sentAt = Carbon::parse($registration->created_at, 'Asia/Ho_Chi_Minh')->format('H:i:s d-m-Y');
+        $approvedAt = now()->timezone('Asia/Ho_Chi_Minh')->format('H:i:s d-m-Y');
+        $notificationMessage = "TB Duyệt đoàn khách số: {$registration->id}\n";
+        $notificationMessage .= "Người y/c: {$user?->full_name}\n";
+        $notificationMessage .= "({$user?->asgl_id})\n";
+        $notificationMessage .= "Đv khách: {$registration->name}\n";
+        $notificationMessage .= "Mục đích: {$registration->purpose}\n";
+        $notificationMessage .= "Số lượng khách: {$registration->guests->count()} người\n";
+        $notificationMessage .= "Khu vực LV: {$areas}\n";
+        $notificationMessage .= "Giờ gửi yc: {$sentAt}\n";
+        $notificationMessage .= "Người duyệt: {$name_manager}\n";
+        $notificationMessage .= "({$job_title_manager})\n";
+        $notificationMessage .= "Giờ duyệt: {$approvedAt}";
+
+        $ch = curl_init();
+        $url = 'http://192.168.1.70:5678/webhook/3abf742a-f6fe-4646-b3c9-4e344bccfe0f';
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $notificationMessage);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Accept: */*',
+            'User-Agent: Thunder Client (https://www.thunderclient.com)',
+            'x-api-key: 76d43e23a183b85d31f140acca740976',
+            'Content-Type: text/plain',
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            Log::error('Webhook approval call failed', [
+                'error' => $error,
+                'http_code' => $httpCode,
+                'data' => $registration,
+            ]);
+        } else {
+            Log::info('Webhook approval call successful', [
+                'response' => $response,
+                'http_code' => $httpCode,
+                'data' => $registration,
+            ]);
+        }
 
         $status = 'Duyệt';
         $message = 'Đăng ký khách đã được phê duyệt thành công';
@@ -79,8 +135,8 @@ class RegistrationController extends Controller
             return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
         }
 
-    // Kiểm tra xem đã được xử lý chưa
-    if (in_array($registration->status, ['approve', 'reject'], true) || filled($registration->approved_at)) {
+        // Kiểm tra xem đã được xử lý chưa
+        if (in_array($registration->status, ['approve', 'reject'], true) || filled($registration->approved_at)) {
             $status = 'Lỗi';
             $message = 'Đăng ký này đã được thực hiện phê duyệt rồi';
 

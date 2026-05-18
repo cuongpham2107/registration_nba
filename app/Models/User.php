@@ -340,4 +340,19 @@ class User extends Authenticatable implements FilamentUser, HasName
 
         return User::on('id_db')->withoutGlobalScopes()->whereIn('id', $userIds)->get();
     }
+
+    public function getDepartmentAttribute(): ?string
+    {
+        $position_id = DB::connection('id_db')
+            ->table('position_user')
+            ->where('user_id', $this->id)
+            ->value('position_id');
+
+        $department = DB::connection('id_db')
+            ->table('positions')
+            ->where('id', $position_id)
+            ->value('name');
+
+        return $department;
+    }
 }

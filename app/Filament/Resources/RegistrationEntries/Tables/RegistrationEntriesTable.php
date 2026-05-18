@@ -28,7 +28,6 @@ use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 
 class RegistrationEntriesTable
 {
@@ -79,16 +78,8 @@ class RegistrationEntriesTable
 
     private static function modifyQuery($query): Builder
     {
-        // $query->addSelect([
-        //     'registration_entries.*',
-        //     DB::raw('(
-        //             SELECT COUNT(*)
-        //             FROM registration_entries re2
-        //             WHERE re2.license_plate = registration_entries.license_plate
-        //         ) as plate_count'),
-        // ]);
-
-        return $query;
+        // Only show registration entries with type = 'inspection'
+        return $query->where('type', 'inspection');
     }
 
     private static function getColumns(bool $isToggledHiddenByDefault = true): array

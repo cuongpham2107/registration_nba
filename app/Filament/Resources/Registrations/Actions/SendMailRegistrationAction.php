@@ -31,7 +31,7 @@ class SendMailRegistrationAction
                 try {
                     // Lấy thông tin người phê duyệt từ relationship
                     $approver = $record->approver;
-
+                    // dd($approver->department);
                     if (! $approver) {
                         Notification::make()
                             ->title('Gửi xét duyệt thất bại')
@@ -46,7 +46,7 @@ class SendMailRegistrationAction
                         Notification::make()
                             ->title('Gửi xét duyệt thất bại')
                             ->danger()
-                            ->body('Người phê duyệt "'.$approver->name.'" chưa có địa chỉ email')
+                            ->body('Người phê duyệt "'.$approver->name_code.'" chưa có địa chỉ email')
                             ->send();
 
                         return;
@@ -57,7 +57,7 @@ class SendMailRegistrationAction
                         Notification::make()
                             ->title('Gửi xét duyệt thất bại')
                             ->danger()
-                            ->body('Email của người phê duyệt "'.$approver->name.'" không hợp lệ: "'.$approver->email.'"')
+                            ->body('Email của người phê duyệt "'.$approver->name_code.'" không hợp lệ: "'.$approver->email.'"')
                             ->send();
 
                         return;
@@ -80,8 +80,8 @@ class SendMailRegistrationAction
                             'asset' => $record->asset,
                             'note' => $record->note,
                             'customers' => $customers,
-                            'name_manager' => $approver->name,
-                            'job_title_manager' => $approver->department_name ?? '',
+                            'name_manager' => $approver->name_code ?? '',
+                            'job_title_manager' => $approver->department ?? '',
                         ],
                     );
                     if (! $mail) {
