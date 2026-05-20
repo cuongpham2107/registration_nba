@@ -21,18 +21,15 @@ class CancelApproveVehicleAction
             ->modalDescription('Bạn có chắc chắn muốn từ chối phê duyệt đăng ký này?')
             ->hidden(function (RegistrationVehicle $record) {
                 $user = auth()->user();
-
                 // Ẩn nếu không phải approve
                 if ($record->status !== 'sent') {
                     return true;
                 }
-
                 // Ẩn nếu user không phải approve_vehicle hoặc không phải người duyệt
-                if (!$user || !$user->hasRole('approve_vehicle') || $record->approved_by !== $user->id) {
-                    return true;
+                if ($user && $user->hasRole('approve_vehicle')) {
+                    return false;
                 }
-
-                return false;
+                return true;
             })
             ->action(function (RegistrationVehicle $record) {
                 $record->update([
