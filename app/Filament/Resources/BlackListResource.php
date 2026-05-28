@@ -59,7 +59,10 @@ class BlackListResource extends Resource
                 Tables\Columns\TextColumn::make('registrationVehicle.vehicle_number')
                     ->label('Biển số xe')
                     ->sortable(),
-
+                Tables\Columns\TextColumn::make('registrationVehicle.secret')
+                    ->label('Mã bí mật')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('blacklistedBy.name')
                     ->label('Người thêm vào danh sách đen')
                     ->numeric()

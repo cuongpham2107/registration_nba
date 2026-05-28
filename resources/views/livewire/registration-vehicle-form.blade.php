@@ -143,17 +143,7 @@
                                                                     class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
                                                                     {{ $reg['vehicle_number'] ?? '-' }}</p>
 
-                                                                @if (!empty($reg['hawbs']))
-                                                                    <div class="mt-2">
-                                                                        <div class="flex gap-2 overflow-x-hidden"
-                                                                            style="max-width:18rem; -webkit-overflow-scrolling: touch;">
-                                                                            @foreach ($reg['hawbs'] as $hawb)
-                                                                                <span
-                                                                                    class="flex-shrink-0 text-xs bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-2 py-0.5 rounded-full">{{ $hawb }}</span>
-                                                                            @endforeach
-                                                                        </div>
-                                                                    </div>
-                                                                @endif
+                                                               
                                                             </div>
 
                                                             <div class="flex-shrink-0 text-right">
@@ -180,7 +170,7 @@
             <!-- Footer -->
             <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600 ">
                 <p class="text-center text-sm text-gray-600 dark:text-gray-300">
-                    © {{ date('Y') }} ASG - Hệ thống đăng ký xe khai thác
+                    © {{ date('Y') }} ASG - @if(data_get($data, 'secret'))<span class="font-mono text-sm px-1">{{ data_get($data, 'secret') }}</span> @endif
                 </p>
             </div>
         </div>
@@ -223,7 +213,60 @@
             });
         });
 
+        function generateBrowserSecret(length = 12) {
+            const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+            const bytes = new Uint32Array(length);
+
+            if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+                window.crypto.getRandomValues(bytes);
+                return Array.from(bytes, (value) => alphabet[value % alphabet.length]).join('');
+            }
+
+            let secret = '';
+            for (let index = 0; index < length; index++) {
+                secret += alphabet[Math.floor(Math.random() * alphabet.length)];
+            }
+
+            return secret;
+        }
+
+        function getStoredVehicleFormData() {
+            const saved = localStorage.getItem('livewireVehicleForm');
+
+            if (!saved) {
+                return null;
+            }
+
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                console.error('Error parsing stored vehicle form data:', e);
+                return null;
+            }
+        }
+
+        function persistVehicleFormData(data) {
+            localStorage.setItem('livewireVehicleForm', JSON.stringify(data));
+        }
+
+        function ensureVehicleFormSecret() {
+            const data = getStoredVehicleFormData() || {};
+
+            if (!data.secret) {
+                data.secret = generateBrowserSecret();
+            }
+
+            if (!data.savedAt) {
+                data.savedAt = new Date().toISOString();
+            }
+
+            persistVehicleFormData(data);
+
+            return data.secret;
+        }
+
         function saveToStorage(data) {
+            const current = getStoredVehicleFormData() || {};
             const storageData = {
                 driver_name: data.driver_name || '',
                 driver_phone: data.driver_phone || '',
@@ -231,28 +274,31 @@
                 vehicle_number: data.vehicle_number || '',
                 name: data.name || '',
                 notes: data.notes || '',
+                secret: data.secret || current.secret || generateBrowserSecret(),
                 savedAt: new Date().toISOString()
             };
 
-            localStorage.setItem('livewireVehicleForm', JSON.stringify(storageData));
+            persistVehicleFormData(storageData);
         }
 
         function loadStoredData() {
-            const saved = localStorage.getItem('livewireVehicleForm');
+            const data = getStoredVehicleFormData() || {};
 
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-
-                    // Clean up old format - remove hawb_number if exists
-                    if (data.hawb_number !== undefined) {
-                        delete data.hawb_number;
-                        localStorage.setItem('livewireVehicleForm', JSON.stringify(data));
-                    }
-                } catch (e) {
-                    console.error('Error loading stored data:', e);
-                }
+            // Clean up old format - remove hawb_number if exists
+            if (data.hawb_number !== undefined) {
+                delete data.hawb_number;
             }
+
+            if (!data.secret) {
+                data.secret = generateBrowserSecret();
+            }
+
+            if (!data.savedAt) {
+                data.savedAt = new Date().toISOString();
+            }
+
+            persistVehicleFormData(data);
+            ensureVehicleFormSecret();
         }
     </script>
 </div>

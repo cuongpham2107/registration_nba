@@ -110,6 +110,7 @@ class RegistrationService
                         'end_date' => $record->end_date,
                         'asset' => $record->asset,
                         'note' => $record->note,
+                        'sender' => $record->user->name ?? 'N/A',
                         'customers' => $customers,
                         'name_manager' => $approver->name,
                         'job_title_manager' => $approver->department_name ?? '',

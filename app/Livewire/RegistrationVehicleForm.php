@@ -11,6 +11,7 @@ use Awcodes\TableRepeater\Header;
 use Carbon\Carbon;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -22,6 +23,7 @@ use Filament\Support\Enums\ActionSize;
 use Filament\Support\Enums\Alignment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class RegistrationVehicleForm extends Component implements HasForms
@@ -129,6 +131,7 @@ class RegistrationVehicleForm extends Component implements HasForms
     public function mount(): void
     {
         $this->form->fill([
+            'secret' => '',
             'expected_in_at' => now()->format('Y-m-d H:i'),
             'hawbs' => [
                 ['hawb_number' => null, 'pcs' => null],
@@ -145,6 +148,8 @@ class RegistrationVehicleForm extends Component implements HasForms
             ->extraAttributes(['style' => 'gap: 0.5rem;', 'class' => 'bg-white dark:bg-gray-800'])
             ->columns(2)
             ->schema([
+                Hidden::make('secret'),
+
                 TextInput::make('driver_name')
                     ->label('Tên tài xế')
                     ->required()
@@ -395,6 +400,7 @@ class RegistrationVehicleForm extends Component implements HasForms
         if (! empty($storedData)) {
             // Fill form with stored data (excluding HAWB data)
             $formData = [
+                'secret' => $storedData['secret'] ?? '',
                 'driver_name' => $storedData['driver_name'] ?? '',
                 'driver_phone' => $storedData['driver_phone'] ?? '',
                 'driver_id_card' => $storedData['driver_id_card'] ?? '',
@@ -424,6 +430,12 @@ class RegistrationVehicleForm extends Component implements HasForms
         if (! empty($processedData['vehicle_number'])) {
             $processedData['vehicle_number'] = \App\Models\Invoice::normalizeLicensePlate($processedData['vehicle_number']);
         }
+
+        $processedData['secret'] = trim((string) ($processedData['secret'] ?? ''));
+        if ($processedData['secret'] === '') {
+            $processedData['secret'] = Str::random(12);
+        }
+        $data['secret'] = $processedData['secret'];
 
         $blacklistedFields = $this->getBlacklistedFields($processedData);
         if (! empty($blacklistedFields)) {
@@ -587,33 +599,28 @@ class RegistrationVehicleForm extends Component implements HasForms
 
     private function isFieldBlacklisted(string $field, $value): bool
     {
-        $normalizedValue = $this->normalizeFieldValueForBlacklist($field, $value);
+        if (! in_array($field, ['vehicle_number', 'driver_phone', 'driver_id_card'], true)) {
+            return false;
+        }
 
-        if ($normalizedValue === '') {
+        $browserSecret = $this->currentBrowserSecret();
+
+        if ($browserSecret === '') {
             return false;
         }
 
         $query = RegistrationVehicle::query()
+            ->where('secret', $browserSecret)
             ->whereHas('blacklist', function ($query) {
                 $query->where('is_active', true);
-            })
-            ->when($field === 'vehicle_number', function (Builder $query) use ($normalizedValue) {
-                $query->where('vehicle_number', $normalizedValue);
-            })
-            ->when($field === 'driver_phone', function (Builder $query) use ($normalizedValue) {
-                $query->whereRaw(
-                    "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(driver_phone, ' ', ''), '-', ''), '.', ''), '/', ''), '(', ''), ')', ''), '+', '') = ?",
-                    [$normalizedValue]
-                );
-            })
-            ->when($field === 'driver_id_card', function (Builder $query) use ($normalizedValue) {
-                $query->whereRaw(
-                    "UPPER(REPLACE(REPLACE(REPLACE(REPLACE(driver_id_card, ' ', ''), '-', ''), '.', ''), '/', '')) = ?",
-                    [$normalizedValue]
-                );
             });
 
         return $query->exists();
+    }
+
+    private function currentBrowserSecret(): string
+    {
+        return trim((string) data_get($this->data, 'secret', ''));
     }
 
 
@@ -680,7 +687,9 @@ class RegistrationVehicleForm extends Component implements HasForms
                 continue;
             }
 
-            if (str_contains($normalizedValue, $normalizedBadWord)) {
+            $pattern = '/(?<!\\p{L})'.preg_quote($normalizedBadWord, '/').'(?!\\p{L})/u';
+
+            if (preg_match($pattern, $normalizedValue) === 1) {
                 return "{$label} chứa từ không phù hợp.";
             }
         }

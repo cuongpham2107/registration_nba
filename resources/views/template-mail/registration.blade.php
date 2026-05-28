@@ -71,6 +71,9 @@
                     <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Ghi chú</th>
                     <td style="padding:10px 8px;">{{ $note }}</td>
                 </tr>
+                     <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Người gửi</th>
+                    <td style="padding:10px 8px;">{{ $sender }}</td>
+                </tr>
             </tbody>
         </table>
         @if ($customers->count() > 0)
