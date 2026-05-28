@@ -40,4 +40,9 @@ class RegistrationVehicle extends Model
     {
         return $this->belongsTo(RegisterDirectly::class, 'id_registration_directly');
     }
+
+     public function blacklist()
+    {
+        return $this->hasOne(BlackList::class, 'registration_vehicle_id');
+    }
 }

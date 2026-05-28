@@ -33,6 +33,10 @@ class ApproveVehicleAction
                     return true;
                 }
 
+                if($record->blacklist) {
+                    return true;
+                }
+
                 return false;
             })
             ->modalWidth(\Filament\Support\Enums\MaxWidth::ThreeExtraLarge)

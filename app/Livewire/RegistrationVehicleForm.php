@@ -20,6 +20,7 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\ActionSize;
 use Filament\Support\Enums\Alignment;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
@@ -147,8 +148,21 @@ class RegistrationVehicleForm extends Component implements HasForms
                 TextInput::make('driver_name')
                     ->label('Tên tài xế')
                     ->required()
+                    ->live(onBlur: true)
+                    ->rules([
+                        function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                $message = $this->validateOffensiveWords('driver_name', $value, 'Tên tài xế');
+
+                                if ($message !== null) {
+                                    $fail($message);
+                                }
+                            };
+                        },
+                    ])
                     ->validationMessages([
                         'required' => 'Tên tài xế không được để trống.',
+                        'blacklist' => 'Tên tài xế chứa từ không hợp lệ.',
                     ])
                     ->extraAttributes([
                         'class' => '!bg-gray-100 dark:!bg-gray-700 dark:!text-white dark:!border-gray-600',
@@ -159,6 +173,16 @@ class RegistrationVehicleForm extends Component implements HasForms
                 TextInput::make('driver_id_card')
                     ->label('Số CCCD/CMND')
                     ->required()
+                    ->live(onBlur: true)
+                    ->rules([
+                        function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                if ($this->isFieldBlacklisted('driver_id_card', $value)) {
+                                    $fail('Số CCCD/CMND này đang nằm trong danh sách đen.');
+                                }
+                            };
+                        },
+                    ])
                     ->validationMessages([
                         'required' => 'Số CCCD/CMND không được để trống.',
                     ])
@@ -169,6 +193,16 @@ class RegistrationVehicleForm extends Component implements HasForms
                 TextInput::make('driver_phone')
                     ->label('Số điện thoại')
                     ->tel()
+                    ->live(onBlur: true)
+                    ->rules([
+                        function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                if ($this->isFieldBlacklisted('driver_phone', $value)) {
+                                    $fail('Số điện thoại này đang nằm trong danh sách đen.');
+                                }
+                            };
+                        },
+                    ])
                     ->extraAttributes(['class' => '!bg-gray-100 dark:!bg-gray-700 dark:!text-white dark:!border-gray-600'])
                     ->maxLength(20)
                     ->required()
@@ -177,6 +211,16 @@ class RegistrationVehicleForm extends Component implements HasForms
                 TextInput::make('vehicle_number')
                     ->label('Biển số xe')
                     ->required()
+                    ->live(onBlur: true)
+                    ->rules([
+                        function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                if ($this->isFieldBlacklisted('vehicle_number', $value)) {
+                                    $fail('Biển số xe này đang nằm trong danh sách đen.');
+                                }
+                            };
+                        },
+                    ])
                     ->extraAttributes(['class' => '!bg-gray-100 dark:!bg-gray-700 dark:!text-white dark:!border-gray-600'])
                     ->validationMessages([
                         'required' => 'Biển số xe không được để trống.',
@@ -324,6 +368,21 @@ class RegistrationVehicleForm extends Component implements HasForms
                 Textarea::make('notes')
                     ->label('Ghi chú')
                     ->rows(2)
+                    ->live(onBlur: true)
+                    ->rules([
+                        function () {
+                            return function (string $attribute, $value, \Closure $fail) {
+                                $message = $this->validateOffensiveWords('notes', $value, 'Ghi chú');
+
+                                if ($message !== null) {
+                                    $fail($message);
+                                }
+                            };
+                        },
+                    ])
+                    ->validationMessages([
+                        'blacklist' => 'Ghi chú chứa từ không hợp lệ.',
+                    ])
                     ->extraAttributes(['class' => '!bg-gray-100 dark:!bg-gray-700 dark:!text-white dark:!border-gray-600'])
                     ->maxLength(1000)
                     ->columnSpan(2),
@@ -364,6 +423,23 @@ class RegistrationVehicleForm extends Component implements HasForms
         // Normalize license plate
         if (! empty($processedData['vehicle_number'])) {
             $processedData['vehicle_number'] = \App\Models\Invoice::normalizeLicensePlate($processedData['vehicle_number']);
+        }
+
+        $blacklistedFields = $this->getBlacklistedFields($processedData);
+        if (! empty($blacklistedFields)) {
+            foreach ($blacklistedFields as $field => $message) {
+                $this->addError("data.{$field}", $message);
+            }
+
+            Notification::make()
+                ->title('Lỗi đăng ký')
+                ->body('Thông tin tài xế/xe thuộc danh sách đen, không thể đăng ký.')
+                ->danger()
+                ->color('danger')
+                ->duration(8000)
+                ->send();
+
+            return;
         }
 
         // Convert name array to comma-separated string
@@ -507,6 +583,120 @@ class RegistrationVehicleForm extends Component implements HasForms
         } catch (\Exception $e) {
             Log::error('Failed to send notifications: '.$e->getMessage());
         }
+    }
+
+    private function isFieldBlacklisted(string $field, $value): bool
+    {
+        $normalizedValue = $this->normalizeFieldValueForBlacklist($field, $value);
+
+        if ($normalizedValue === '') {
+            return false;
+        }
+
+        $query = RegistrationVehicle::query()
+            ->whereHas('blacklist', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->when($field === 'vehicle_number', function (Builder $query) use ($normalizedValue) {
+                $query->where('vehicle_number', $normalizedValue);
+            })
+            ->when($field === 'driver_phone', function (Builder $query) use ($normalizedValue) {
+                $query->whereRaw(
+                    "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(driver_phone, ' ', ''), '-', ''), '.', ''), '/', ''), '(', ''), ')', ''), '+', '') = ?",
+                    [$normalizedValue]
+                );
+            })
+            ->when($field === 'driver_id_card', function (Builder $query) use ($normalizedValue) {
+                $query->whereRaw(
+                    "UPPER(REPLACE(REPLACE(REPLACE(REPLACE(driver_id_card, ' ', ''), '-', ''), '.', ''), '/', '')) = ?",
+                    [$normalizedValue]
+                );
+            });
+
+        return $query->exists();
+    }
+
+    private function normalizeFieldValueForBlacklist(string $field, $value): string
+    {
+        $normalizedValue = trim((string) $value);
+
+        if ($normalizedValue === '') {
+            return '';
+        }
+
+        if ($field === 'vehicle_number') {
+            return \App\Models\Invoice::normalizeLicensePlate($normalizedValue);
+        }
+
+        if ($field === 'driver_phone') {
+            return preg_replace('/\D+/', '', $normalizedValue) ?? '';
+        }
+
+        if ($field === 'driver_id_card') {
+            return strtoupper(preg_replace('/[^A-Za-z0-9]+/', '', $normalizedValue) ?? '');
+        }
+
+        return $normalizedValue;
+    }
+
+    private function getBlacklistedFields(array $processedData): array
+    {
+        $fieldLabels = [
+            'driver_id_card' => 'Số CCCD/CMND',
+            'driver_phone' => 'Số điện thoại',
+            'vehicle_number' => 'Biển số xe',
+            'driver_name' => 'Tên tài xế',
+            'notes' => 'Ghi chú',
+        ];
+
+        $errors = [];
+
+        foreach ($fieldLabels as $field => $label) {
+            if ($this->isFieldBlacklisted($field, $processedData[$field] ?? null)) {
+                $errors[$field] = "{$label} đang nằm trong danh sách đen.";
+            }
+        }
+
+        return $errors;
+    }
+
+    private function validateOffensiveWords(string $field, $value, string $label): ?string
+    {
+        $normalizedValue = $this->normalizeOffensiveInput($value);
+
+        if ($normalizedValue === '') {
+            return null;
+        }
+
+        $badWords = config('offensive-word.bad_words', []);
+
+        foreach ($badWords as $badWord) {
+            $normalizedBadWord = $this->normalizeOffensiveInput($badWord);
+
+            if ($normalizedBadWord === '') {
+                continue;
+            }
+
+            if (str_contains($normalizedValue, $normalizedBadWord)) {
+                return "{$label} chứa từ không phù hợp.";
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizeOffensiveInput($value): string
+    {
+        $normalizedValue = trim((string) $value);
+
+        if ($normalizedValue === '') {
+            return '';
+        }
+
+        $normalizedValue = mb_strtolower($normalizedValue);
+        $normalizedValue = preg_replace('/\s+/u', ' ', $normalizedValue) ?? $normalizedValue;
+
+        return $normalizedValue;
     }
 
     public function render()

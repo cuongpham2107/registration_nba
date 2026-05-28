@@ -29,6 +29,10 @@ class CancelApproveVehicleAction
                 if ($user && $user->hasRole('approve_vehicle')) {
                     return false;
                 }
+
+                if($record->blacklist) {
+                    return true;
+                }
                 return true;
             })
             ->action(function (RegistrationVehicle $record) {

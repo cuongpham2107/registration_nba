@@ -380,11 +380,35 @@ class RegistrationVehicleResource extends Resource
                             'updated' => 'warning',
                             'deleted' => 'danger',
                         ]),
+                    Tables\Actions\Action::make('blacklist')
+                        ->label('Thêm vào danh sách đen')
+                        ->color('danger')
+                        ->icon('heroicon-o-lock-closed')
+                        ->hidden(fn ($record) => ! auth()->user() || (! auth()->user()->hasRole('super_admin') && ! auth()->user()->hasRole('approve_vehicle')) || $record->blacklist !== null)
+                        ->form([
+                            Forms\Components\Textarea::make('reason')
+                                ->label('Lý do')
+                                ->required()
+                                ->maxLength(2000),
+                        ])
+                        ->modalHeading('Xác nhận thêm vào danh sách đen')
+                        ->modalButton('Xác nhận')
+                        ->action(function (RegistrationVehicle $record, array $data) {
+                            $record->blacklist()->updateOrCreate([], [
+                                'reason' => $data['reason'] ?? null,
+                                'blacklisted_by' => auth()->id(),
+                                'blacklisted_at' => now(),
+                                'is_active' => true,
+                            ]);
+                            $record->status = 'reject';
+                            $record->save();
+
+                        }),
                 ])->icon('heroicon-m-adjustments-vertical')
                     ->size(ActionSize::Small)
                     ->iconButton()
                     ->color('gray'),
-
+                    
             ], position: \Filament\Tables\Enums\ActionsPosition::BeforeColumns)
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
