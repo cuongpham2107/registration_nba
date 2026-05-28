@@ -75,6 +75,8 @@ services:
             - ./:/var/www/html
             # Giữ lại /public/build (Vite manifest + assets) được build trong image
             - public-build:/var/www/html/public/build
+            # Mount certs cho HTTPS; admin chỉ cần đặt fullchain.pem và privkey.pem vào đây
+            - ./.docker/nginx/ssl:/etc/nginx/ssl:ro
             - ./.docker/nginx/conf.d/app.conf:/etc/nginx/conf.d/default.conf
         networks:
             - app-network

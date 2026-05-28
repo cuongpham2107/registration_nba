@@ -41,7 +41,8 @@ class ListRegistrations extends ListRecords
                     $action->makeModalSubmitAction('createAndSendMail', arguments: ['send_mail' => true])
                         ->label('Tạo và gửi phê duyệt')
                         ->color('success')
-                        ->icon('heroicon-m-envelope'),
+                        ->icon('heroicon-m-envelope')
+                        ->hidden(fn () => !Auth::user() || Auth::user()->hasRole('approver')), // Ẩn nút này nếu là approver
                 ])
                 ->mutateFormDataUsing(function (array $data): array {
                     $user = Auth::user();
