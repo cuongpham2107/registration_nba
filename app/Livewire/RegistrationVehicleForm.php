@@ -616,6 +616,7 @@ class RegistrationVehicleForm extends Component implements HasForms
         return $query->exists();
     }
 
+
     private function normalizeFieldValueForBlacklist(string $field, $value): string
     {
         $normalizedValue = trim((string) $value);
@@ -636,6 +637,10 @@ class RegistrationVehicleForm extends Component implements HasForms
             return strtoupper(preg_replace('/[^A-Za-z0-9]+/', '', $normalizedValue) ?? '');
         }
 
+        // Default: normalize text fields (names, notes) to lowercase and collapse whitespace
+        $normalizedValue = mb_strtolower($normalizedValue);
+        $normalizedValue = preg_replace('/\s+/u', ' ', $normalizedValue) ?? $normalizedValue;
+
         return $normalizedValue;
     }
 
@@ -645,8 +650,6 @@ class RegistrationVehicleForm extends Component implements HasForms
             'driver_id_card' => 'Số CCCD/CMND',
             'driver_phone' => 'Số điện thoại',
             'vehicle_number' => 'Biển số xe',
-            'driver_name' => 'Tên tài xế',
-            'notes' => 'Ghi chú',
         ];
 
         $errors = [];
