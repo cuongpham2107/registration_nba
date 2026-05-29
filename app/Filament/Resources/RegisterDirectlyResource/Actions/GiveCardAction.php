@@ -52,8 +52,7 @@ class GiveCardAction
                             ->columnSpanFull(),
                         Forms\Components\Select::make('id')
                             ->label('Thẻ')
-                            ->options(Card::all()->pluck('card_name', 'id'))
-                            // ->required()
+                            ->options(Card::where('status', 'inactive')->get()->pluck('card_name', 'id'))
                             ->searchable(['card_name', 'card_number'])
                             ->preload(),
                         Forms\Components\DateTimePicker::make('start_date')
