@@ -170,8 +170,8 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->label('Giờ vào thực tế')
                             ->displayFormat('d/m/Y H:i')
                             ->prefixIcon('heroicon-s-calendar-days')
-                            ->seconds(false),
-                        // ->readonly(),
+                            ->seconds(false)
+                            ->readonly(),
                         Forms\Components\DateTimePicker::make('actual_date_out')
                             ->label('Giờ ra thực tế')
                             ->displayFormat('d/m/Y H:i')
@@ -185,7 +185,9 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ])
                             ->default('coming_in')
                             ->label('Trạng thái')
+                            // ->readOnly()
                             // ->required()
+                            ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
                             ->columnSpanFull(),
                     ])->columnSpan(1)->columns(2),
             ])->columns(2);
