@@ -4,9 +4,11 @@ namespace App\Filament\Resources\RegistrationResource\Actions;
 
 use App\Models\Registration;
 use App\Models\User;
+use App\Services\RegistrationService;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\ActionSize;
 use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Log;
 
 class ApproveRegistrationAction
 {
@@ -50,7 +52,7 @@ class ApproveRegistrationAction
                     'type_date' => now(),
                 ]);
 
-                (new \App\Http\Controllers\RegistrationController)->createRegistrationRirectly($record);
+                (new RegistrationService)->createRegistrationDirectly($record, $record->fee_id ? 'vehicle' : 'passenger');
 
                 Notification::make()
                     ->title('Phê duyệt thành công')
@@ -59,7 +61,7 @@ class ApproveRegistrationAction
                     ->send();
 
                 try {
-                    $protectUsers = \App\Models\User::role('protect')->get();
+                    $protectUsers = User::role('protect')->get();
                     foreach ($protectUsers as $user) {
                         Notification::make()
                             ->title('Đơn xét duyệt đăng ký khách mới')
@@ -68,7 +70,7 @@ class ApproveRegistrationAction
                             ->broadcast($user);
                     }
                 } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('Broadcast notification failed: '.$e->getMessage());
+                    Log::error('Broadcast notification failed: '.$e->getMessage());
                 }
             });
     }

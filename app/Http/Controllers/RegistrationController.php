@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\RegisterDirectly;
 use App\Models\Registration;
 use App\Models\RegistrationVehicle;
+use App\Models\User;
+use App\Services\MailService;
 use App\Services\RegistrationService;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RegistrationController extends Controller
 {
@@ -28,7 +31,7 @@ class RegistrationController extends Controller
             return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
         }
 
-        (new RegistrationService)->createRegistrationDirectly($registration);
+        (new RegistrationService)->createRegistrationDirectly($registration, $registration->fee_id ? 'vehicle' : 'passenger');
         $registration->type = 'browse';
         $registration->type_date = now();
         $registration->save();
@@ -37,7 +40,7 @@ class RegistrationController extends Controller
         $message = 'Đăng ký khách đã được phê duyệt thành công';
         try {
             // Gửi thông báo đến người có role "protect"
-            $approveVehicleUsers = \App\Models\User::role('protect')->get();
+            $approveVehicleUsers = User::role('protect')->get();
 
             foreach ($approveVehicleUsers as $user) {
                 Notification::make()
@@ -47,7 +50,7 @@ class RegistrationController extends Controller
                     ->broadcast($user);
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Notification sending failed: '.$e->getMessage());
+            Log::error('Notification sending failed: '.$e->getMessage());
         }
 
         return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
@@ -76,84 +79,6 @@ class RegistrationController extends Controller
         $message = 'Đăng ký khách đã bị từ chối';
 
         return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
-    }
-
-    public function createRegistrationDirectly(Registration $registration)
-    {
-        try{
-            $startDate = Carbon::parse($registration->start_date, 'Asia/Ho_Chi_Minh');
-            $endDate = Carbon::parse($registration->end_date, 'Asia/Ho_Chi_Minh');
-
-            $customers = $registration->customers;
-
-            $currentDate = $startDate->copy()->startOfDay();
-
-            while ($currentDate->lte($endDate->endOfDay())) {
-                // Xác định thời gian bắt đầu và kết thúc cho ngày hiện tại
-                $startOfDay = $currentDate->isSameDay($startDate) ? $startDate->copy() : $currentDate->copy()->startOfDay();
-                $endOfDay = $currentDate->isSameDay($endDate) ? $endDate->copy() : $currentDate->copy()->endOfDay();
-
-                // Nếu không có khách, tạo bản ghi với thông tin đơn vị
-                if ($customers->count() == 0) {
-                    RegisterDirectly::create([
-                        'name' => $registration->name,
-                        'papers' => '',
-                        'address' => '',
-                        'bks' => $registration->bks ?? '',
-                        'contact_person' => '',
-                        'job' => $registration->purpose,
-                        'start_date' => $startOfDay,
-                        'end_date' => $endOfDay,
-                        'type' => 'passenger',
-                        'areas' => '',
-                        'status' => 'none',
-                    ]);
-                }
-                // Nếu có 1 khách, tạo 1 bản ghi với thông tin khách đó
-                elseif ($customers->count() == 1) {
-                    $customer = $customers->first();
-                    RegisterDirectly::create([
-                        'name' => $customer->name.'|'.$registration->name,
-                        'papers' => $customer->papers,
-                        'address' => '',
-                        'bks' => $customer->license_plate ? $customer->license_plate : $registration->bks ?? '',
-                        'contact_person' => '',
-                        'job' => $registration->purpose,
-                        'start_date' => $startOfDay,
-                        'end_date' => $endOfDay,
-                        'type' => 'passenger',
-                        'areas' => $customer->areas,
-                        'status' => 'none',
-                    ]);
-                }
-                // Nếu có nhiều khách, tạo nhiều bản ghi
-                else {
-                    foreach ($customers as $customer) {
-                        RegisterDirectly::create([
-                            'name' => $customer->name.'|'.$registration->name,
-                            'papers' => $customer->papers,
-                            'address' => '',
-                            'bks' => $customer->license_plate ? $customer->license_plate : $registration->bks ?? '',
-                            'contact_person' => '',
-                            'job' => $registration->purpose,
-                            'start_date' => $startOfDay,
-                            'end_date' => $endOfDay,
-                        'type' => 'passenger',
-                        'areas' => $customer->areas,
-                        'status' => 'none',
-                    ]);
-                }
-            }
-
-            // Chuyển sang ngày tiếp theo
-            $currentDate->addDay()->startOfDay();
-        }
-
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error creating RegisterDirectly: '.$e->getMessage());
-             throw $e; // Ném lại lỗi để có thể xử lý ở cấp cao hơn nếu cần
-        }
-        
     }
 
     public function createRegistrationDirectlyFromVehicle(RegistrationVehicle $registration, array $areas, bool $is_priority = false)
@@ -304,7 +229,7 @@ class RegistrationController extends Controller
         if ($request->input('action') === 'save_and_send') {
             try {
                 // Tìm tất cả user có quyền approve_vehicle
-                $approvers = \App\Models\User::whereHas('roles', function ($query) {
+                $approvers = User::whereHas('roles', function ($query) {
                     $query->where('name', 'approve_vehicle');
                 })->orWhereHas('permissions', function ($query) {
                     $query->where('name', 'approve_vehicle');
@@ -317,7 +242,7 @@ class RegistrationController extends Controller
                 $mailSent = false;
                 foreach ($approvers as $user) {
                     if ($user->email) {
-                        $mail = (new \App\Services\MailService)->sendMailWithTemplate(
+                        $mail = (new MailService)->sendMailWithTemplate(
                             $user->email,
                             'Đăng ký xe khai thác: '.$record->driver_name.' | '.$record->vehicle_number.' | '.date('Y-m-d H:i:s'),
                             'template-mail.registration-vehicle',
@@ -335,7 +260,7 @@ class RegistrationController extends Controller
 
                     try {
                         // Gửi thông báo đến người có role "approve_vehicle"
-                        $approveVehicleUsers = \App\Models\User::role('approve_vehicle')->get();
+                        $approveVehicleUsers = User::role('approve_vehicle')->get();
 
                         foreach ($approveVehicleUsers as $user) {
                             Notification::make()
@@ -345,7 +270,7 @@ class RegistrationController extends Controller
                                 ->broadcast($user);
                         }
                     } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::error('Notification sending failed: '.$e->getMessage());
+                        Log::error('Notification sending failed: '.$e->getMessage());
                     }
 
                     // Redirect to success page with registration data

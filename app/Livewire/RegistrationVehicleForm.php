@@ -363,8 +363,10 @@ class RegistrationVehicleForm extends Component implements HasForms
 
                 DateTimePicker::make('expected_in_at')
                     ->label('Thời gian vào dự kiến')
+                    ->placeholder('Chọn ngày, giờ vào dự kiến')
                     ->required()
-                    ->native(true)
+                    ->native(false)
+                    ->prefixIcon('heroicon-o-calendar')
                     ->extraAttributes(['class' => '!bg-gray-100 dark:!bg-gray-700 dark:!text-white dark:!border-gray-600'])
                     ->seconds(false)
                     ->displayFormat('H:i d/m/Y')

@@ -15,7 +15,7 @@ class InvoiceFee
         $totalMinutes = FeeCalculator::durationMinutes($entryTime, $exitTime);
 
         $invoice = $record->invoice;
-        $feeBreakdown = FeeCalculator::forRegistrationEntry($record);
+        $fee = FeeCalculator::forRegistrationEntry($record);
 
         $payload = [
             'record' => $record,
@@ -27,8 +27,8 @@ class InvoiceFee
             'total_hours' => intdiv($totalMinutes, 60),
             'total_minutes' => $totalMinutes,
             'remaining_minutes' => $totalMinutes % 60,
-            'fee_breakdown' => $feeBreakdown,
-            'fee' => $invoice ? $invoice->amount : (int) ($feeBreakdown['total'] ?? 0),
+            'fee_breakdown' => ['total' => $fee],
+            'fee' => $invoice ? $invoice->amount : $fee,
             'logo' => $logo,
             'is_print' => true,
         ];

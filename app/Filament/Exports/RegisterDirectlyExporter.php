@@ -29,7 +29,7 @@ class RegisterDirectlyExporter extends Exporter
                 ->label('Người liên hệ'),
             ExportColumn::make('job')
                 ->label('Mục đích công việc'),
-            ExportColumn::make('card.card_name')
+            ExportColumn::make('cards.card_name')
                 ->label('Tên thẻ'),
             ExportColumn::make('start_date')
                 ->label('Giờ vào'),
@@ -39,6 +39,9 @@ class RegisterDirectlyExporter extends Exporter
                 ->label('Giờ vào thực tế'),
             ExportColumn::make('actual_date_out')
                 ->label('Giờ ra thực tế'),
+            ExportColumn::make('invoice.amount')
+                ->label('Số tiền')
+                ->formatStateUsing(fn (?string $state): string => $state ? number_format((float) $state, 0, ',', '.') . ' VNĐ' : ''),
             ExportColumn::make('areas')
                 ->label('Khu vực')
                 ->formatStateUsing(function (?string $state): string {

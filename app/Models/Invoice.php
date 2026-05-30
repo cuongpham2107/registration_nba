@@ -32,12 +32,16 @@ class Invoice extends Model
         'payment_method',
         'file_path',
         'notes',
+        'is_invoiced',
+        'invoiced_at',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'is_paid' => 'boolean',
         'paid_at' => 'datetime',
+        'is_invoiced' => 'boolean',
+        'invoiced_at' => 'datetime',
     ];
 
     public function registerDirectly()
@@ -99,5 +103,15 @@ class Invoice extends Model
     public function scopeUnpaid($query)
     {
         return $query->where('is_paid', false);
+    }
+
+    public function scopeInvoiced($query)
+    {
+        return $query->where('is_invoiced', true);
+    }
+
+    public function scopeNotInvoiced($query)
+    {
+        return $query->where('is_invoiced', false);
     }
 }

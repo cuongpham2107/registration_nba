@@ -77,31 +77,60 @@
             </tbody>
         </table>
         @if ($customers->count() > 0)
-            <h3 style="font-size: 18px; color: #2d3748; font-weight: 600; margin-top: 24px; margin-bottom: 12px;">Danh sách nhân viên đăng ký:</h3>
-            <table style="width:100%;border-collapse:collapse;background:#f7fafc;border-radius:12px;overflow:hidden;">
-                <thead>
-                    <tr>
-                        <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Tên khách</th>
-                        <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Giấy tờ</th>
-                        <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Số</th>
-                        <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Khu vực</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($customers as $staff)
-                    <tr>
-                        <td style="padding:10px 8px;">{{ $staff['name'] }}</td>
-                        <td style="padding:10px 8px;">{{ $staff['type'] }}</td>
-                        <td style="padding:10px 8px;">{{ $staff['papers'] }}</td>
-                        <td style="padding:10px 8px;">
-                            @foreach ($staff['areas'] as $area)
-                                <p>{{ \App\Models\Area::where('code',$area)->first()->name}}</p>
-                            @endforeach
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            @if ($customers->count() === 1)
+                @php $staff = $customers->first(); @endphp
+                <h3 style="font-size: 16px; color: #2d3748; font-weight: 600; margin-top: 24px; margin-bottom: 12px;">Thông tin khách:</h3>
+                <table style="width:100%;border-collapse:collapse;background:#f7fafc;border-radius:12px;overflow:hidden;">
+                    <tbody>
+                        <tr>
+                            <th style="width:40%;color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Tên khách</th>
+                            <td style="padding:10px 8px;">{{ $staff['name'] }}</td>
+                        </tr>
+                        <tr>
+                            <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Giấy tờ</th>
+                            <td style="padding:10px 8px;">{{ $staff['type'] }}</td>
+                        </tr>
+                        <tr>
+                            <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Số giấy tờ</th>
+                            <td style="padding:10px 8px;">{{ $staff['papers'] }}</td>
+                        </tr>
+                        <tr>
+                            <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Khu vực</th>
+                            <td style="padding:10px 8px;">
+                                @foreach ($staff['areas'] as $area)
+                                    {{ \App\Models\Area::where('code',$area)->first()->name }}@if(!$loop->last), @endif
+                                @endforeach
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            @else
+                <h3 style="font-size: 16px; color: #2d3748; font-weight: 600; margin-top: 24px; margin-bottom: 12px;">Danh sách khách ({{ $customers->count() }} người):</h3>
+                <table style="width:100%;border-collapse:collapse;background:#f7fafc;border-radius:12px;overflow:hidden;">
+                    <thead>
+                        <tr>
+                            <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Tên khách</th>
+                            <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Giấy tờ</th>
+                            <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Số</th>
+                            <th style="color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Khu vực</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($customers as $staff)
+                        <tr>
+                            <td style="padding:10px 8px;">{{ $staff['name'] }}</td>
+                            <td style="padding:10px 8px;">{{ $staff['type'] }}</td>
+                            <td style="padding:10px 8px;">{{ $staff['papers'] }}</td>
+                            <td style="padding:10px 8px;">
+                                @foreach ($staff['areas'] as $area)
+                                    <p>{{ \App\Models\Area::where('code',$area)->first()->name}}</p>
+                                @endforeach
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
         @endif
 
         <div style="margin-top: 32px; text-align:center;">

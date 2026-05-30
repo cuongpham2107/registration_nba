@@ -9,8 +9,14 @@ class Card extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $guarded = [];
+
+    protected $casts = [
+        'expiry_date' => 'date',
+    ];
+
+    public function registerDirectlies()
+    {
+        return $this->belongsToMany(RegisterDirectly::class);
+    }
 }

@@ -10,6 +10,7 @@ use App\Filament\Resources\RegistrationResource\Actions\SendMailAction;
 use App\Filament\Resources\RegistrationResource\Filters\RegistrationFilter;
 use App\Filament\Resources\RegistrationResource\Pages;
 use App\Models\Area;
+use App\Models\Fee;
 use App\Models\Registration;
 use Awcodes\TableRepeater\Components\TableRepeater;
 use Awcodes\TableRepeater\Header;
@@ -18,6 +19,7 @@ use Carbon\Carbon;
 use Closure;
 use Filament\Actions\Exports\Models\Export;
 use Filament\Forms;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Resources\Resource;
@@ -27,9 +29,12 @@ use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Actions\ExportBulkAction;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
+use Rmsramos\Activitylog\RelationManagers\ActivitylogRelationManager;
 
 class RegistrationResource extends Resource implements HasShieldPermissions
 {
@@ -69,9 +74,22 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                         'md' => 2,
                         'lg' => 3,
                     ]),
+                Forms\Components\Select::make('fee_id')
+                    ->label('Trọng tải')
+                    ->options(Fee::all()->pluck('vehicle_type', 'id'))
+                    ->searchable()
+                    ->preload()
+                    ->reactive()
+                    ->hidden(fn (Get $get) => $get('fee_id') === null)
+                    ->columnSpan([
+                        'sm' => 1,
+                        'md' => 2,
+                        'lg' => 3,
+                    ]),
                 Forms\Components\TextInput::make('bks')
                     ->prefixIcon('heroicon-o-truck')
                     ->label('BKS ô tô')
+                    ->hidden(fn (Get $get) => $get('fee_id') !== null)
                     ->columnSpan([
                         'sm' => 1,
                         'md' => 2,
@@ -87,10 +105,13 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ]),
                 Forms\Components\DateTimePicker::make('start_date')
                     ->displayFormat('d/m/Y h:i')
+                    ->placeholder('Chọn ngày, giờ vào dự kiến')
                     ->locale('vi')
                     ->seconds(false)
                     ->label('Giờ vào dự kiến')
                     ->required()
+                    ->native(false)
+                    ->prefixIcon('heroicon-o-calendar')
                     ->columnSpan([
                         'sm' => 1,
                         'md' => 1,
@@ -98,10 +119,13 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ]),
                 Forms\Components\DateTimePicker::make('end_date')
                     ->displayFormat('d/m/Y h:i')
+                    ->placeholder('Chọn ngày, giờ kết thúc dự kiến')
                     ->locale('vi')
                     ->seconds(false)
                     ->label('Giờ ra dự kiến')
                     ->required()
+                    ->native(false)
+                    ->prefixIcon('heroicon-o-calendar')
                     ->rules([
                         fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
                             if (($record['status'] ?? null) != 'sent') {
@@ -174,12 +198,12 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ->relationship()
                     ->label('')
                     ->headers([
-                        Header::make('Tên khách')->width(200),
-                        Header::make('Số giấy tờ')->width(150),
-                        Header::make('Loại giấy tờ')->width(150),
-                        Header::make('Khu vực')->width(200),
-                        Header::make('Biển số')->width(150),
-                        Header::make('Ghi chú')->width(250),
+                        Header::make('Tên khách')->width('200px'),
+                        Header::make('Số giấy tờ')->width('180px'),
+                        Header::make('Loại giấy tờ')->width('100px'),
+                        Header::make('Khu vực')->width('250px'),
+                        Header::make('Biển số')->width('100px'),
+                        Header::make('Ghi chú')->width('150px'),
                     ])
                     ->schema([
                         Forms\Components\TextInput::make('name')
@@ -205,8 +229,12 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ])
                     ->defaultItems(1)
                     ->columns(6)
+                    ->addable(fn (Get $get): bool => $get('fee_id') === null)
+                    ->deleteAction(
+                        fn (Action $action) => $action->hidden(fn (Get $get) => $get('fee_id') !== null),
+                    )
                     ->extraActions([
-                        ImportCustomersAction::make(),
+                        ImportCustomersAction::make()->hidden(fn (Get $get) => $get('fee_id') !== null),
                     ]),
             ]);
     }
@@ -236,7 +264,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                         ],
                     ]);
 
-                    return new \Illuminate\Support\HtmlString(
+                    return new HtmlString(
                         '<a href="'.$filterUrl.'" style="display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: linear-gradient(135deg, #ff6b6b 0%, #ffa5a5 100%); color: white; border-radius: 8px; font-weight: 500; font-size: 0.875rem; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\'; this.style.boxShadow=\'0 4px 12px rgba(255, 107, 107, 0.4)\';" onmouseout="this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'none\';">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px; flex-shrink: 0;">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
@@ -274,8 +302,20 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('bks')
                     ->label('BKS ô tô')
                     ->weight(FontWeight::Bold)
-                    ->searchable()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->getStateUsing(function (Registration $record) {
+                        if ($record->bks) {
+                            return $record->bks;
+                        }
+
+                        $plates = $record->customers
+                            ->pluck('license_plate')
+                            ->filter()
+                            ->unique()
+                            ->values();
+
+                        return $plates->isNotEmpty() ? $plates->implode(', ') : '-';
+                    }),
                 Tables\Columns\ColumnGroup::make('Thời gian dự kiến', [
                     Tables\Columns\TextColumn::make('start_date')
                         ->label('Giờ vào')
@@ -381,7 +421,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                         ->hidden(fn (Registration $record) => $record->status === 'sent' && $record->type === 'browse' || $record->type === 'refuse' || $record->user_id !== auth()->id()),
                     Tables\Actions\ViewAction::make()->modalWidth(MaxWidth::SixExtraLarge),
                     Tables\Actions\DeleteAction::make(),
-                        // ->hidden(fn (Registration $record) => $record->status === 'sent' && $record->type === 'browse' || $record->type === 'refuse' || $record->user_id !== auth()->id()),
+                    // ->hidden(fn (Registration $record) => $record->status === 'sent' && $record->type === 'browse' || $record->type === 'refuse' || $record->user_id !== auth()->id()),
                     ApproveRegistrationAction::make(),
                     RefuseRegistrationAction::make(),
                 ])->icon('heroicon-m-adjustments-vertical')
@@ -389,7 +429,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ->iconButton()
                     ->color('gray'),
 
-            ], position: \Filament\Tables\Enums\ActionsPosition::BeforeColumns)
+            ], position: ActionsPosition::BeforeColumns)
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
                 ExportBulkAction::make()
@@ -405,7 +445,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
     public static function getRelations(): array
     {
         return [
-            \Rmsramos\Activitylog\RelationManagers\ActivitylogRelationManager::class,
+            ActivitylogRelationManager::class,
         ];
     }
 

@@ -29,9 +29,9 @@ class RegisterDirectly extends Model
         'status' => 'none',
     ];
 
-    public function card()
+    public function cards()
     {
-        return $this->belongsTo(Card::class);
+        return $this->belongsToMany(Card::class);
     }
 
     public function registrationVehicle()

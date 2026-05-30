@@ -29,9 +29,6 @@ class CardResource extends Resource implements HasShieldPermissions
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('account_id')
-                    ->label('Mã số thẻ')
-                    ->required(),
                 Forms\Components\TextInput::make('card_number')
                     ->label('Số thẻ')
                     ->numeric()
@@ -39,6 +36,22 @@ class CardResource extends Resource implements HasShieldPermissions
                 Forms\Components\TextInput::make('card_name')
                     ->label('Tên thẻ')
                     ->required(),
+                Forms\Components\Select::make('type')
+                    ->label('Loại thẻ')
+                    ->options([
+                        'daily' => 'Thẻ ngày',
+                        'long_term' => 'Thẻ dài hạn',
+                    ])
+                    ->default('daily')
+                    ->required()
+                    ->live(),
+                Forms\Components\DatePicker::make('expiry_date')
+                    ->label('Ngày hết hạn')
+                    ->placeholder('Chọn ngày hết hạn')
+                    ->native(false)
+                    ->prefixIcon('heroicon-o-calendar')
+                    ->visible(fn (Forms\Get $get) => $get('type') === 'long_term')
+                    ->required(fn (Forms\Get $get) => $get('type') === 'long_term'),
                 Forms\Components\Select::make('status')
                     ->label('Trạng thái')
                     ->options([
@@ -56,11 +69,26 @@ class CardResource extends Resource implements HasShieldPermissions
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('card_number')
-                    ->label('Mã số thẻ')
+                    ->label('Số thẻ')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('card_name')
                     ->label('Tên thẻ')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('type')
+                    ->label('Loại thẻ')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'daily' => 'info',
+                        'long_term' => 'warning',
+                    })
+                    ->formatStateUsing(fn (string $state) => match ($state) {
+                        'daily' => 'Thẻ ngày',
+                        'long_term' => 'Thẻ dài hạn',
+                    }),
+                Tables\Columns\TextColumn::make('expiry_date')
+                    ->label('Ngày hết hạn')
+                    ->date()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Trạng thái')
                     ->searchable()

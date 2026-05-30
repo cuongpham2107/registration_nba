@@ -11,6 +11,16 @@ class CreateRegistration extends CreateRecord
 {
     protected static string $resource = RegistrationResource::class;
 
-    
-    
+    protected function afterCreate(): void
+    {
+        if (filled($this->data['fee_id'] ?? null)) {
+            $this->record->customers()->create([
+                'name' => $this->data['customer_name'] ?? '',
+                'papers' => $this->data['papers'] ?? '',
+                'type' => $this->data['paper_type'] ?? 'CCCD',
+                'areas' => $this->data['areas'] ?? [],
+                'license_plate' => $this->data['bks'] ?? '',
+            ]);
+        }
+    }
 }

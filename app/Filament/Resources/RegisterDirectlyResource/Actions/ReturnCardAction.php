@@ -2,17 +2,21 @@
 
 namespace App\Filament\Resources\RegisterDirectlyResource\Actions;
 
+use App\Http\Controllers\InvoiceFee;
 use App\Models\CarCatalog;
 use App\Models\Invoice;
 use App\Models\RegisterDirectly;
 use App\Services\FeeCalculator;
 use Carbon\Carbon;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\MaxWidth;
 use Filament\Tables\Actions\Action;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Livewire\Component;
 
@@ -67,7 +71,7 @@ class ReturnCardAction
                             ->description('Xe này thuộc danh sách thanh toán sau. Không thu phí trực tiếp tại trạm.')
                             ->columnSpanFull()
                             ->schema([
-                                \Filament\Forms\Components\Placeholder::make('vehicle_type_preview')
+                                Placeholder::make('vehicle_type_preview')
                                     ->label('Loại xe / Trọng tải')
                                     ->content(function (RegisterDirectly $record): HtmlString {
                                         $type = $record->fee?->vehicle_type ?: 'Không xác định';
@@ -75,19 +79,17 @@ class ReturnCardAction
                                         return new HtmlString('<div class="flex items-center gap-2 font-bold">'.svg('heroicon-o-truck', 'w-5 h-5 text-gray-500')->toHtml().$type.'</div>');
                                     })
                                     ->columnSpanFull(),
-                                \Filament\Forms\Components\Placeholder::make('note')
+                                Placeholder::make('note')
                                     ->label('Trạng thái')
                                     ->content(new HtmlString('<div class="flex items-center gap-2 font-bold text-success-600">'.svg('heroicon-o-check-circle', 'w-5 h-5')->toHtml().'Xe thu phí trả sau - Không thu tiền</div>'))
                                     ->columnSpanFull(),
-                                \Filament\Forms\Components\Placeholder::make('fee_preview')
+                                Placeholder::make('fee_preview')
                                     ->label('Số tiền: ')
-                                    ->inlineLabel(true)
                                     ->content(function (RegisterDirectly $record): HtmlString {
-                                        $calculator = new FeeCalculator;
-                                        $amount = (int) $calculator->calculateFeePublic($record);
-                                        $formatted = number_format((int) $amount, 0, ',', '.').' đ';
+                                        $amount = FeeCalculator::calculateFee($record);
+                                        $formatted = number_format($amount, 0, ',', '.').' đ';
 
-                                        return new HtmlString('<div class="flex items-center justify-end w-full"><strong class="text-lg text-primary-600">'.$formatted.'</strong></div>');
+                                        return new HtmlString('<div class="flex items-center w-full"><strong class="text-lg text-primary-600">'.$formatted.'</strong></div>');
                                     })
                                     ->columnSpanFull(),
                             ]),
@@ -100,7 +102,7 @@ class ReturnCardAction
                         ->columnSpanFull()
                         ->columns(2)
                         ->schema([
-                            \Filament\Forms\Components\Placeholder::make('entry_time_preview')
+                            Placeholder::make('entry_time_preview')
                                 ->label('Giờ vào')
                                 ->content(function (RegisterDirectly $record): HtmlString {
                                     $date = $record->actual_date_in
@@ -111,7 +113,7 @@ class ReturnCardAction
                                 })
                                 ->columnSpan(1),
 
-                            \Filament\Forms\Components\Placeholder::make('exit_time_preview')
+                            Placeholder::make('exit_time_preview')
                                 ->label('Giờ ra (tạm tính)')
                                 ->content(function (): HtmlString {
                                     $date = Carbon::now('Asia/Ho_Chi_Minh')->format('d/m/Y H:i');
@@ -120,7 +122,7 @@ class ReturnCardAction
                                 })
                                 ->columnSpan(1),
 
-                            \Filament\Forms\Components\Placeholder::make('duration_preview')
+                            Placeholder::make('duration_preview')
                                 ->label('Thời gian (tạm tính)')
                                 ->content(function (RegisterDirectly $record): HtmlString {
                                     if (! $record->actual_date_in) {
@@ -136,7 +138,7 @@ class ReturnCardAction
                                 })
                                 ->columnSpanFull(),
 
-                            \Filament\Forms\Components\Placeholder::make('vehicle_type_preview')
+                            Placeholder::make('vehicle_type_preview')
                                 ->label('Loại xe / Trọng tải')
                                 ->content(function (RegisterDirectly $record): HtmlString {
                                     $type = $record->fee?->vehicle_type ?: 'Không xác định';
@@ -145,15 +147,13 @@ class ReturnCardAction
                                 })
                                 ->columnSpanFull(),
 
-                            \Filament\Forms\Components\Placeholder::make('fee_preview')
+                            Placeholder::make('fee_preview')
                                 ->label('Số tiền: ')
-                                ->inlineLabel(true)
                                 ->content(function (RegisterDirectly $record): HtmlString {
-                                    $calculator = new FeeCalculator;
-                                    $amount = (int) $calculator->calculateFeePublic($record);
-                                    $formatted = number_format((int) $amount, 0, ',', '.').' đ';
+                                    $amount = FeeCalculator::calculateFee($record);
+                                    $formatted = number_format($amount, 0, ',', '.').' đ';
 
-                                    return new HtmlString('<div class="flex items-center justify-end w-full"><strong class="text-lg text-primary-600">'.$formatted.'</strong></div>');
+                                    return new HtmlString('<div class="flex items-center w-full"><strong class="text-lg text-primary-600">'.$formatted.'</strong></div>');
                                 })
                                 ->columnSpanFull(),
                             ToggleButtons::make('payment_method')
@@ -182,8 +182,7 @@ class ReturnCardAction
                             $isPostpaid = $carCatalog && $carCatalog->billing_type === 'postpaid';
 
                             // Tính phí
-                            $calculator = new FeeCalculator;
-                            $feeAmount = $calculator->calculateFeePublic($record);
+                            $feeAmount = FeeCalculator::calculateFee($record);
 
                             // Xác định trạng thái thanh toán dựa trên billing_type
                             $isPaid = false;
@@ -213,10 +212,10 @@ class ReturnCardAction
                             $record->actual_date_out = Carbon::now('Asia/Ho_Chi_Minh');
 
                             // Lưu trữ hóa đơn dưới dạng HTML file
-                            $invoiceHtml = (new \App\Http\Controllers\InvoiceFee)->getInvoiceHtml($record);
+                            $invoiceHtml = (new InvoiceFee)->getInvoiceHtml($record);
                             $fileName = 'invoice_'.$invoiceCode.'_'.time().'.html';
                             $filePath = 'invoices/'.$fileName;
-                            \Illuminate\Support\Facades\Storage::disk('public')->put($filePath, $invoiceHtml);
+                            Storage::disk('public')->put($filePath, $invoiceHtml);
 
                             // Tạo invoice record chính thức
                             $existingInvoice = $record->invoice;
@@ -240,15 +239,13 @@ class ReturnCardAction
                             }
                         }
 
-                        // Update card status to inactive
-                        if ($record->card) {
-                            $record->card->update(['status' => 'inactive']);
-                        }
+                        // Update all cards status to inactive
+                        $record->cards()->update(['status' => 'inactive']);
 
                         // Update registration vehicle status (guard and update safely)
                         if ($record->relationLoaded('registrationVehicle') || $record->registrationVehicle) {
                             $registrationVehicle = $record->registrationVehicle;
-                            if ($registrationVehicle instanceof \Illuminate\Database\Eloquent\Model) {
+                            if ($registrationVehicle instanceof Model) {
                                 $registrationVehicle->status = 'exited';
                                 $registrationVehicle->save();
                             }

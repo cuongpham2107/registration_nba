@@ -4,6 +4,7 @@ namespace App\Filament\Resources\InvoiceResource\Filters;
 
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\Indicator;
@@ -23,10 +24,31 @@ class InvoiceFilter extends Filter
                 TextInput::make('search')
                     ->label('Tìm kiếm')
                     ->placeholder('Mã hóa đơn, tên khách hàng, biển số...')
-                    ->columnSpan(2),
+                    ->columnSpan(1),
+
+                Select::make('payment_status')
+                    ->label('Trạng thái thanh toán')
+                    ->options([
+                        'paid' => 'Đã thanh toán',
+                        'unpaid' => 'Chưa thanh toán',
+                    ])
+                    ->placeholder('Tất cả')
+                    ->columnSpan(1),
+
+                Select::make('invoice_status')
+                    ->label('Trạng thái xuất HĐ')
+                    ->options([
+                        'invoiced' => 'Đã xuất',
+                        'not_invoiced' => 'Chưa xuất',
+                    ])
+                    ->placeholder('Tất cả')
+                    ->columnSpan(1),
+
                 DatePicker::make('created_from')
                     ->label('Từ ngày')
                     ->placeholder('Chọn ngày bắt đầu')
+                    ->native(false)
+                    ->prefixIcon('heroicon-o-calendar')
                     ->format('d/m/Y')
                     ->default(Carbon::now('Asia/Ho_Chi_Minh'))
                     ->columnSpan(1),
@@ -34,10 +56,12 @@ class InvoiceFilter extends Filter
                 DatePicker::make('created_to')
                     ->label('Đến ngày')
                     ->placeholder('Chọn ngày kết thúc')
+                    ->native(false)
+                    ->prefixIcon('heroicon-o-calendar')
                     ->format('d/m/Y')
                     ->columnSpan(1),
             ])
-            ->columns(4)
+            ->columns(5)
             ->columnSpanFull()
             ->query(function (Builder $query, array $data): Builder {
                 return $query
@@ -59,6 +83,18 @@ class InvoiceFilter extends Filter
                                 return $query->where('is_paid', true);
                             } elseif ($status === 'unpaid') {
                                 return $query->where('is_paid', false);
+                            }
+
+                            return $query;
+                        }
+                    )
+                    ->when(
+                        $data['invoice_status'] ?? null,
+                        function (Builder $query, $status) {
+                            if ($status === 'invoiced') {
+                                return $query->where('is_invoiced', true);
+                            } elseif ($status === 'not_invoiced') {
+                                return $query->where('is_invoiced', false);
                             }
 
                             return $query;
@@ -103,6 +139,12 @@ class InvoiceFilter extends Filter
                     $statusText = $data['payment_status'] === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán';
                     $indicators[] = Indicator::make('Trạng thái: '.$statusText)
                         ->removeField('payment_status');
+                }
+
+                if ($data['invoice_status'] ?? null) {
+                    $statusText = $data['invoice_status'] === 'invoiced' ? 'Đã xuất' : 'Chưa xuất';
+                    $indicators[] = Indicator::make('Xuất HĐ: '.$statusText)
+                        ->removeField('invoice_status');
                 }
 
                 if ($data['payment_method'] ?? null) {

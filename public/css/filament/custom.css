@@ -111,6 +111,11 @@ table.fi-ta-table tbody {
     color: #f3f4f6 !important;
 }
 
+/* Light Mode - Table Body */
+.fi-ta-content table.fi-ta-table tbody td {
+    border: 1px solid #e2e8f0 !important;
+}
+
 /* Dark Mode - Table Body */
 .dark .fi-ta-content table.fi-ta-table tbody tr {
     border-bottom: 1px solid #374151 !important;

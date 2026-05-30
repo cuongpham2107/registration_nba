@@ -2,17 +2,23 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\InvoiceExporter;
 use App\Filament\Resources\InvoiceResource\Filters\InvoiceFilter;
 use App\Filament\Resources\InvoiceResource\Pages;
 use App\Models\Invoice;
+use Filament\Actions\Exports\Models\Export;
 use Filament\Forms;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\ActionSize;
 use Filament\Tables;
 use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Storage;
+use Rmsramos\Activitylog\RelationManagers\ActivitylogRelationManager;
 
 class InvoiceResource extends Resource
 {
@@ -40,7 +46,8 @@ class InvoiceResource extends Resource
                             ->maxLength(255)
                             ->unique(ignoreRecord: true)
                             ->placeholder('Tự động tạo nếu để trống')
-                            ->default(fn () => Invoice::generateInvoiceCode()),
+                            ->default(fn () => Invoice::generateInvoiceCode())
+                            ->columnSpan(2),
 
                         Forms\Components\Select::make('register_directly_id')
                             ->label('Đăng ký trực tiếp')
@@ -48,28 +55,22 @@ class InvoiceResource extends Resource
                             ->searchable(['name', 'bks'])
                             ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->name} - {$record->bks}")
                             ->required()
-                            ->columnSpan(1),
+                            ->columnSpan(2),
 
                         Forms\Components\TextInput::make('normalized_license_plate')
                             ->label('Biển số chuẩn hóa')
                             ->maxLength(255)
                             ->placeholder('Tự động chuẩn hóa từ đăng ký')
-                            ->columnSpan(1),
-                    ])
-                    ->columns(2),
+                            ->columnSpan(2),
 
-                Forms\Components\Section::make('Thông tin xe và công ty')
-                    ->schema([
                         Forms\Components\Select::make('car_catalog_id')
                             ->label('Thông tin xe')
                             ->relationship('carCatalog', 'unit')
                             ->searchable(['name', 'license_plate'])
                             ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->name} - {$record->license_plate}")
-                            ->placeholder('Chọn xe từ danh mục'),
-                    ]),
+                            ->placeholder('Chọn xe từ danh mục')
+                            ->columnSpan(2),
 
-                Forms\Components\Section::make('Thông tin thanh toán')
-                    ->schema([
                         Forms\Components\TextInput::make('amount')
                             ->label('Số tiền')
                             ->required()
@@ -83,11 +84,15 @@ class InvoiceResource extends Resource
                         Forms\Components\Toggle::make('is_paid')
                             ->label('Đã thanh toán')
                             ->default(false)
+                            ->inline(false)
                             ->live()
                             ->columnSpan(1),
 
                         Forms\Components\DateTimePicker::make('paid_at')
                             ->label('Thời gian thanh toán')
+                            ->placeholder('Chọn ngày, giờ thanh toán')
+                            ->native(false)
+                            ->prefixIcon('heroicon-o-calendar')
                             ->visible(fn (Forms\Get $get) => $get('is_paid'))
                             ->default(fn (Forms\Get $get) => $get('is_paid') ? now() : null)
                             ->columnSpan(1),
@@ -102,22 +107,43 @@ class InvoiceResource extends Resource
                             ])
                             ->visible(fn (Forms\Get $get) => $get('is_paid'))
                             ->columnSpan(1),
-                    ])
-                    ->columns(2),
 
-                Forms\Components\Section::make('Thông tin bổ sung')
-                    ->schema([
+                        Forms\Components\Toggle::make('is_invoiced')
+                            ->label('Đã xuất hóa đơn')
+                            ->inline(false)
+                            ->default(false)
+                            ->live()
+                            ->columnSpan(1),
+
+                        Forms\Components\DateTimePicker::make('invoiced_at')
+                            ->label('Thời gian xuất hóa đơn')
+                            ->placeholder('Chọn ngày, giờ xuất hóa đơn')
+                            ->native(false)
+                            ->prefixIcon('heroicon-o-calendar')
+                            ->visible(fn (Forms\Get $get) => $get('is_invoiced'))
+                            ->default(fn (Forms\Get $get) => $get('is_invoiced') ? now() : null)
+                            ->columnSpan(1),
+
                         Forms\Components\TextInput::make('file_path')
                             ->label('Đường dẫn file PDF')
                             ->maxLength(255)
                             ->placeholder('Tự động tạo khi xuất hóa đơn')
-                            ->disabled(),
+                            ->columnSpanFull()
+                            ->suffixAction(
+                                Action::make('download_invoice_form')
+                                    ->icon('heroicon-o-inbox-arrow-down')
+                                    ->color('success')
+                                    ->url(fn ($record) => $record->file_path ? asset('storage/'.$record->file_path) : null)
+                                    ->openUrlInNewTab()
+                                    ->visible(fn ($record) => $record->file_path && Storage::disk('public')->exists($record->file_path))
+                            ),
 
                         Forms\Components\Textarea::make('notes')
                             ->label('Ghi chú')
                             ->rows(3)
-                            ->columnSpanFull(),
-                    ]),
+                            ->columnSpan(4),
+                    ])
+                    ->columns(4),
             ]);
     }
 
@@ -202,6 +228,21 @@ class InvoiceResource extends Resource
                     ->sortable()
                     ->placeholder('Chưa thanh toán'),
 
+                Tables\Columns\IconColumn::make('is_invoiced')
+                    ->label('Đã xuất HĐ')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->alignCenter()
+                    ->falseColor('danger'),
+
+                Tables\Columns\TextColumn::make('invoiced_at')
+                    ->label('Thời gian xuất HĐ')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable()
+                    ->placeholder('Chưa xuất'),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Ngày tạo')
                     ->dateTime('d/m/Y H:i')
@@ -212,21 +253,68 @@ class InvoiceResource extends Resource
                 InvoiceFilter::make(),
             ], layout: FiltersLayout::AboveContent)
             ->actions([
-                Tables\Actions\Action::make('download_pdf')
-                    ->tooltip('Tải hoá đơn')
-                    ->iconButton()
-                    ->icon('heroicon-o-inbox-arrow-down')
-                    ->url(fn ($record) => $record->file_path ? asset('storage/'.$record->file_path) : null)
-                    ->openUrlInNewTab()
-                    ->visible(fn ($record) => $record->file_path && Storage::disk('public')->exists($record->file_path)),
-
                 Tables\Actions\EditAction::make()
                     ->modal()
                     ->iconButton()
                     ->tooltip('Xem chi tiết')
                     ->modalHeading('Chỉnh sửa hóa đơn')
                     ->modalDescription('Nhập thông tin hóa đơn cần chỉnh sửa'),
-                // Tables\Actions\DeleteAction::make(),
+
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('mark_invoiced')
+                        ->label('Đã xuất hóa đơn')
+                        ->icon('heroicon-o-document-check')
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->modalHeading('Xác nhận xuất hóa đơn')
+                        ->modalDescription('Bạn có chắc chắn muốn đánh dấu hóa đơn này đã được xuất?')
+                        ->modalSubmitActionLabel('Xác nhận')
+                        ->hidden(fn ($record) => $record->is_invoiced)
+                        ->action(function ($record) {
+                            $record->update([
+                                'is_invoiced' => true,
+                                'invoiced_at' => now(),
+                            ]);
+
+                            Notification::make()
+                                ->title('Đã xuất hóa đơn')
+                                ->success()
+                                ->send();
+                        }),
+
+                    Tables\Actions\Action::make('confirm_payment')
+                        ->label('Xác nhận đã thanh toán')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Xác nhận thanh toán')
+                        ->modalDescription('Bạn có chắc chắn muốn đánh dấu hóa đơn này đã thanh toán?')
+                        ->modalSubmitActionLabel('Xác nhận')
+                        ->hidden(fn ($record) => $record->is_paid)
+                        ->action(function ($record) {
+                            $record->update([
+                                'is_paid' => true,
+                                'paid_at' => now(),
+                                'payment_method' => 'Đơn vị trả tiền',
+                            ]);
+
+                            Notification::make()
+                                ->title('Đã xác nhận thanh toán')
+                                ->success()
+                                ->send();
+                        }),
+
+                    Tables\Actions\Action::make('download_pdf')
+                        ->label('Tải hoá đơn')
+                        ->icon('heroicon-o-inbox-arrow-down')
+                        ->url(fn ($record) => $record->file_path ? asset('storage/'.$record->file_path) : null)
+                        ->openUrlInNewTab()
+                        ->visible(fn ($record) => $record->file_path && Storage::disk('public')->exists($record->file_path)),
+                ])
+                    ->icon('heroicon-m-adjustments-vertical')
+                    ->size(ActionSize::Small)
+                    ->iconButton()
+                    ->color('gray'),
             ], position: ActionsPosition::BeforeColumns)
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -247,25 +335,43 @@ class InvoiceResource extends Resource
                                 ]);
                             });
 
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Đã xác nhận thanh toán')
                                 ->body('Đã cập nhật trạng thái thanh toán cho '.$records->count().' hóa đơn.')
                                 ->success()
                                 ->send();
                         }),
 
-                    Tables\Actions\BulkAction::make('export_excel')
-                        ->label('Xuất Excel')
-                        ->icon('heroicon-o-document-arrow-down')
-                        ->color('primary')
+                    Tables\Actions\BulkAction::make('mark_invoiced')
+                        ->label('Đã xuất hóa đơn')
+                        ->icon('heroicon-o-document-check')
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->modalHeading('Xác nhận xuất hóa đơn')
+                        ->modalDescription('Bạn có chắc chắn muốn đánh dấu các hóa đơn đã chọn là đã xuất?')
+                        ->modalSubmitActionLabel('Xác nhận')
                         ->action(function ($records) {
-                            // Logic xuất Excel sẽ implement sau
-                            \Filament\Notifications\Notification::make()
-                                ->title('Đang chuẩn bị file Excel')
-                                ->body('Chức năng xuất Excel đang được phát triển.')
-                                ->info()
+                            $records->each(function ($record) {
+                                $record->update([
+                                    'is_invoiced' => true,
+                                    'invoiced_at' => now(),
+                                ]);
+                            });
+
+                            Notification::make()
+                                ->title('Đã xuất hóa đơn')
+                                ->body('Đã cập nhật trạng thái xuất hóa đơn cho '.$records->count().' hóa đơn.')
+                                ->success()
                                 ->send();
                         }),
+
+                    Tables\Actions\ExportBulkAction::make()
+                        ->label('Xuất Excel')
+                        ->modalHeading('Xuất Excel hóa đơn')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->color('success')
+                        ->fileName(fn (Export $export): string => "Danh sách hóa đơn-{$export->getKey()}.xlsx")
+                        ->exporter(InvoiceExporter::class),
 
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
@@ -295,7 +401,7 @@ class InvoiceResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \Rmsramos\Activitylog\RelationManagers\ActivitylogRelationManager::class,
+            ActivitylogRelationManager::class,
         ];
     }
 

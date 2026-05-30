@@ -50,13 +50,23 @@ class GiveCardAction
                             ->disabled()
 
                             ->columnSpanFull(),
-                        Forms\Components\Select::make('id')
+                        Forms\Components\Select::make('card_ids')
                             ->label('Thẻ')
-                            ->options(Card::where('status', 'inactive')->get()->pluck('card_name', 'id'))
+                            ->multiple()
+                            ->options(Card::where('status', 'inactive')
+                                ->where(function ($q) {
+                                    $q->whereNull('expiry_date')
+                                        ->orWhere('expiry_date', '>=', now());
+                                })
+                                ->get()
+                                ->pluck('card_name', 'id'))
                             ->searchable(['card_name', 'card_number'])
                             ->preload(),
                         Forms\Components\DateTimePicker::make('start_date')
                             ->label('Giờ vào')
+                            ->placeholder('Chọn ngày, giờ vào')
+                            ->native(false)
+                            ->prefixIcon('heroicon-o-calendar')
                             ->default(now())
                             ->readOnly()
                             ->required(),
@@ -90,17 +100,10 @@ class GiveCardAction
                     $record->status = 'coming_in';
                     $record->actual_date_in = $data['start_date'];
 
-                    // Get and update card
-                    if (!empty($data['id'])) {
-                        $card = Card::where('id', $data['id'])->firstOrFail();
-                        $card->status = 'active';
-                        $card->save();
-
-                        // Assign card to record
-                        $record->card_id = $card->id;
-                    } else {
-                        $record->card_id = null;
-                    }
+                    // Assign selected cards
+                    $cardIds = $data['card_ids'] ?? [];
+                    $record->cards()->sync($cardIds);
+                    Card::whereIn('id', $cardIds)->update(['status' => 'active']);
 
                     // Update registration vehicle status (guard and update safely)
                     if ($record->relationLoaded('registrationVehicle') || $record->registrationVehicle) {

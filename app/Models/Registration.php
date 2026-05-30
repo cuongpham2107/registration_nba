@@ -25,6 +25,10 @@ class Registration extends Model
      */
     protected $guarded = [];
 
+    protected $casts = [
+        'areas' => 'array',
+    ];
+
     public function customers(): HasMany
     {
         return $this->hasMany(Customer::class);
