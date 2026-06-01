@@ -466,6 +466,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
             'create',
             'update',
             'delete',
+            'create_with_fee_registration'
         ];
     }
 }

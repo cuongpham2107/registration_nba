@@ -103,6 +103,7 @@ class ListRegistrations extends ListRecords
                 ->icon('heroicon-o-currency-dollar')
                 ->modalWidth(MaxWidth::SixExtraLarge)
                 ->modalHeading('Tạo đăng ký có phí')
+                ->hidden(fn () => !auth()->user()->can('create_with_fee_registration_registration'))
                 ->form([
                     Section::make('Thông tin đăng ký')
                         ->description('Thông tin khách hàng và phương tiện')
