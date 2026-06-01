@@ -195,8 +195,12 @@
 
             <!-- QR Code large -->
             <div class="ticket-qr">
-                <img src="https://qr.sepay.vn/img?acc=113604245888&bank=ICB&amount={{ $fee ?? 0 }}&des={{ urlencode(($vehicle_number ?? '') . ' thanh toan tien ve xe') }}"
-                    style="width: 35mm; height: 35mm;" />
+                
+                     <div style="width: 35mm; height: 35mm; background: #f3f4f6; border: 1px solid #d1d5db; position: relative; display: flex; align-items: center; justify-content: center;">
+                    <div style="position: absolute; width: 100%; height: 2px; background: #9ca3af;"></div>
+                    <div style="position: absolute; width: 100%; height: 2px; background: #9ca3af;"></div>
+                    <div style="font-size: 8pt; color: #6b7280; text-align: center;">Chưa có tài khoản ngân hàng</div>
+                </div>
                 <div class="text-[8px] italic">({{ $vehicle_number ?? '' }} thanh toan tien ve xe)</div>
             </div>
 

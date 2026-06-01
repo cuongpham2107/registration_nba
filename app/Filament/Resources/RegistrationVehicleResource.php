@@ -150,7 +150,7 @@ class RegistrationVehicleResource extends Resource
                         })
                         ->dehydrated(false) // Don't save this field directly
                         ->addActionLabel('Thêm số HAWB')
-                        ->addable(false)
+                        // ->addable(false)
                         ->reorderable(false)
                         ->emptyLabel('Chưa có HAWB nào được thêm')
                         ->minItems(0)
@@ -162,6 +162,19 @@ class RegistrationVehicleResource extends Resource
                         ->prefixIcon('heroicon-o-calendar')
                         ->seconds(false)
                         ->required()
+                        ->columnSpanFull(),
+                    Forms\Components\Select::make('status')
+                        ->label('Trạng thái')
+                        ->options([
+                            'none' => 'Chưa gửi',
+                            'sent' => 'Cần duyệt',
+                            'approve' => 'Đã phê duyệt',
+                            'entering' => 'Đang vào',
+                            'exited' => 'Đã ra',
+                            'reject' => 'Từ chối',
+                        ])
+                        ->default('none')
+                        ->hidden(fn () => !auth()->user()->hasRole('super_admin'))
                         ->columnSpanFull(),
                     Forms\Components\Textarea::make('notes')
                         ->label('Ghi chú')

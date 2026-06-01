@@ -53,8 +53,9 @@ class ReturnCardAction
                 $record->status === 'came_out'
             )
             ->form(function (RegisterDirectly $record) {
+                // dd(config('registration.is_price', false));
                 // Nếu IS_PRICE trong env là false thì không hiển thị phần thông tin phí tạm tính.
-                if (env('IS_PRICE', false) === false) {
+                if (! config('registration.is_price', false)) {
                     return [];
                 }
                 if ($record->type !== 'vehicle') {
@@ -163,7 +164,7 @@ class ReturnCardAction
                                     'Tiền mặt' => 'Tiền mặt',
                                     'Chuyển khoản' => 'Chuyển khoản',
                                 ])
-                                ->default('Chuyển khoản')
+                                ->default('Tiền mặt')
                                 ->required()
                                 ->columnSpanFull(),
                         ]),
@@ -175,7 +176,7 @@ class ReturnCardAction
                     $shouldDownloadInvoice = true;
 
                     DB::transaction(function () use ($record, $data, &$shouldDownloadInvoice) {
-                        if ($record->type === 'vehicle' && env('IS_PRICE', false) !== false) {
+                        if ($record->type === 'vehicle' && config('registration.is_price', false)) {
                             // Chuẩn hóa biển số và tìm car_catalog
                             $normalizedBks = Invoice::normalizeLicensePlate($record->bks);
                             $carCatalog = CarCatalog::where('license_plate', $normalizedBks)->first();
@@ -263,7 +264,7 @@ class ReturnCardAction
                         ->success();
 
                     if ($record->type === 'vehicle') {
-                        if (env('IS_PRICE', false) !== false) {
+                        if (config('registration.is_price', false)) {
                             if ($shouldDownloadInvoice) {
                                 // Tạo URL download cho PDF invoice - TODO: verify route exists
                                 $downloadUrl = route('invoice.download', [
