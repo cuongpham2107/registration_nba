@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Closure;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\ViewField;
@@ -67,6 +68,10 @@ class UserResource extends Resource implements HasShieldPermissions
                             ->label('Địa chỉ Email')
                             ->prefixIcon('heroicon-o-envelope')
                             ->required()
+                            ->unique(ignoreRecord: true)
+                            ->validationMessages([
+                                'unique' => 'Email này đã được sử dụng bởi tài khoản khác. Vui lòng chọn email khác.',
+                            ])
                             ->columnSpan([
                                 'sm' => 1,
                                 'md' => 2,

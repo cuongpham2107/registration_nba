@@ -24,6 +24,7 @@ use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\MaxWidth;
 use Filament\Tables;
 use Filament\Tables\Actions\ExportBulkAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
@@ -228,12 +229,11 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     ->label('Họ và tên')
                     ->formatStateUsing(
                         fn (RegisterDirectly $record): string => isset(explode('|', $record->name)[0]) ? trim(explode('|', mb_convert_case($record->name, MB_CASE_TITLE, 'UTF-8'))[0]) : mb_convert_case($record->name, MB_CASE_TITLE, 'UTF-8')
-
                     )
                     ->description(function (RegisterDirectly $record): string {
                         $parts = explode('|', $record->name);
-
-                        return isset($parts[1]) ? trim($parts[1]) : '';
+                        $text = isset($parts[1]) ? trim($parts[1]) : '';
+                        return mb_strimwidth($text, 0, 15, '...');
                     })
                     ->weight(FontWeight::Bold)
                     ->toggleable(),
