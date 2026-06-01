@@ -258,6 +258,7 @@ class InvoiceResource extends Resource
                     ->iconButton()
                     ->tooltip('Xem chi tiết')
                     ->modalHeading('Chỉnh sửa hóa đơn')
+                    ->modalWidth('6xl')
                     ->modalDescription('Nhập thông tin hóa đơn cần chỉnh sửa'),
 
                 Tables\Actions\ActionGroup::make([
