@@ -234,7 +234,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->columnSpan(2),
                 Select::make('fee_id')
                     ->label('Loại xe, trọng tải')
-                    ->options(\App\Models\Fee::pluck('vehicle_type', 'id'))
+                    ->options(\App\Models\Fee::pluck('ticket_code', 'id'))
                     ->required()
                     ->extraAttributes(['class' => '!bg-gray-100'])
                     ->columnSpan(2)

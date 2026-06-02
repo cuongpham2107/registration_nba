@@ -55,7 +55,7 @@ class CardPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('{{ DeleteAny }}');
+        return $user->can('delete_any_card');
     }
 
     /**

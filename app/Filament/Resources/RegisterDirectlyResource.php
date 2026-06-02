@@ -80,7 +80,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->label('Loại xe / Mức phí')
                             ->relationship(
                                 name: 'fee',
-                                titleAttribute: 'vehicle_type',
+                                titleAttribute: 'ticket_code',
                             )
                             ->hidden(fn (?Model $record) => $record?->type !== 'vehicle')
                             ->searchable(['vehicle_type', 'ticket_code'])

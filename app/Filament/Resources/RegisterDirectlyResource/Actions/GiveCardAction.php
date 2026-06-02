@@ -45,7 +45,7 @@ class GiveCardAction
                             ->disabled(),
                         Forms\Components\TextInput::make('fee_id')
                             ->label('Trọng tải')
-                            ->default(fn (RegisterDirectly $record) => $record?->fee?->vehicle_type)
+                            ->default(fn (RegisterDirectly $record) => $record?->fee?->ticket_code)
                             ->hidden(fn (RegisterDirectly $record) => $record->type !== 'vehicle')
                             ->disabled()
 

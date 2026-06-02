@@ -22,7 +22,7 @@ class InvoiceExporter extends Exporter
                 ->label('Tên khách hàng'),
             ExportColumn::make('normalized_license_plate')
                 ->label('Biển số xe'),
-            ExportColumn::make('registerDirectly.fee.vehicle_type')
+            ExportColumn::make('registerDirectly.fee.ticket_code')
                 ->label('Loại vé / Trọng tải'),
             ExportColumn::make('registerDirectly.actual_date_in')
                 ->label('Giờ vào'),

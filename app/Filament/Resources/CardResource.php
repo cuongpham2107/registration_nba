@@ -50,8 +50,7 @@ class CardResource extends Resource implements HasShieldPermissions
                     ->placeholder('Chọn ngày hết hạn')
                     ->native(false)
                     ->prefixIcon('heroicon-o-calendar')
-                    ->visible(fn (Forms\Get $get) => $get('type') === 'long_term')
-                    ->required(fn (Forms\Get $get) => $get('type') === 'long_term'),
+                    ->required(),
                 Forms\Components\Select::make('status')
                     ->label('Trạng thái')
                     ->options([
@@ -110,6 +109,7 @@ class CardResource extends Resource implements HasShieldPermissions
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->modalHeading('Chỉnh sửa thẻ'),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -142,6 +142,7 @@ class CardResource extends Resource implements HasShieldPermissions
             'create',
             'update',
             'delete',
+            'delete_any',
         ];
     }
 }

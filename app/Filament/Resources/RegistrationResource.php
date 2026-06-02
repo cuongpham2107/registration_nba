@@ -76,7 +76,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ]),
                 Forms\Components\Select::make('fee_id')
                     ->label('Trọng tải')
-                    ->options(Fee::all()->pluck('vehicle_type', 'id'))
+                    ->options(Fee::all()->pluck('ticket_code', 'id'))
                     ->searchable()
                     ->preload()
                     ->reactive()

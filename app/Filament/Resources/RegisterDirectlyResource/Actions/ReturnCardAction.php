@@ -75,7 +75,7 @@ class ReturnCardAction
                                 Placeholder::make('vehicle_type_preview')
                                     ->label('Loại xe / Trọng tải')
                                     ->content(function (RegisterDirectly $record): HtmlString {
-                                        $type = $record->fee?->vehicle_type ?: 'Không xác định';
+                                        $type = $record->fee?->ticket_code ?: 'Không xác định';
 
                                         return new HtmlString('<div class="flex items-center gap-2 font-bold">'.svg('heroicon-o-truck', 'w-5 h-5 text-gray-500')->toHtml().$type.'</div>');
                                     })
@@ -142,7 +142,7 @@ class ReturnCardAction
                             Placeholder::make('vehicle_type_preview')
                                 ->label('Loại xe / Trọng tải')
                                 ->content(function (RegisterDirectly $record): HtmlString {
-                                    $type = $record->fee?->vehicle_type ?: 'Không xác định';
+                                    $type = $record->fee?->ticket_code ?: 'Không xác định';
 
                                     return new HtmlString('<div class="flex items-center gap-2 font-bold">'.svg('heroicon-o-truck', 'w-5 h-5 text-gray-500')->toHtml().$type.'</div>');
                                 })
