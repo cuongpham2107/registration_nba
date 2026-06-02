@@ -245,6 +245,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     ->label('Biển kiểm soát')
                     ->weight(FontWeight::Bold)
                     ->formatStateUsing(fn (?string $state): string => $state ? strtoupper($state) : '')
+                    ->description(fn (?Model $record) => $record?->fee ? "{$record->fee->ticket_code}" : '')
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('areas')
@@ -352,7 +353,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->alignment(Alignment::Center)
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('sort', 'asc')
             ->filters([
