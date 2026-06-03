@@ -158,7 +158,7 @@ class RegistrationVehicleResource extends Resource
                     Forms\Components\DateTimePicker::make('expected_in_at')
                         ->label('Thời gian vào dự kiến')
                         ->placeholder('Chọn ngày, giờ vào dự kiến')
-                        ->native(false)
+                        ->native(true)
                         ->prefixIcon('heroicon-o-calendar')
                         ->seconds(false)
                         ->required()

@@ -42,7 +42,7 @@ class BlackListResource extends Resource
                 Forms\Components\DateTimePicker::make('blacklisted_at')
                     ->label('Thời gian thêm vào danh sách đen')
                     ->placeholder('Chọn ngày, giờ')
-                    ->native(false)
+                    ->native(true)
                     ->prefixIcon('heroicon-o-calendar'),
                 Forms\Components\Toggle::make('is_active')
                     ->required(),

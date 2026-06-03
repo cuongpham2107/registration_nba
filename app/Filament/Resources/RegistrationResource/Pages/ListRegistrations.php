@@ -143,7 +143,7 @@ class ListRegistrations extends ListRecords
                                 ->label('Giờ vào dự kiến')
                                 ->placeholder('Chọn ngày, giờ vào dự kiến')
                                 ->prefixIcon('heroicon-o-calendar')
-                                ->native(false)
+                                ->native(true)
                                 ->required()
                                 ->columnSpan(3),
                             DateTimePicker::make('end_date')
@@ -152,7 +152,7 @@ class ListRegistrations extends ListRecords
                                 ->seconds(false)
                                 ->label('Giờ ra dự kiến')
                                 ->placeholder('Chọn ngày, giờ kết thúc dự kiến')
-                                ->native(false)
+                                ->native(true)
                                 ->prefixIcon('heroicon-o-calendar')
                                 ->required()
                                 ->rules([

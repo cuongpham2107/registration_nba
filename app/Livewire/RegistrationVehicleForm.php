@@ -238,10 +238,10 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->required()
                     ->extraAttributes(['class' => '!bg-gray-100'])
                     ->columnSpan(2)
-                    ->native(false),
+                    ->native(true),
                 Select::make('name')
                     ->label('Tên đơn vị')
-                    ->native(false)
+                    ->native(true)
                     ->multiple()
                     ->extraAttributes(['class' => '!bg-gray-100 dark:!bg-gray-700 dark:!text-white dark:!border-gray-600'])
                     ->options(HawbService::getListAgentApi())
@@ -365,7 +365,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->label('Thời gian vào dự kiến')
                     ->placeholder('Chọn ngày, giờ vào dự kiến')
                     ->required()
-                    ->native(false)
+                    ->native(true)
                     ->prefixIcon('heroicon-o-calendar')
                     ->extraAttributes(['class' => '!bg-gray-100 dark:!bg-gray-700 dark:!text-white dark:!border-gray-600'])
                     ->seconds(false)

@@ -141,7 +141,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->seconds(false)
                             ->label('Giờ vào')
                             ->placeholder('Chọn ngày, giờ vào')
-                            ->native(false)
+                            ->native(true)
                             ->prefixIcon('heroicon-o-calendar')
                             ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
                             ->required(),
@@ -150,7 +150,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->seconds(false)
                             ->label('Giờ ra dự kiến')
                             ->placeholder('Chọn ngày, giờ kết thúc dự kiến')
-                            ->native(false)
+                            ->native(true)
                             ->prefixIcon('heroicon-o-calendar')
                             ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
                             ->rules([
@@ -178,7 +178,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->seconds(false)
                             ->readonly()
                             ->placeholder('Chọn ngày, giờ vào thực tế')
-                            ->native(false),
+                            ->native(true),
                         Forms\Components\DateTimePicker::make('actual_date_out')
                             ->label('Giờ ra thực tế')
                             ->displayFormat('d/m/Y H:i')
@@ -186,7 +186,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->seconds(false)
                             ->readonly()
                             ->placeholder('Chọn ngày, giờ ra thực tế')
-                            ->native(false),
+                            ->native(true),
                         Forms\Components\Select::make('status')
                             ->options([
                                 'coming_in' => 'Đang vào',

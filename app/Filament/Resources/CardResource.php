@@ -48,7 +48,7 @@ class CardResource extends Resource implements HasShieldPermissions
                 Forms\Components\DatePicker::make('expiry_date')
                     ->label('Ngày hết hạn')
                     ->placeholder('Chọn ngày hết hạn')
-                    ->native(false)
+                    ->native(true)
                     ->prefixIcon('heroicon-o-calendar')
                     ->required(),
                 Forms\Components\Select::make('status')

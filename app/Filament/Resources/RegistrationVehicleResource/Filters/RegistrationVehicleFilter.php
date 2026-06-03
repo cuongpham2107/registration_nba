@@ -39,13 +39,13 @@ class RegistrationVehicleFilter extends Filter
                 DatePicker::make('start_date')
                     ->label('Từ ngày')
                     ->placeholder('Chọn ngày bắt đầu')
-                    ->native(false)
+                    ->native(true)
                     ->prefixIcon('heroicon-o-calendar')
                     ->format('d-m-Y'),
                 DatePicker::make('end_date')
                     ->label('Đến ngày')
                     ->placeholder('Chọn ngày kết thúc')
-                    ->native(false)
+                    ->native(true)
                     ->prefixIcon('heroicon-o-calendar')
                     ->format('d-m-Y'),
                 Toggle::make('is_priority')

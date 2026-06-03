@@ -65,7 +65,7 @@ class GiveCardAction
                         Forms\Components\DateTimePicker::make('start_date')
                             ->label('Giờ vào')
                             ->placeholder('Chọn ngày, giờ vào')
-                            ->native(false)
+                            ->native(true)
                             ->prefixIcon('heroicon-o-calendar')
                             ->default(now())
                             ->readOnly()

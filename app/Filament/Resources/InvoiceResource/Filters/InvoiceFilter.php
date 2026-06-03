@@ -47,7 +47,7 @@ class InvoiceFilter extends Filter
                 DatePicker::make('created_from')
                     ->label('Từ ngày')
                     ->placeholder('Chọn ngày bắt đầu')
-                    ->native(false)
+                    ->native(true)
                     ->prefixIcon('heroicon-o-calendar')
                     ->format('d/m/Y')
                     ->default(Carbon::now('Asia/Ho_Chi_Minh'))
@@ -56,7 +56,7 @@ class InvoiceFilter extends Filter
                 DatePicker::make('created_to')
                     ->label('Đến ngày')
                     ->placeholder('Chọn ngày kết thúc')
-                    ->native(false)
+                    ->native(true)
                     ->prefixIcon('heroicon-o-calendar')
                     ->format('d/m/Y')
                     ->columnSpan(1),
