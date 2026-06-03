@@ -52,25 +52,22 @@ class ListRegistrations extends ListRecords
                         ->label('Tạo và gửi phê duyệt')
                         ->color('success')
                         ->icon('heroicon-m-envelope')
-                        ->hidden(fn () => ! Auth::user() || Auth::user()->hasRole('approver')), // Ẩn nút này nếu là approver
+                        ->hidden(fn () => ! Auth::user() || Auth::user()->hasRole('approver') || Auth::user()->hasRole('super_admin')),
                 ])
                 ->mutateFormDataUsing(function (array $data): array {
                     $user = Auth::user();
                     if ($user) {
                         $data['user_id'] = $user->id;
-                        // Nếu là approver thì gắn approver_id = chính tài khoản đó
-                        if ($user->hasRole('approver')) {
+                        if ($user->hasRole('approver') || $user->hasRole('super_admin')) {
                             $data['approver_id'] = $user->id;
                         }
-                        // Không phải approver thì chỉ gắn user_id, không set approver_id
                     }
 
                     return $data;
                 })
                 ->after(function (Registration $record, Actions\CreateAction $action): void {
                     $user = Auth::user();
-                    // Nếu là approver: tạo bản ghi trực tiếp và duyệt luôn
-                    if ($user && $user->hasRole('approver')) {
+                    if ($user && ($user->hasRole('approver') || $user->hasRole('super_admin'))) {
                         try {
                             (new RegistrationService)->createRegistrationDirectly($record, $record->fee_id ? 'vehicle' : 'passenger');
                             $record->type = 'browse';
@@ -196,12 +193,22 @@ class ListRegistrations extends ListRecords
                         ]),
 
                 ])
+                ->mutateFormDataUsing(function (array $data): array {
+                    $user = Auth::user();
+                    if ($user) {
+                        $data['user_id'] = $user->id;
+                        if ($user->hasRole('approver') || $user->hasRole('super_admin')) {
+                            $data['approver_id'] = $user->id;
+                        }
+                    }
+                    return $data;
+                })
                 ->extraModalFooterActions(fn (Actions\Action $action): array => [
                     $action->makeModalSubmitAction('createWithFee', arguments: ['send_mail' => true])
                         ->label('Tạo và gửi phê duyệt')
                         ->color('success')
                         ->icon('heroicon-m-envelope')
-                        ->hidden(fn () => ! Auth::user() || Auth::user()->hasRole('approver')), // Ẩn nút này nếu là approver
+                        ->hidden(fn () => ! Auth::user() || Auth::user()->hasRole('approver') || Auth::user()->hasRole('super_admin')),
                 ])
                 ->action(function (array $data, Actions\Action $action): void {
                     try {
@@ -216,7 +223,7 @@ class ListRegistrations extends ListRecords
                                 'note' => $data['note'] ?? null,
                                 'status' => 'not_yet_sent',
                                 'user_id' => $data['user_id'] ?? Auth::id(),
-                                'approver_id' => $user->hasRole('approver') ? $data['approver_id'] ?? null : null,
+                                'approver_id' => $data['approver_id'] ?? null,
                             ]);
 
                             $registration->customers()->create([
@@ -227,7 +234,7 @@ class ListRegistrations extends ListRecords
                                 'license_plate' => $data['bks'] ?? '',
                                 'note' => $data['note'] ?? null,
                             ]);
-                            if ($user && $user->hasRole('approver')) {
+                            if ($user && ($user->hasRole('approver') || $user->hasRole('super_admin'))) {
                                 (new RegistrationService)->createRegistrationDirectly($registration, $registration->fee_id ? 'vehicle' : 'passenger');
                                 $registration->update([
                                     'type' => 'browse',

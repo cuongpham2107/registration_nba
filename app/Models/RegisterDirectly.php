@@ -49,6 +49,11 @@ class RegisterDirectly extends Model
         return $this->hasOne(Invoice::class);
     }
 
+    public function registration()
+    {
+        return $this->belongsTo(Registration::class);
+    }
+
     protected $casts = [
         'areas' => 'array',
     ];

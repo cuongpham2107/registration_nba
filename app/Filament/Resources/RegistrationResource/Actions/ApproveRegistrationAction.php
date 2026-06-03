@@ -50,6 +50,7 @@ class ApproveRegistrationAction
                 $record->update([
                     'type' => 'browse',
                     'type_date' => now(),
+                    'approver_id' => $record->approver_id ?? auth()->id(),
                 ]);
 
                 (new RegistrationService)->createRegistrationDirectly($record, $record->fee_id ? 'vehicle' : 'passenger');

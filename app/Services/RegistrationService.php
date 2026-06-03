@@ -30,6 +30,7 @@ class RegistrationService
                 'start_date' => $startOfDay,
                 'end_date' => $endOfDay,
                 'status' => 'none',
+                'registration_id' => $registration->id,
             ];
 
             if ($registration->fee_id) {

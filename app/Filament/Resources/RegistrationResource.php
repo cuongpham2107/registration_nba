@@ -110,7 +110,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ->seconds(false)
                     ->label('Giờ vào dự kiến')
                     ->required()
-                    ->native(false)
+                    ->native(true)
                     ->prefixIcon('heroicon-o-calendar')
                     ->columnSpan([
                         'sm' => 1,
@@ -124,7 +124,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                     ->seconds(false)
                     ->label('Giờ ra dự kiến')
                     ->required()
-                    ->native(false)
+                    ->native(true)
                     ->prefixIcon('heroicon-o-calendar')
                     ->rules([
                         fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
@@ -466,7 +466,7 @@ class RegistrationResource extends Resource implements HasShieldPermissions
             'create',
             'update',
             'delete',
-            'create_with_fee_registration'
+            'create_with_fee_registration',
         ];
     }
 }

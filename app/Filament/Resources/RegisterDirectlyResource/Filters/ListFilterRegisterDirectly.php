@@ -37,6 +37,7 @@ class ListFilterRegisterDirectly extends Filter
                             ->options([
                                 'none' => 'Chờ vào',
                                 'coming_in' => 'Đang vào',
+                                'temporary_out' => 'Ra tạm thời',
                                 'came_out' => 'Đã ra'
                             ]),
                         
@@ -97,7 +98,7 @@ class ListFilterRegisterDirectly extends Filter
                             
                             // Xác định cột ngày để lọc dựa vào trạng thái
                             $dateColumn = 'start_date';
-                            if ($status === 'came_out') {
+                            if ($status === 'came_out' || $status === 'temporary_out') {
                                 // Lọc theo ngày ra
                                 return $query->where(function ($q) use ($startDate, $endDate) {
                                     if ($startDate && !$endDate) {
@@ -144,6 +145,7 @@ class ListFilterRegisterDirectly extends Filter
                     $statusText = match ($data['status']) {
                         'none' => 'Chờ vào',
                         'coming_in' => 'Đang vào',
+                        'temporary_out' => 'Ra tạm thời',
                         'came_out' => 'Đã ra',
                         default => $data['status'],
                     };

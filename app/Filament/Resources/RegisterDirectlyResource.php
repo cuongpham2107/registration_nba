@@ -9,6 +9,7 @@ use App\Filament\Resources\RegisterDirectlyResource\Filters\ListFilterRegisterDi
 use App\Filament\Resources\RegisterDirectlyResource\Pages;
 use App\Models\Area;
 use App\Models\RegisterDirectly;
+use App\Models\RegistrationVehicle;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Carbon\Carbon;
 use Closure;
@@ -100,9 +101,12 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->label('Mục đích công việc')
                             ->rows(5),
                     ])->columnSpan(1),
-                Section::make('Thông tin thẻ')
+                Forms\Components\Group::make()
+                    ->columnSpan(1)
                     ->schema([
-                        Forms\Components\Select::make('cards')
+                        Section::make('Thông tin thẻ')
+                            ->schema([
+                                Forms\Components\Select::make('cards')
                             ->label('Thẻ')
                             ->multiple()
                             ->columnSpanFull()
@@ -186,6 +190,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                         Forms\Components\Select::make('status')
                             ->options([
                                 'coming_in' => 'Đang vào',
+                                'temporary_out' => 'Ra tạm thời',
                                 'came_out' => 'Đã ra',
                             ])
                             ->default('coming_in')
@@ -194,7 +199,19 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             // ->required()
                             ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
                             ->columnSpanFull(),
-                    ])->columnSpan(1)->columns(2),
+                    ])->columns(2),
+                    Section::make('Thông tin phê duyệt')
+                        ->schema([
+                            Forms\Components\Placeholder::make('approved_by')
+                                ->label('Người phê duyệt')
+                                ->content(fn (?RegisterDirectly $record): string => self::getApproverName($record)),
+                            Forms\Components\Placeholder::make('approved_at')
+                                ->label('Thời gian phê duyệt')
+                                ->content(fn (?RegisterDirectly $record): string => self::getApprovedAt($record)),
+                        ])
+                        ->hidden(fn (?RegisterDirectly $record): bool => ! self::hasApproval($record))
+                        ->columns(2),
+                    ]),
             ])->columns(2);
     }
 
@@ -267,8 +284,9 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             return $query->orderByRaw(
                                 "CASE status
                                     WHEN 'coming_in' THEN 1
-                                    WHEN 'came_out' THEN 2
-                                    ELSE 3
+                                    WHEN 'temporary_out' THEN 2
+                                    WHEN 'came_out' THEN 3
+                                    ELSE 4
                                 END {$direction}"
                             );
                         }
@@ -281,6 +299,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
 
                         return match ($state) {
                             'coming_in' => 'danger',
+                            'temporary_out' => 'warning',
                             'came_out' => 'primary',
                         };
                     })
@@ -291,6 +310,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
 
                         return match ($state) {
                             'coming_in' => 'Đang vào',
+                            'temporary_out' => 'Ra tạm thời',
                             'came_out' => 'Đã ra',
                         };
                     })
@@ -445,5 +465,52 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
             'delete',
             'delete_any',
         ];
+    }
+
+    private static function resolveApprovalVehicle(?RegisterDirectly $record): ?RegistrationVehicle
+    {
+        if (! $record) return null;
+
+        return $record->registrationVehicle
+            ?? RegistrationVehicle::where('id_registration_directly', $record->id)->first();
+    }
+
+    public static function hasApproval(?RegisterDirectly $record): bool
+    {
+        if (! $record) return false;
+
+        if ($record->registration?->type || $record->registration?->approver) return true;
+
+        return (bool) self::resolveApprovalVehicle($record)?->approver;
+    }
+
+    public static function getApproverName(?RegisterDirectly $record): string
+    {
+        if (! $record) return 'Chưa phê duyệt';
+
+        if ($record->registration?->approver) {
+            return $record->registration->approver->name;
+        }
+
+        if ($record->registration?->type) {
+            return $record->registration->type === 'browse' ? 'Đã duyệt' : 'Đã từ chối';
+        }
+
+        return self::resolveApprovalVehicle($record)?->approver?->name ?? 'Chưa phê duyệt';
+    }
+
+    public static function getApprovedAt(?RegisterDirectly $record): string
+    {
+        if (! $record) return 'Chưa phê duyệt';
+
+        if ($record->registration?->type_date) {
+            return Carbon::parse($record->registration->type_date)->format('d/m/Y H:i');
+        }
+
+        $vehicle = self::resolveApprovalVehicle($record);
+
+        return $vehicle?->approved_at
+            ? Carbon::parse($vehicle->approved_at)->format('d/m/Y H:i')
+            : 'Chưa phê duyệt';
     }
 }

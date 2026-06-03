@@ -43,6 +43,7 @@ class RefuseRegistrationAction
                 $record->update([
                     'type' => 'refuse',
                     'type_date' => now(),
+                    'approver_id' => $record->approver_id ?? auth()->id(),
                 ]);
 
                 Notification::make()

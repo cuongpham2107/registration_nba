@@ -47,8 +47,9 @@ class ListRegisterDirectlies extends ListRecords
                 CASE 
                     WHEN status = 'none' OR status IS NULL OR status = '' THEN 0 
                     WHEN status = 'coming_in' THEN 1
-                    WHEN status = 'came_out' THEN 2
-                    ELSE 3 
+                    WHEN status = 'temporary_out' THEN 2
+                    WHEN status = 'came_out' THEN 3
+                    ELSE 4 
                 END ASC,
                 is_priority DESC,
                 sort ASC,
@@ -59,8 +60,9 @@ class ListRegisterDirectlies extends ListRecords
                 CASE 
                     WHEN status = 'none' OR status IS NULL OR status = '' THEN 0 
                     WHEN status = 'coming_in' THEN 1
-                    WHEN status = 'came_out' THEN 2
-                    ELSE 3 
+                    WHEN status = 'temporary_out' THEN 2
+                    WHEN status = 'came_out' THEN 3
+                    ELSE 4 
                 END ASC,
                 created_at DESC
             ");

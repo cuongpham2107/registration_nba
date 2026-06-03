@@ -50,15 +50,26 @@ class ReturnCardAction
                 fn (RegisterDirectly $record) => is_null($record->status) ||
                 $record->status === 'none' ||
                 $record->status === '' ||
-                $record->status === 'came_out'
+                $record->status === 'came_out' ||
+                $record->status === 'temporary_out'
             )
             ->form(function (RegisterDirectly $record) {
-                // dd(config('registration.is_price', false));
-                // Nếu IS_PRICE trong env là false thì không hiển thị phần thông tin phí tạm tính.
-                if (! config('registration.is_price', false)) {
-                    return [];
-                }
                 if ($record->type !== 'vehicle') {
+                    return [
+                        ToggleButtons::make('exit_type')
+                            ->label('Loại ra')
+                            ->options([
+                                'came_out' => 'Ra hẳn',
+                                'temporary_out' => 'Ra tạm thời',
+                            ])
+                            ->default('came_out')
+                            ->grouped()
+                            ->required()
+                            ->columnSpanFull(),
+                    ];
+                }
+
+                if (! config('registration.is_price', false)) {
                     return [];
                 }
 
@@ -168,11 +179,39 @@ class ReturnCardAction
                                 ->required()
                                 ->columnSpanFull(),
                         ]),
-
                 ];
             })
             ->action(function (RegisterDirectly $record, array $data, Component $livewire): void {
                 try {
+                    $exitType = $data['exit_type'] ?? 'came_out';
+
+                    if ($exitType === 'temporary_out') {
+                        DB::transaction(function () use ($record) {
+                            $record->cards()->update(['status' => 'inactive']);
+
+                            if ($record->relationLoaded('registrationVehicle') || $record->registrationVehicle) {
+                                $registrationVehicle = $record->registrationVehicle;
+                                if ($registrationVehicle instanceof Model) {
+                                    $registrationVehicle->status = 'exited';
+                                    $registrationVehicle->save();
+                                }
+                            }
+
+                            $record->update([
+                                'status' => 'temporary_out',
+                                'actual_date_out' => Carbon::now('Asia/Ho_Chi_Minh'),
+                            ]);
+                        });
+
+                        Notification::make()
+                            ->title('Thành công')
+                            ->body($record->type === 'vehicle' ? 'Xe ra tạm thời, thẻ đã được trả lại.' : 'Khách ra tạm thời, thẻ đã được trả lại.')
+                            ->success()
+                            ->send();
+
+                        return;
+                    }
+
                     $shouldDownloadInvoice = true;
 
                     DB::transaction(function () use ($record, $data, &$shouldDownloadInvoice) {

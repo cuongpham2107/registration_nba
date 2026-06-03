@@ -54,6 +54,7 @@ class RegisterDirectlyExporter extends Exporter
                 ->label('Trạng thái')
                 ->formatStateUsing(fn (?string $state): string => match ($state) {
                     'coming_in' => 'Đang vào',
+                    'temporary_out' => 'Ra tạm thời',
                     'came_out' => 'Đã ra',
                     default => 'Chưa vào',
                 }),
