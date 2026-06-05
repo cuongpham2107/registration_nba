@@ -117,6 +117,7 @@ class RegistrationService
                     'note' => $record->note,
                     'sender' => $record->user->name ?? 'N/A',
                     'customers' => $customers,
+                    'approver_id' => $approver->id,
                     'name_manager' => $approver->name,
                     'job_title_manager' => $approver->department_name ?? '',
                 ];

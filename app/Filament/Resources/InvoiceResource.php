@@ -377,11 +377,10 @@ class InvoiceResource extends Resource
             ->persistSortInSession()
             ->deferLoading()
             ->extremePaginationLinks()
-            ->paginated([25, 50, 100, 'all'])
+            ->paginated([25, 50, 100])
             ->defaultPaginationPageOption(25)
             ->recordUrl(null)
             ->recordAction(null)
-            ->selectCurrentPageOnly()
             ->searchOnBlur()
             ->searchDebounce('500ms');
     }

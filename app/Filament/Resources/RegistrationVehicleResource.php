@@ -23,6 +23,7 @@ use Filament\Support\Enums\Alignment;
 use Filament\Tables;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class RegistrationVehicleResource extends Resource
 {
@@ -235,6 +236,7 @@ class RegistrationVehicleResource extends Resource
                 Tables\Columns\TextColumn::make('vehicle_number')
                     ->label('Biển số xe')
                     ->formatStateUsing(fn (string $state): string => strtoupper(str_replace(' ', '', $state)))
+                    ->description(fn (?Model $record) => $record?->fee ? "{$record->fee->ticket_code}" : '')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Tên đơn vị')

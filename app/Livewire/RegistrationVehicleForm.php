@@ -36,6 +36,8 @@ class RegistrationVehicleForm extends Component implements HasForms
 
     public string $searchDriver = '';
 
+    public ?int $exitedFeeId = null;
+
     // Hold registrations to display in the view
     public array $registrations = [];
 
@@ -226,6 +228,27 @@ class RegistrationVehicleForm extends Component implements HasForms
                             };
                         },
                     ])
+                    ->afterStateUpdated(function (?string $state, callable $set) {
+                        if (empty($state)) {
+                            $set('fee_id', null);
+                            $this->exitedFeeId = null;
+                            return;
+                        }
+
+                        $normalized = \App\Models\Invoice::normalizeLicensePlate($state);
+                        $exited = \App\Models\RegistrationVehicle::where('vehicle_number', $normalized)
+                            ->where('status', 'exited')
+                            ->latest()
+                            ->first();
+
+                        if ($exited && $exited->fee_id) {
+                            $set('fee_id', $exited->fee_id);
+                            $this->exitedFeeId = $exited->fee_id;
+                        } else {
+                            $set('fee_id', null);
+                            $this->exitedFeeId = null;
+                        }
+                    })
                     ->extraAttributes(['class' => '!bg-gray-100 dark:!bg-gray-700 dark:!text-white dark:!border-gray-600'])
                     ->validationMessages([
                         'required' => 'Biển số xe không được để trống.',
@@ -236,6 +259,8 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->label('Loại xe, trọng tải')
                     ->options(\App\Models\Fee::pluck('ticket_code', 'id'))
                     ->required()
+                    ->disabled(fn () => $this->exitedFeeId !== null)
+                    ->dehydrated()
                     ->extraAttributes(['class' => '!bg-gray-100'])
                     ->columnSpan(2)
                     ->native(false),
@@ -406,7 +431,8 @@ class RegistrationVehicleForm extends Component implements HasForms
                 'driver_name' => $storedData['driver_name'] ?? '',
                 'driver_phone' => $storedData['driver_phone'] ?? '',
                 'driver_id_card' => $storedData['driver_id_card'] ?? '',
-                'vehicle_number' => $storedData['vehicle_number'] ?? '',
+                // 'vehicle_number' => $storedData['vehicle_number'] ?? '',
+                'vehicle_number' => null,
                 // 'name' => $storedData['name'] ?? '',
                 'name' => null,
                 'notes' => $storedData['notes'] ?? '',

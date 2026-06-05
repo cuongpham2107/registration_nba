@@ -21,8 +21,16 @@ class RegistrationController extends Controller
     {
         $name_manager = $request->query('name_manager');
         $job_title_manager = $request->query('job_title_manager');
+        $approver_id = $request->query('approver_id');
+        $approver = User::find($approver_id);
         $id = Crypt::decryptString($id);
         $registration = Registration::with('customers')->where('id', $id)->first();
+        if (! $registration) {
+            $status = 'Lỗi';
+            $message = 'Bản ghi không tồn tại hoặc đã bị xoá';
+
+            return view('pages.mail-response')->with(compact('name_manager', 'job_title_manager', 'status', 'message'));
+        }
         // Kiểm tra xem đã được xử lý chưa
         if ($registration->type !== null) {
             $status = 'Lỗi';
@@ -34,6 +42,7 @@ class RegistrationController extends Controller
         (new RegistrationService)->createRegistrationDirectly($registration, $registration->fee_id ? 'vehicle' : 'passenger');
         $registration->type = 'browse';
         $registration->type_date = now();
+        $registration->approver_id = $approver->id;
         $registration->save();
 
         $status = 'Duyệt';
@@ -60,6 +69,8 @@ class RegistrationController extends Controller
     {
         $name_manager = $request->query('name_manager');
         $job_title_manager = $request->query('job_title_manager');
+        $approver_id = $request->query('approver_id');
+        $approver = User::find($approver_id);
         $id = Crypt::decryptString($id);
         $registration = Registration::where('id', $id)->first();
 
@@ -74,6 +85,7 @@ class RegistrationController extends Controller
         $registration->update([
             'type' => 'refuse',
             'type_date' => now(),
+            'approver_id' => $approver->id,
         ]);
         $status = 'Từ chối';
         $message = 'Đăng ký khách đã bị từ chối';

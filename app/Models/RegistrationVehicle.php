@@ -45,4 +45,8 @@ class RegistrationVehicle extends Model
     {
         return $this->hasOne(BlackList::class, 'registration_vehicle_id');
     }
+     public function fee()
+    {
+        return $this->belongsTo(Fee::class, 'fee_id');
+    }
 }
