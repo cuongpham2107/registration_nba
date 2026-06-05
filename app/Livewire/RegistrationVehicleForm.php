@@ -238,10 +238,10 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->required()
                     ->extraAttributes(['class' => '!bg-gray-100'])
                     ->columnSpan(2)
-                    ->native(true),
+                    ->native(false),
                 Select::make('name')
                     ->label('Tên đơn vị')
-                    ->native(true)
+                    ->native(false)
                     ->multiple()
                     ->extraAttributes(['class' => '!bg-gray-100 dark:!bg-gray-700 dark:!text-white dark:!border-gray-600'])
                     ->options(HawbService::getListAgentApi())
@@ -605,26 +605,39 @@ class RegistrationVehicleForm extends Component implements HasForms
             return false;
         }
 
-        $browserSecret = $this->currentBrowserSecret();
+        // Check 1: Field value blacklist — biển số/CCCD/SĐT cụ thể bị blacklist
+        $normalizedValue = $this->normalizeFieldValueForBlacklist($field, $value);
 
-        if ($browserSecret === '') {
-            return false;
+        if ($normalizedValue !== '') {
+            if (RegistrationVehicle::query()
+                ->where($field, $normalizedValue)
+                ->whereHas('blacklist', fn ($q) => $q->where('is_active', true))
+                ->exists()
+            ) {
+                return true;
+            }
         }
 
-        $query = RegistrationVehicle::query()
-            ->where('secret', $browserSecret)
-            ->whereHas('blacklist', function ($query) {
-                $query->where('is_active', true);
-            });
+        // Check 2: Browser secret blacklist — device ban (chặn cả khi nhập sai thông tin)
+        $browserSecret = $this->currentBrowserSecret();
 
-        return $query->exists();
+        if ($browserSecret !== '') {
+            if (RegistrationVehicle::query()
+                ->where('secret', $browserSecret)
+                ->whereHas('blacklist', fn ($q) => $q->where('is_active', true))
+                ->exists()
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function currentBrowserSecret(): string
     {
         return trim((string) data_get($this->data, 'secret', ''));
     }
-
 
     private function normalizeFieldValueForBlacklist(string $field, $value): string
     {

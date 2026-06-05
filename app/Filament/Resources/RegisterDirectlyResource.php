@@ -365,7 +365,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('invoice.amount')
                     ->label('Số tiền')
                     ->badge()
-                    ->formatStateUsing(fn (?string $state): string => $state ? number_format($state, 0, ',', '.').' VNĐ' : '')
+                    ->formatStateUsing(fn (?string $state): string => $state ? number_format($state, 0, ',', '.') : '')
                     ->alignment(Alignment::Center),
 
                 Tables\Columns\TextColumn::make('created_at')

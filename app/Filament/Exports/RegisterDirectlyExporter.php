@@ -17,6 +17,13 @@ class RegisterDirectlyExporter extends Exporter
         return [
             ExportColumn::make('id')
                 ->label('ID'),
+            ExportColumn::make('type')
+                ->label('Loại')
+                ->formatStateUsing(fn (?string $state): string => match ($state) {
+                    'passenger' => 'Người',
+                    'vehicle' => 'Xe',
+                    default => $state ?? '',
+                }),
             ExportColumn::make('name')
                 ->label('Họ và tên'),
             ExportColumn::make('papers')
