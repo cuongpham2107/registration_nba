@@ -186,20 +186,7 @@ class InvoiceResource extends Resource
                     ->money('VND')
                     ->sortable()
                     ->alignRight()
-                    ->weight('bold')
-                    ->summarize([
-                        Tables\Columns\Summarizers\Sum::make()
-                            ->money('VND')
-                            ->label('Tổng cộng'),
-                        Tables\Columns\Summarizers\Sum::make()
-                            ->label('Đã thanh toán')
-                            ->money('VND')
-                            ->query(fn ($query) => $query->where('is_paid', true)),
-                        Tables\Columns\Summarizers\Sum::make()
-                            ->label('Chưa thanh toán')
-                            ->money('VND')
-                            ->query(fn ($query) => $query->where('is_paid', false)),
-                    ]),
+                    ->weight('bold'),
 
                 Tables\Columns\IconColumn::make('is_paid')
                     ->label('Đã thanh toán')

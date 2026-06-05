@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\InvoiceResource\Pages;
 
 use App\Filament\Resources\InvoiceResource;
+use App\Filament\Resources\InvoiceResource\Widgets\InvoiceStatsWidget;
 use App\Models\Invoice;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
@@ -17,6 +18,13 @@ class ListInvoices extends ListRecords
     {
         return [
             // Actions\CreateAction::make(),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            InvoiceStatsWidget::class,
         ];
     }
 
