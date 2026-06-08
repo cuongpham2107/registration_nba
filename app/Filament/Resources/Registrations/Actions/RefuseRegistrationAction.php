@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Registrations\Actions;
 
 use App\Models\Registration;
+use App\Models\UserApprover;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\Size;
@@ -33,8 +34,13 @@ class RefuseRegistrationAction
                     return true;
                 }
 
-                // Ẩn nếu user không phải là người được chọn phê duyệt
-                if ($record->approver_id !== $user->id) {
+                // Ẩn nếu user không phải là người phê duyệt của đơn này
+                $isApproverForCreator = UserApprover::query()
+                    ->where('user_id', $record->user_id)
+                    ->where('approver_id', $user->id)
+                    ->exists();
+
+                if (! $isApproverForCreator) {
                     return true;
                 }
 

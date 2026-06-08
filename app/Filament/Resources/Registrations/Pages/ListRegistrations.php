@@ -5,11 +5,15 @@ namespace App\Filament\Resources\Registrations\Pages;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Filament\Resources\Registrations\Schemas\RegistrationForm;
 use App\Models\User;
+use App\Services\RegistrationService;
 use Filament\Actions\CreateAction;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ListRegistrations extends ListRecords
 {
@@ -29,7 +33,14 @@ class ListRegistrations extends ListRecords
 
                     return RegistrationForm::configure($schema, $type);
                 })
-                ->after(function (Model $record) {
+                ->extraModalFooterActions(fn (CreateAction $action): array => [
+                    $action->makeModalSubmitAction('createAndSendMail', arguments: ['send_mail' => true])
+                        ->label('Tạo và gửi phê duyệt')
+                        ->color('success')
+                        ->icon('heroicon-m-envelope')
+                        ->hidden(fn () => ! Auth::user() || Auth::user()->hasRole('approver') || Auth::user()->hasRole('super_admin')),
+                ])
+                ->after(function (Model $record, CreateAction $action): void {
                     $user = User::find($record->user_id);
                     $areas = $record->guests
                         ->pluck('areas')
@@ -70,17 +81,36 @@ class ListRegistrations extends ListRecords
 
                     // Log the webhook call
                     if ($error) {
-                        \Log::error('Webhook call failed', [
+                        Log::error('Webhook call failed', [
                             'error' => $error,
                             'http_code' => $httpCode,
                             'data' => $record,
                         ]);
                     } else {
-                        \Log::info('Webhook call successful', [
+                        Log::info('Webhook call successful', [
                             'response' => $response,
                             'http_code' => $httpCode,
                             'data' => $record,
                         ]);
+                    }
+
+                    // Nếu người dùng nhấn "Tạo và gửi phê duyệt"
+                    if ($action->getArguments()['send_mail'] ?? false) {
+                        $sent = (new RegistrationService)->sendMailForRegistration($record);
+
+                        if ($sent) {
+                            Notification::make()
+                                ->title('Gửi phê duyệt thành công')
+                                ->success()
+                                ->body('Email đã được gửi đến người phê duyệt.')
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title('Gửi phê duyệt thất bại')
+                                ->danger()
+                                ->body('Có lỗi xảy ra khi gửi email phê duyệt. Vui lòng kiểm tra lại.')
+                                ->send();
+                        }
                     }
                 }),
         ];

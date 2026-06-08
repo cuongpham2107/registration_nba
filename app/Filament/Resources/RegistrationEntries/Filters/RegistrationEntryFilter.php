@@ -55,7 +55,7 @@ class RegistrationEntryFilter extends Filter
                         fn (Builder $query, $search): Builder => $query->where(function ($query) use ($search) {
                             return $query->where('name', 'like', "%{$search}%")
                                 ->orWhere('papers', 'like', "%{$search}%")
-                                ->orWhere('bks', 'like', "%{$search}%");
+                                ->orWhere('license_plate', 'like', "%{$search}%");
                         }),
                     )
                     ->when(

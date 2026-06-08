@@ -22,9 +22,9 @@ class RegistrationEntryResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationLabel = 'Danh sách ra vào';
+    protected static ?string $navigationLabel = 'Danh sách kiểm hoá';
 
-    protected static ?string $title = 'Danh sách ra vào';
+    protected static ?string $title = 'Danh sách kiểm hoá';
 
     protected static ?int $navigationSort = 1;
 

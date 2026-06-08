@@ -104,8 +104,8 @@
         @endif
 
         <div style="margin-top: 32px; text-align:center;">
-            <a href="{{route('approve',$id). '?name_manager=' . $name_manager . '&job_title_manager=' . $job_title_manager}}" class="btn" style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-weight:600;font-size:16px;padding:12px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(102,126,234,0.12);margin-right:12px;text-decoration:none;display:inline-block;">Duyệt</a>
-            <a href="{{route('reject',$id). '?name_manager=' . $name_manager . '&job_title_manager=' . $job_title_manager}}" class="btn btn-danger" style="background:linear-gradient(135deg,#f44336,#ff6b6b);color:#fff;font-weight:600;font-size:16px;padding:12px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(244,67,54,0.12);text-decoration:none;display:inline-block;">Từ chối</a>
+            <a href="{{route('approve',['id' => $id, 'approver_id' => $approver_id, 'name_manager' => $name_manager, 'job_title_manager' => $job_title_manager])}}" class="btn" style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-weight:600;font-size:16px;padding:12px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(102,126,234,0.12);margin-right:12px;text-decoration:none;display:inline-block;">Duyệt</a>
+            <a href="{{route('reject',['id' => $id, 'approver_id' => $approver_id, 'name_manager' => $name_manager, 'job_title_manager' => $job_title_manager])}}" class="btn btn-danger" style="background:linear-gradient(135deg,#f44336,#ff6b6b);color:#fff;font-weight:600;font-size:16px;padding:12px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(244,67,54,0.12);text-decoration:none;display:inline-block;">Từ chối</a>
         </div>
     </div>
 </body>

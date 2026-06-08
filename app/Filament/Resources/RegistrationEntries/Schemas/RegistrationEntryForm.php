@@ -32,8 +32,7 @@ class RegistrationEntryForm
                         Forms\Components\TextInput::make('license_plate')
                             ->label('Biển kiểm soát')
                             ->prefixIcon('heroicon-o-truck')
-                            ->formatStateUsing(fn (?string $state) => $state ? strtoupper(str_replace(' ', '', $state)) : '')
-                            ->required(),
+                            ->formatStateUsing(fn (?string $state) => $state ? strtoupper(str_replace(' ', '', $state)) : ''),
                         // trong tải
                         Forms\Components\TextInput::make('vehicle_type')
                             ->label('Trọng tải')
@@ -138,8 +137,7 @@ class RegistrationEntryForm
                             ->label('Giờ vào thực tế')
                             ->displayFormat('d/m/Y H:i A')
                             ->prefixIcon('heroicon-s-calendar-days')
-                            ->seconds(false)
-                            ->readonly(),
+                            ->seconds(false),
                         Forms\Components\DateTimePicker::make('actual_date_out')
                             ->label('Giờ ra thực tế')
                             ->displayFormat('d/m/Y H:i A')

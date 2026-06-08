@@ -16,7 +16,7 @@ class ImportGuestsAction
     {
         return Action::make('import')
             ->label('Import danh sách khách')
-            ->modalDescription(new HtmlString('File Excel phải đúng định dạng theo mẫu. Vui lòng tải về mẫu trước khi import. <br><a href="/template-guest.xlsx" download class="text-primary-600 hover:underline font-semibold">📥 Tải file mẫu tại đây</a>'))
+            ->modalDescription(new HtmlString('File Excel phải đúng định dạng theo mẫu. Vui lòng tải về mẫu trước khi import. <br><a href="/template.xlsx" download class="text-primary-600 hover:underline font-semibold">📥 Tải file mẫu tại đây</a>'))
             ->icon('heroicon-s-arrow-up-on-square')
             ->form([
                 FileUpload::make('file')
@@ -65,11 +65,10 @@ class ImportGuestsAction
 
                         $importedGuests[] = [
                             'name' => $row[0] ?? '',           // Column A - Tên khách
-                            'phone' => $row[1] ?? '',          // Column B - Số điện thoại
-                            'papers' => $row[2] ?? '',         // Column C - Số giấy tờ
-                            'type' => $row[3] ?? '',           // Column D - Loại giấy tờ
-                            'license_plate' => $row[4] ?? '',  // Column E - Biển số
-                            'note' => $row[5] ?? '',           // Column F - Ghi chú
+                            'papers' => $row[1] ?? '',         // Column B - Số giấy tờ
+                            'type' => $row[2] ?? '',           // Column C - Loại giấy tờ
+                            'license_plate' => $row[3] ?? '',  // Column D - Biển số
+                            'note' => $row[4] ?? '',           // Column E - Ghi chú
                             'areas' => [],                     // Default empty areas
                         ];
                     }

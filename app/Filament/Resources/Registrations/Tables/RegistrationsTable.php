@@ -9,6 +9,7 @@ use App\Filament\Resources\Registrations\Actions\SendMailRegistrationAction;
 use App\Filament\Resources\Registrations\Filters\RegistrationFilter;
 use App\Filament\Resources\Registrations\Schemas\RegistrationForm;
 use App\Models\Registration;
+use App\Models\UserApprover;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -63,7 +64,11 @@ class RegistrationsTable
             return null;
         }
 
-        $count = Registration::where('approver_id', $user->id)
+        $assignedUserIds = UserApprover::query()
+            ->where('approver_id', $user->id)
+            ->pluck('user_id');
+
+        $count = Registration::whereIn('user_id', $assignedUserIds)
             ->where('status', 'sent')
             ->whereNull('type')
             ->count();
@@ -171,10 +176,8 @@ class RegistrationsTable
                 ->toggleable(),
             TextColumn::make('approver.full_name')
                 ->Label('Người duyệt')
-                ->searchable()
                 ->badge()
                 ->color('warning')
-                ->sortable()
                 ->toggleable(),
             TextColumn::make('creator.full_name')
                 ->Label('Người tạo')
@@ -200,7 +203,15 @@ class RegistrationsTable
             return $query;
         }
         if ($user->hasRole('approver')) {
-            return $query->where('approver_id', $user->id);
+            // Lấy danh sách user_id mà approver này được phép phê duyệt
+            $assignedUserIds = UserApprover::query()
+                ->where('approver_id', $user->id)
+                ->pluck('user_id');
+
+            return $query->where(function ($q) use ($user, $assignedUserIds) {
+                $q->whereIn('user_id', $assignedUserIds)
+                    ->orWhere('user_id', $user->id);
+            });
         }
 
         return $query->where('user_id', $user->id);
@@ -221,12 +232,12 @@ class RegistrationsTable
                 EditAction::make()
                     ->modalWidth(Width::SixExtraLarge)
                     ->schema(fn (Schema $schema, Registration $record) => RegistrationForm::configure($schema, $record->type ?? 'working'))
-                    ->hidden(fn (Registration $record) => in_array($record->status, ['sent', 'approve', 'reject', 'entering', 'exited'], true) || $record->user_id !== Auth::id()),
+                    ->hidden(fn (Registration $record) => ! Auth::user()?->hasRole('super_admin') && (in_array($record->status, ['sent', 'approve', 'reject', 'entering', 'exited'], true) || $record->user_id !== Auth::id())),
                 ViewAction::make()
                     ->modalWidth(Width::SixExtraLarge)
                     ->schema(fn (Schema $schema, Registration $record) => RegistrationForm::configure($schema, $record->type ?? 'working')),
                 DeleteAction::make()
-                    ->hidden(fn (Registration $record) => in_array($record->status, ['sent', 'approve', 'reject', 'entering', 'exited'], true) || $record->user_id !== Auth::id()),
+                    ->hidden(fn (Registration $record) => ! Auth::user()?->hasRole('super_admin') && (in_array($record->status, ['sent', 'approve', 'reject', 'entering', 'exited'], true) || $record->user_id !== Auth::id())),
                 ApproveRegistrationAction::make(),
                 RefuseRegistrationAction::make(),
             ])->icon('heroicon-m-adjustments-vertical')

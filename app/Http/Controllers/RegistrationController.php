@@ -17,6 +17,7 @@ class RegistrationController extends Controller
     {
         $name_manager = $request->query('name_manager');
         $job_title_manager = $request->query('job_title_manager');
+        $approver_id = $request->query('approver_id');
         $id = Crypt::decryptString($id);
         $registration = Registration::with('guests')->where('id', $id)->first();
         $user = User::find($registration?->user_id);
@@ -41,6 +42,7 @@ class RegistrationController extends Controller
             'type' => $registration->type ?? 'working',
             'status' => 'approve',
             'approved_at' => now(),
+            'approver_id' => $approver_id,
         ]);
 
         $areas = $registration->guests
@@ -125,6 +127,7 @@ class RegistrationController extends Controller
     {
         $name_manager = $request->query('name_manager');
         $job_title_manager = $request->query('job_title_manager');
+        $approver_id = $request->query('approver_id');
         $id = Crypt::decryptString($id);
         $registration = Registration::where('id', $id)->first();
 
@@ -146,6 +149,7 @@ class RegistrationController extends Controller
         $registration->update([
             'status' => 'reject',
             'approved_at' => now(),
+            'approver_id' => $approver_id,
         ]);
 
         $status = 'Từ chối';

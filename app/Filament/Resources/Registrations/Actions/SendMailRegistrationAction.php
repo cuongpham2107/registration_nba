@@ -29,10 +29,14 @@ class SendMailRegistrationAction
             )
             ->action(function (Registration $record, Component $livewire): void {
                 try {
-                    // Lấy thông tin người phê duyệt từ relationship
-                    $approver = $record->approver;
-                    // dd($approver->department);
-                    if (! $approver) {
+                    // Lấy tất cả người phê duyệt
+                    $approvers = $record->creator?->approverConfigs()
+                        ->with('approver')
+                        ->get()
+                        ->pluck('approver')
+                        ->filter();
+
+                    if ($approvers->isEmpty()) {
                         Notification::make()
                             ->title('Gửi xét duyệt thất bại')
                             ->danger()
@@ -42,53 +46,62 @@ class SendMailRegistrationAction
                         return;
                     }
 
-                    if (! $approver->email) {
-                        Notification::make()
-                            ->title('Gửi xét duyệt thất bại')
-                            ->danger()
-                            ->body('Người phê duyệt "'.$approver->name_code.'" chưa có địa chỉ email')
-                            ->send();
-
-                        return;
-                    }
-
-                    // Validate email format
-                    if (! filter_var($approver->email, FILTER_VALIDATE_EMAIL)) {
-                        Notification::make()
-                            ->title('Gửi xét duyệt thất bại')
-                            ->danger()
-                            ->body('Email của người phê duyệt "'.$approver->name_code.'" không hợp lệ: "'.$approver->email.'"')
-                            ->send();
-
-                        return;
-                    }
                     $customers = Guest::query()
                         ->where('registration_id', $record->id)
                         ->with('fee')
                         ->get();
-                    // Gửi email
-                    $mail = (new MailService)->sendMailWithTemplate(
-                        $approver->email,
-                        'Đăng ký khách: '.$record->name.' | '.date('d/m/Y H:i:s'),
-                        'template-mail.registration',
-                        [
-                            'id' => Crypt::encryptString($record->id),
-                            'name' => $record->name,
-                            'purpose' => $record->purpose,
-                            'start_date' => $record->start_date,
-                            'end_date' => $record->end_date,
-                            'asset' => $record->asset,
-                            'note' => $record->note,
-                            'customers' => $customers,
-                            'name_manager' => $approver->name_code ?? '',
-                            'job_title_manager' => $approver->department ?? '',
-                        ],
-                    );
-                    if (! $mail) {
+
+                    $sentCount = 0;
+                    $errors = [];
+
+                    foreach ($approvers as $approver) {
+                        if (! $approver->email) {
+                            $errors[] = 'Người phê duyệt "'.$approver->name_code.'" chưa có địa chỉ email';
+
+                            continue;
+                        }
+
+                        if (! filter_var($approver->email, FILTER_VALIDATE_EMAIL)) {
+                            $errors[] = 'Email của người phê duyệt "'.$approver->name_code.'" không hợp lệ: "'.$approver->email.'"';
+
+                            continue;
+                        }
+
+                        // Mã hoá registration_id
+                        $encryptedId = Crypt::encryptString($record->id);
+
+                        // Gửi email đến từng người phê duyệt
+                        $mail = (new MailService)->sendMailWithTemplate(
+                            $approver->email,
+                            'Đăng ký khách: '.$record->name.' | '.date('d/m/Y H:i:s'),
+                            'template-mail.registration',
+                            [
+                                'id' => $encryptedId,
+                                'approver_id' => $approver->id,
+                                'name' => $record->name,
+                                'purpose' => $record->purpose,
+                                'start_date' => $record->start_date,
+                                'end_date' => $record->end_date,
+                                'asset' => $record->asset,
+                                'note' => $record->note,
+                                'customers' => $customers,
+                                'name_manager' => $approver->name_code ?? '',
+                                'job_title_manager' => $approver->department ?? '',
+                            ],
+                        );
+
+                        if ($mail) {
+                            $sentCount++;
+                        } else {
+                            $errors[] = 'Không thể gửi email đến: '.$approver->email;
+                        }
+                    }
+
+                    if ($sentCount === 0) {
                         Notification::make()
                             ->title('Gửi xét duyệt thất bại')
                             ->danger()
-                            ->body('Không thể gửi email đến: '.$approver->email)
+                            ->body(implode("\n", $errors))
                             ->send();
 
                         return;
@@ -97,8 +110,9 @@ class SendMailRegistrationAction
                     // Cập nhật status
                     $record->update(['status' => 'sent']);
 
-                    // Refresh UI so `hidden()` is re-evaluated immediately.
+                    // Refresh UI
                     $livewire->dispatch('$refresh');
+
                     // Broadcast đến các approver
                     try {
                         $approveVehicleUsers = User::role('approver')->get();
@@ -113,11 +127,15 @@ class SendMailRegistrationAction
                         Log::error('Broadcast notification failed: '.$e->getMessage());
                     }
 
-                    // Hiển thị một notification tổng hợp duy nhất
+                    $message = 'Email đã được gửi đến '.$sentCount.' người phê duyệt.';
+                    if (! empty($errors)) {
+                        $message .= "\nLỗi: ".implode("\n", $errors);
+                    }
+
                     Notification::make()
                         ->title('Gửi xét duyệt thành công')
                         ->success()
-                        ->body('Email đã được gửi đến: '.$approver->email)
+                        ->body($message)
                         ->send();
                 } catch (Throwable $e) {
                     Notification::make()

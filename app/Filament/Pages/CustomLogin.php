@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\User;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Actions\Action;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
@@ -93,6 +94,15 @@ class CustomLogin extends Login
         }
 
         session()->regenerate();
+
+        // Auto-assign panel_user role for accounts without any permissions,
+        // so they have at least one accessible navigation item and avoid redirect loop.
+        /** @var User|null $authenticatedUser */
+        $authenticatedUser = $authGuard->user();
+
+        if ($authenticatedUser && $authenticatedUser->getRoleNames()->isEmpty()) {
+            $authenticatedUser->assignRole('panel_user');
+        }
 
         return app(LoginResponse::class);
     }

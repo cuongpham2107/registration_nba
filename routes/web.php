@@ -15,6 +15,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+
 Route::get('qrcode', function () {
     // return QrCode::size(300)->generate(route('registration.success'));
 });

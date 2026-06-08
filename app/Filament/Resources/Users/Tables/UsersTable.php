@@ -48,6 +48,9 @@ class UsersTable
                 ->label('Quyền')
                 ->badge()
                 ->sortable(),
+            TextColumn::make('approverConfigs.approver.full_name')
+                ->label('Người phê duyệt')
+                ->badge(),
             TextColumn::make('created_at')
                 ->label('Ngày tạo')
                 ->dateTime()
@@ -88,15 +91,16 @@ class UsersTable
                         ->pluck('role_id')
                         ->toArray();
 
-                    // Load approver hiện tại
-                    $approverId = DB::connection('mysql')
+                    // Load danh sách người phê duyệt hiện tại
+                    $approverIds = DB::connection('mysql')
                         ->table('user_approvers')
                         ->where('user_id', $record->id)
-                        ->value('approver_id');
+                        ->pluck('approver_id')
+                        ->toArray();
 
                     return [
                         'roles' => $currentRoleIds,
-                        'approver_id' => $approverId,
+                        'approver_ids' => $approverIds,
                     ];
                 })
                 ->schema([
@@ -111,8 +115,9 @@ class UsersTable
                         ->multiple()
                         ->preload()
                         ->searchable(),
-                    Select::make('approver_id')
+                    Select::make('approver_ids')
                         ->label('Người phê duyệt')
+                        ->multiple()
                         ->options(function () {
                             return DB::connection('id_db')
                                 ->table('users')
@@ -139,15 +144,25 @@ class UsersTable
 
                     $record->syncRoles($roleNames);
 
-                    // Xử lý approver
-                    $approverId = $data['approver_id'] ?? null;
+                    // Xử lý approver — xoá cũ và ghi lại nhiều người phê duyệt
+                    $approverIds = $data['approver_ids'] ?? [];
 
                     DB::connection('mysql')
                         ->table('user_approvers')
-                        ->updateOrInsert(
-                            ['user_id' => $record->id],
-                            ['approver_id' => $approverId, 'updated_at' => now(), 'created_at' => now()]
-                        );
+                        ->where('user_id', $record->id)
+                        ->delete();
+
+                    $now = now();
+                    foreach ($approverIds as $approverId) {
+                        DB::connection('mysql')
+                            ->table('user_approvers')
+                            ->insert([
+                                'user_id' => $record->id,
+                                'approver_id' => $approverId,
+                                'updated_at' => $now,
+                                'created_at' => $now,
+                            ]);
+                    }
 
                     Notification::make()
                         ->title('Cập nhật vai trò & người phê duyệt thành công')

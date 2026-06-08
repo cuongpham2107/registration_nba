@@ -314,6 +314,14 @@ class User extends Authenticatable implements FilamentUser, HasName
     }
 
     /**
+     * Các dòng cấu hình phê duyệt của user này (nhiều approver)
+     */
+    public function approverConfigs()
+    {
+        return $this->hasMany(UserApprover::class, 'user_id');
+    }
+
+    /**
      * Lấy thông tin người phê duyệt
      */
     public function getApproverAttribute(): ?User

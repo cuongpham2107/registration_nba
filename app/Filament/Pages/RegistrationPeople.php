@@ -8,6 +8,7 @@ use BackedEnum;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
@@ -18,6 +19,7 @@ use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Livewire\Attributes\On;
 
 class RegistrationPeople extends Page implements HasActions, HasSchemas, HasTable
 {
@@ -52,11 +54,60 @@ class RegistrationPeople extends Page implements HasActions, HasSchemas, HasTabl
             ->filtersFormColumns(1)
             ->deferLoading()
             ->deferFilters(false)
-            ->defaultSort('created_at', 'asc')
             ->defaultPaginationPageOption(25)
             ->recordActions(RegistrationEntriesTable::recordActions(), position: RecordActionsPosition::BeforeColumns)
+            ->modifyQueryUsing(function (Builder $query) {
+                $query->getQuery()->orders = null;
+                $query->orderByRaw("
+                    CASE
+                        WHEN status = 'none' OR status IS NULL OR status = '' THEN 0
+                        WHEN status = 'coming_in' THEN 1
+                        WHEN status = 'came_out' THEN 2
+                        ELSE 3
+                    END ASC,
+                    created_at DESC
+                ");
+            })
             ->toolbarActions([
                 // ...
             ]);
+    }
+
+    // protected function applyFiltersToTableQuery(Builder $query, bool $isResolvingRecord = false): Builder
+    // {
+    //     $query = parent::applyFiltersToTableQuery($query);
+    //     $query->getQuery()->orders = null;
+    //     $query->orderByRaw("
+    //         CASE
+    //             WHEN status = 'none' OR status IS NULL OR status = '' THEN 0
+    //             WHEN status = 'coming_in' THEN 1
+    //             WHEN status = 'came_out' THEN 2
+    //             ELSE 3
+    //         END ASC,
+    //         created_at DESC
+    //     ");
+
+    //     return $query;
+    // }
+
+    #[On('card-scanned')]
+    public function onCardScanned(string $code): void
+    {
+        $record = RegistrationEntry::query()
+            ->whereHas('card', fn ($query) => $query->where('account_id', $code))
+            ->where('status', 'entering')
+            ->first();
+
+        if (! $record) {
+            Notification::make()
+                ->title('Không tìm thấy bản ghi')
+                ->body("Không tìm thấy đơn đăng ký đang ở trạng thái 'Đang vào' với mã thẻ: {$code}.")
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $this->mountTableAction('return-card', $record->getKey());
     }
 }
