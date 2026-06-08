@@ -26,3 +26,15 @@
     border-inline-end-style: var(--tw-border-style) !important;
     border-inline-end-width: 1px !important;
 }
+.fi-fo-table-repeater > table > thead > tr > th {
+    border-color: var(--gray-400) !important;
+}
+.fi-fo-table-repeater.fi-compact > table > tbody > tr > td {
+    border-color: var(--gray-400) !important;
+}
+.fi-fo-table-repeater > table {
+    box-shadow: 0 0 0 1px var(--gray-400) !important;
+}
+.fi-input-wrp {
+    --tw-ring-color: color-mix(in oklab, var(--gray-950) 20%, transparent) !important;
+}

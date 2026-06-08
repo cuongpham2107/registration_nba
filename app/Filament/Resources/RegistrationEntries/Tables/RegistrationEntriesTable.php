@@ -28,6 +28,7 @@ use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class RegistrationEntriesTable
 {
@@ -174,13 +175,17 @@ class RegistrationEntriesTable
             ])->alignment(Alignment::Center)->wrapHeader(),
             TextColumn::make('job')
                 ->label('Mục đích')
-                ->formatStateUsing(
-                    fn (RegistrationEntry $record): string => isset(explode('|', $record->job)[0]) ? trim(explode('|', $record->job)[0]) : $record->job
-                )
+                ->formatStateUsing(function (RegistrationEntry $record): string {
+                    $parts = explode('|', $record->job);
+                    $text = isset($parts[0]) ? trim($parts[0]) : $record->job;
+
+                    return Str::limit($text, 30, '...');
+                })
                 ->description(function (RegistrationEntry $record): string {
                     $parts = explode('|', $record->job);
+                    $text = isset($parts[1]) ? trim($parts[1]) : '';
 
-                    return isset($parts[1]) ? trim($parts[1]) : '';
+                    return Str::limit($text, 50, '...');
                 })
                 ->toggleable(isToggledHiddenByDefault: $isToggledHiddenByDefault),
             TextColumn::make('card.card_name')
