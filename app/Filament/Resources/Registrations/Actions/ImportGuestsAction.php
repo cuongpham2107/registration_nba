@@ -63,13 +63,23 @@ class ImportGuestsAction
                             continue;
                         }
 
+                        // Parse areas: hỗ trợ nhiều kiểu phân tách (dấu phẩy, chấm phẩy, xuống dòng)
+                        $areasRaw = $row[4] ?? '';
+                        if (is_array($areasRaw)) {
+                            $areas = $areasRaw;
+                        } else {
+                            $areasRaw = (string) ($areasRaw ?? '');
+                            $areas = preg_split('/[;,\n\r]+/', $areasRaw) ?: [];
+                        }
+                        $areas = array_values(array_filter(array_map('trim', $areas), static fn ($v) => $v !== ''));
+
                         $importedGuests[] = [
                             'name' => $row[0] ?? '',           // Column A - Tên khách
                             'papers' => $row[1] ?? '',         // Column B - Số giấy tờ
                             'type' => $row[2] ?? '',           // Column C - Loại giấy tờ
                             'license_plate' => $row[3] ?? '',  // Column D - Biển số
-                            'note' => $row[4] ?? '',           // Column E - Ghi chú
-                            'areas' => [],                     // Default empty areas
+                            'areas' => $areas,                 // Column E - Khu vực (parse thành array)
+                            'note' => $row[5] ?? '',           // Column F - Ghi chú
                         ];
                     }
 

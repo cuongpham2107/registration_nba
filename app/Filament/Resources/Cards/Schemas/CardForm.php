@@ -16,7 +16,6 @@ class CardForm
                     ->required(),
                 Forms\Components\TextInput::make('card_number')
                     ->label('Số thẻ')
-                    ->numeric()
                     ->required(),
                 Forms\Components\TextInput::make('card_name')
                     ->label('Tên thẻ')

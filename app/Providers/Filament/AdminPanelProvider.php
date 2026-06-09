@@ -51,7 +51,7 @@ class AdminPanelProvider extends PanelProvider
             ->maxContentWidth(Width::Full)
             ->brandName('ASGL')
             ->brandLogo(asset('images/ASG.png'))
-            ->favicon(asset('images/ASG.png'))
+            ->favicon(asset('images/Logo.png'))
             ->brandLogoHeight('2rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

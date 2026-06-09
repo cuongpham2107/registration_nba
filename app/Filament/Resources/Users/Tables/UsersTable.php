@@ -9,6 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,7 @@ class UsersTable
         return $table
             ->columns(self::getColumns())
             ->modifyQueryUsing(fn ($query) => self::modifyQuery($query))
+            ->filters(self::getFilters())
             ->recordActions(self::getRecordActions())
             ->toolbarActions(self::getBulkActions());
     }
@@ -66,11 +68,28 @@ class UsersTable
             return $query->whereRaw('1 = 0');
         }
 
-        if ($user->hasRole('super_admin')) {
-            return $query;
+        if (! $user->hasRole('super_admin')) {
+            $query->where('id', $user->id);
         }
 
-        return $query->where('id', $user->id);
+        return $query;
+    }
+
+    private static function getFilters(): array
+    {
+        return [
+            Filter::make('has_roles')
+                ->label('Đã được cấp quyền')
+                ->query(function ($query) {
+                    $userIds = DB::connection('mysql')
+                        ->table('model_has_roles')
+                        ->where('model_type', User::class)
+                        ->distinct()
+                        ->pluck('model_id');
+
+                    $query->whereIn('id', $userIds);
+                }),
+        ];
     }
 
     private static function getRecordActions(): array

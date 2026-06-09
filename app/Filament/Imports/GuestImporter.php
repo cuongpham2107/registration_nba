@@ -29,8 +29,8 @@ class GuestImporter implements ToModel, WithHeadingRow
             'name' => $row['name'] ?? null,
             'papers' => $row['papers'] ?? null,
             'type' => $row['type'] ?? null,
-            'areas' => $areas, // Lưu dưới dạng array (cast JSON/array trên model)
-            'license_plate' => $row['license_plate'] ?? null,
+            'license_plate' => $row['license_plate'] ?? null, // Biển số xe
+            'areas' => $areas,                                 // Khu vực (ngay sau biển số)
             'note' => $row['note'] ?? null,
             'visitor_registration_id' => $row['visitor_registration_id'] ?? null,
         ]);
