@@ -67,7 +67,7 @@ class RegistrationService
                         'asset' => $registration->asset,
                         'note' => $registration->note,
                         'customers' => $customers,
-                        'name_manager' => $approver->name_code ?? '',
+                        'name_manager' => $approver->full_name ?? '',
                         'job_title_manager' => $approver->department ?? '',
                     ],
                 );

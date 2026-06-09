@@ -21,6 +21,28 @@
       "min_uptime": "10s",
       "max_restarts": 10,
       "restart_delay": 4000
+    },
+    {
+      "name": "laravel-scheduler",
+      "script": "/usr/bin/php",
+      "args": "artisan schedule:work",
+      "cwd": "/var/www/registration_nba",
+      "instances": 1,
+      "exec_mode": "fork",
+      "autorestart": true,
+      "watch": false,
+      "max_memory_restart": "500M",
+      "env": {
+        "NODE_ENV": "production",
+        "APP_ENV": "local"
+      },
+      "error_file": "/var/www/registration_nba/storage/logs/laravel-scheduler-error.log",
+      "out_file": "/var/www/registration_nba/storage/logs/laravel-scheduler-out.log",
+      "log_date_format": "YYYY-MM-DD HH:mm:ss Z",
+      "merge_logs": true,
+      "min_uptime": "10s",
+      "max_restarts": 10,
+      "restart_delay": 4000
     }
   ]
 }

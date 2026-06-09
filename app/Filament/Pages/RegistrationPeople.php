@@ -60,35 +60,17 @@ class RegistrationPeople extends Page implements HasActions, HasSchemas, HasTabl
                 $query->getQuery()->orders = null;
                 $query->orderByRaw("
                     CASE
-                        WHEN status = 'none' OR status IS NULL OR status = '' THEN 0
-                        WHEN status = 'coming_in' THEN 1
-                        WHEN status = 'came_out' THEN 2
+                        WHEN status = 'entering' THEN 0
+                        WHEN status = 'exited' THEN 1
+                        WHEN status = 'none' OR status IS NULL OR status = '' THEN 2
                         ELSE 3
                     END ASC,
                     created_at DESC
                 ");
             })
             ->toolbarActions([
-                // ...
             ]);
     }
-
-    // protected function applyFiltersToTableQuery(Builder $query, bool $isResolvingRecord = false): Builder
-    // {
-    //     $query = parent::applyFiltersToTableQuery($query);
-    //     $query->getQuery()->orders = null;
-    //     $query->orderByRaw("
-    //         CASE
-    //             WHEN status = 'none' OR status IS NULL OR status = '' THEN 0
-    //             WHEN status = 'coming_in' THEN 1
-    //             WHEN status = 'came_out' THEN 2
-    //             ELSE 3
-    //         END ASC,
-    //         created_at DESC
-    //     ");
-
-    //     return $query;
-    // }
 
     #[On('card-scanned')]
     public function onCardScanned(string $code): void

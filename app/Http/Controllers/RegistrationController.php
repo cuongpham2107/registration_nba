@@ -62,8 +62,7 @@ class RegistrationController extends Controller
         $notificationMessage .= "Số lượng khách: {$registration->guests->count()} người\n";
         $notificationMessage .= "Khu vực LV: {$areas}\n";
         $notificationMessage .= "Giờ gửi yc: {$sentAt}\n";
-        $notificationMessage .= "Người duyệt: {$name_manager}\n";
-        $notificationMessage .= "({$job_title_manager})\n";
+        $notificationMessage .= "Người duyệt: {$name_manager} ({$job_title_manager})\n";
         $notificationMessage .= "Giờ duyệt: {$approvedAt}";
 
         $ch = curl_init();

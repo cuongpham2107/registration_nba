@@ -12,7 +12,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Xoá các bản ghi RegistrationEntry có status 'none' của ngày hôm qua lúc 6h sáng
+        $schedule->command('app:cleanup-none-status-registration-entries')
+            ->dailyAt('06:00')
+            ->withoutOverlapping();
     }
 
     /**

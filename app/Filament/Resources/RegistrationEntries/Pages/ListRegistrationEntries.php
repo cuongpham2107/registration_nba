@@ -36,9 +36,9 @@ class ListRegistrationEntries extends ListRecords
         $query->getQuery()->orders = null;
         $query->orderByRaw("
             CASE
-                WHEN status = 'none' OR status IS NULL OR status = '' THEN 0
-                WHEN status = 'coming_in' THEN 1
-                WHEN status = 'came_out' THEN 2
+                WHEN status = 'coming_in' THEN 0
+                WHEN status = 'came_out' THEN 1
+                WHEN status = 'none' OR status IS NULL OR status = '' THEN 2
                 ELSE 3
             END ASC,
             created_at DESC

@@ -39,7 +39,6 @@ class RegistrationEntriesTable
             ->emptyStateHeading('Không có khách hay xe khai thác nào')
             ->emptyStateDescription('Hiện tại chưa có khách hay xe khai thác nào.')
             ->columns(self::getColumns())
-            ->defaultSort('created_at', 'asc')
             ->modifyQueryUsing(fn ($query) => self::modifyQuery($query))
             ->filters(self::getFilters(), layout: FiltersLayout::AboveContentCollapsible)
             ->filtersFormColumns(1)
@@ -79,8 +78,19 @@ class RegistrationEntriesTable
 
     private static function modifyQuery($query): Builder
     {
-        // Only show registration entries with type = 'inspection'
-        return $query->where('type', 'inspection');
+        $query
+            ->where('type', 'inspection')
+            ->getQuery()->orders = null;
+
+        return $query->orderByRaw("
+            CASE
+                WHEN status = 'coming_in' THEN 0
+                WHEN status = 'came_out' THEN 1
+                WHEN status = 'none' OR status IS NULL OR status = '' THEN 2
+                ELSE 3
+            END ASC,
+            created_at DESC
+        ");
     }
 
     private static function getColumns(bool $isToggledHiddenByDefault = true): array
@@ -116,6 +126,7 @@ class RegistrationEntriesTable
                 ->weight(FontWeight::Bold)
                 ->formatStateUsing(fn (?string $state): string => $state ? strtoupper($state) : '')
                 ->searchable()
+                ->limit(30)
                 ->toggleable(),
             TextColumn::make('areas')
                 ->label('Khu vực')
