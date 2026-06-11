@@ -100,6 +100,7 @@ class CarCatalogResource extends Resource implements HasShieldPermissions
                     ->modal()
                     ->modalHeading('Chỉnh sửa danh mục xe')
                     ->modalDescription('Nhập thông tin xe cần chỉnh sửa'),
+                Tables\Actions\DeleteAction::make()
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
