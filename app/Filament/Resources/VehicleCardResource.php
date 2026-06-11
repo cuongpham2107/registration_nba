@@ -28,9 +28,9 @@ class VehicleCardResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('stt')
-                    ->label('STT')
-                    ->numeric(),
+                // Forms\Components\TextInput::make('stt')
+                //     ->label('STT')
+                //     ->numeric(),
                 Forms\Components\TextInput::make('full_name')
                     ->label('Họ và tên')
                     ->maxLength(255),
@@ -67,10 +67,10 @@ class VehicleCardResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('stt')
-                    ->label('STT')
-                    ->alignCenter()
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('stt')
+                //     ->label('STT')
+                //     ->alignCenter()
+                //     ->sortable(),
                 Tables\Columns\TextColumn::make('full_name')
                     ->label('Họ và tên')
                     ->searchable(),
@@ -117,7 +117,7 @@ class VehicleCardResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort('stt')
+            ->defaultSort('card_number')
             ->filters([
                 //
             ])
