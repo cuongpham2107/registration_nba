@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Login;
 use App\Filament\Pages\UserProfile;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -22,6 +23,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Rmsramos\Activitylog\ActivitylogPlugin;
 use WatheqAlshowaiter\FilamentStickyTableHeader\StickyTableHeaderPlugin;
 
 class AdminPanelProvider extends PanelProvider
@@ -56,7 +58,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->maxContentWidth(MaxWidth::Full)
             ->plugins([
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
+                FilamentShieldPlugin::make()
                     ->gridColumns([
                         'default' => 1,
                         'sm' => 2,
@@ -73,7 +75,7 @@ class AdminPanelProvider extends PanelProvider
                         'sm' => 2,
                     ]),
                 TutorialsPlugin::make(),
-                \Rmsramos\Activitylog\ActivitylogPlugin::make()
+                ActivitylogPlugin::make()
                     ->navigationGroup('Quản lý danh mục')
                     ->navigationCountBadge(true)
                     ->label('Nhật ký hoạt động')
