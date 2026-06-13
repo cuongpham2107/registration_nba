@@ -2,9 +2,12 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Filament\Exports\UserExporter;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\ExportBulkAction;
+use Filament\Actions\Exports\Models\Export;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\ImageColumn;
@@ -196,6 +199,13 @@ class UsersTable
     {
         return [
             DeleteBulkAction::make(),
+            ExportBulkAction::make()
+                ->label('Xuất Excel')
+                ->modalHeading('Xuất danh sách người dùng')
+                ->icon('heroicon-o-inbox-arrow-down')
+                ->color('success')
+                ->fileName(fn (Export $export): string => "Danh sách người dùng-{$export->getKey()}.xlsx")
+                ->exporter(UserExporter::class),
         ];
     }
 }

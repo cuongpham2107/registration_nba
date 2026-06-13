@@ -25,6 +25,10 @@ class ApproveRegistrationAction
             ->requiresConfirmation()
             ->hidden(function (Registration $record) {
                 $user = Auth::user();
+                // super_admin có thể thấy tất cả
+                if ($user && $user->hasRole('super_admin')) {
+                    return false;
+                }
                 // Ẩn nếu chưa gửi hoặc đã duyệt/từ chối
                 if ($record->status !== 'sent') {
                     return true;
@@ -48,10 +52,12 @@ class ApproveRegistrationAction
                 return false;
             })
             ->action(function (Registration $record) {
+                $user = Auth::user();
                 $record->update([
                     'approved_at' => now(),
                     'status' => 'approve',
                     'type' => $record->type ?? 'working',
+                    'approver_id' => $user->id,
                 ]);
                 (new RegistrationController)->createRegistrationEntryFromGuest($record);
 

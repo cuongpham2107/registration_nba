@@ -4,6 +4,7 @@ namespace App\Filament\Resources\RegistrationEntries\Tables;
 
 use App\Filament\Exports\RegistrationEntryExporter;
 use App\Filament\Resources\RegistrationEntries\Actions\GiveCardAction;
+use App\Filament\Resources\RegistrationEntries\Actions\ReEnterCardAction;
 use App\Filament\Resources\RegistrationEntries\Actions\ReturnCardAction;
 use App\Filament\Resources\RegistrationEntries\Filters\RegistrationEntryFilter;
 use App\Filament\Resources\RegistrationEntries\Schemas\RegistrationEntryForm;
@@ -238,6 +239,7 @@ class RegistrationEntriesTable
         return [
             GiveCardAction::make(),
             ReturnCardAction::make(),
+            ReEnterCardAction::make(),
             ActionGroup::make([
                 ViewAction::make()
                     ->slideOver()

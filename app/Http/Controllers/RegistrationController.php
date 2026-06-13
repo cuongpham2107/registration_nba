@@ -8,6 +8,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 
@@ -17,7 +18,8 @@ class RegistrationController extends Controller
     {
         $name_manager = $request->query('name_manager');
         $job_title_manager = $request->query('job_title_manager');
-        $approver_id = $request->query('approver_id');
+        // Nếu đã đăng nhập thì dùng ID của user đang đăng nhập, không dùng từ URL
+        $approver_id = Auth::check() ? Auth::user()->id : $request->query('approver_id');
         $id = Crypt::decryptString($id);
         $registration = Registration::with('guests')->where('id', $id)->first();
         $user = User::find($registration?->user_id);
@@ -56,7 +58,6 @@ class RegistrationController extends Controller
         $approvedAt = now()->timezone('Asia/Ho_Chi_Minh')->format('H:i:s d-m-Y');
         $notificationMessage = "TB Duyệt đoàn khách số: {$registration->id}\n";
         $notificationMessage .= "Người y/c: {$user?->full_name}\n";
-        $notificationMessage .= "({$user?->asgl_id})\n";
         $notificationMessage .= "Đv khách: {$registration->name}\n";
         $notificationMessage .= "Mục đích: {$registration->purpose}\n";
         $notificationMessage .= "Số lượng khách: {$registration->guests->count()} người\n";
@@ -126,7 +127,8 @@ class RegistrationController extends Controller
     {
         $name_manager = $request->query('name_manager');
         $job_title_manager = $request->query('job_title_manager');
-        $approver_id = $request->query('approver_id');
+        // Nếu đã đăng nhập thì dùng ID của user đang đăng nhập, không dùng từ URL
+        $approver_id = Auth::check() ? Auth::user()->id : $request->query('approver_id');
         $id = Crypt::decryptString($id);
         $registration = Registration::where('id', $id)->first();
 
