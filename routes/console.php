@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,3 +18,8 @@ use Illuminate\Support\Facades\Artisan;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+// Xoá các bản ghi RegistrationEntry có status 'none' của ngày hôm qua lúc 6h sáng
+Schedule::command('app:cleanup-none-status-registration-entries')
+    ->dailyAt('06:00')
+    ->withoutOverlapping();

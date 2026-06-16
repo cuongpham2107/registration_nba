@@ -2,22 +2,10 @@
 
 namespace App\Console;
 
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
-    /**
-     * Define the application's command schedule.
-     */
-    protected function schedule(Schedule $schedule): void
-    {
-        // Xoá các bản ghi RegistrationEntry có status 'none' của ngày hôm qua lúc 6h sáng
-        $schedule->command('app:cleanup-none-status-registration-entries')
-            ->dailyAt('06:00')
-            ->withoutOverlapping();
-    }
-
     /**
      * Register the commands for the application.
      */

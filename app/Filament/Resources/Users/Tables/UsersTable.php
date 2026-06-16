@@ -51,8 +51,7 @@ class UsersTable
                 ->searchable(),
             TextColumn::make('roles.name')
                 ->label('Quyền')
-                ->badge()
-                ->sortable(),
+                ->badge(),
             TextColumn::make('approverConfigs.approver.full_name')
                 ->label('Người phê duyệt')
                 ->badge(),
