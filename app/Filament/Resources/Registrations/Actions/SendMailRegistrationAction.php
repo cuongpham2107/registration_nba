@@ -84,6 +84,7 @@ class SendMailRegistrationAction
                                 'end_date' => $record->end_date,
                                 'asset' => $record->asset,
                                 'note' => $record->note,
+                                'sender' => $record->creator?->full_name.' - '.$record->creator?->department ?? '', // full_name + department
                                 'customers' => $customers,
                                 'name_manager' => $approver->full_name ?? '',
                                 'job_title_manager' => $approver->department ?? '',

@@ -44,6 +44,10 @@
         <table style="width:100%;border-collapse:collapse;background:#f7fafc;border-radius:12px;overflow:hidden;">
             <tbody>
                 <tr>
+                    <th style="width:40%;color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Người đăng ký</th>
+                    <td style="padding:10px 8px;">{{ $sender }}</td>
+                </tr>
+                <tr>
                     <th style="width:40%;color:#667eea;text-align:left;padding:10px 8px;background:#f3f6fd;font-weight:600;">Đơn vị khách</th>
                     <td style="padding:10px 8px;">{{ $name }}</td>
                 </tr>

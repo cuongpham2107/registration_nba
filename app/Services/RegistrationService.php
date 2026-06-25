@@ -67,6 +67,7 @@ class RegistrationService
                         'asset' => $registration->asset,
                         'note' => $registration->note,
                         'customers' => $customers,
+                        'sender' => $registration->creator?->full_name.' - '.$registration->creator?->department ?? '', // full_name + department
                         'name_manager' => $approver->full_name ?? '',
                         'job_title_manager' => $approver->department ?? '',
                     ],
