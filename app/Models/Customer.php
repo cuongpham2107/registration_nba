@@ -18,6 +18,11 @@ class Customer extends Model
         return $this->belongsTo(Registration::class);
     }
 
+    public function registrationVehicle()
+    {
+        return $this->belongsTo(RegistrationVehicle::class);
+    }
+
     protected $casts = [
         'areas' => 'array',
     ];

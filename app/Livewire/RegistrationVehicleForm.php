@@ -3,9 +3,12 @@
 namespace App\Livewire;
 
 use App\Forms\Components\AutocompleteHawb;
+use App\Models\Fee;
+use App\Models\Invoice;
 use App\Models\RegistrationVehicle;
 use App\Models\User;
 use App\Services\HawbService;
+use App\Services\MailService;
 use Awcodes\TableRepeater\Components\TableRepeater;
 use Awcodes\TableRepeater\Header;
 use Carbon\Carbon;
@@ -21,8 +24,8 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\ActionSize;
 use Filament\Support\Enums\Alignment;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
@@ -232,11 +235,12 @@ class RegistrationVehicleForm extends Component implements HasForms
                         if (empty($state)) {
                             $set('fee_id', null);
                             $this->exitedFeeId = null;
+
                             return;
                         }
 
-                        $normalized = \App\Models\Invoice::normalizeLicensePlate($state);
-                        $exited = \App\Models\RegistrationVehicle::where('vehicle_number', $normalized)
+                        $normalized = Invoice::normalizeLicensePlate($state);
+                        $exited = RegistrationVehicle::where('vehicle_number', $normalized)
                             ->where('status', 'exited')
                             ->latest()
                             ->first();
@@ -257,7 +261,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->columnSpan(2),
                 Select::make('fee_id')
                     ->label('Loại xe, trọng tải')
-                    ->options(\App\Models\Fee::pluck('ticket_code', 'id'))
+                    ->options(Fee::pluck('ticket_code', 'id'))
                     ->required()
                     ->disabled(fn () => $this->exitedFeeId !== null)
                     ->dehydrated()
@@ -277,7 +281,7 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->columnSpan(2),
 
                 TableRepeater::make('hawbs')
-                    ->label(new \Illuminate\Support\HtmlString('Danh sách HAWB <br><span class="text-[10px] italic text-blue-600 dark:text-blue-400">(Nhập 5 số cuối của số hawb. Sau đó chọn số Hawb từ danh sách gợi ý)</span>'))
+                    ->label(new HtmlString('Danh sách HAWB <br><span class="text-[10px] italic text-blue-600 dark:text-blue-400">(Nhập 5 số cuối của số hawb. Sau đó chọn số Hawb từ danh sách gợi ý)</span>'))
                     ->headers([
                         Header::make('hawb_number')->label('Số HAWB'),
                         Header::make('pcs')->label('Số PCS')->width('100px')->align(Alignment::Center),
@@ -396,6 +400,39 @@ class RegistrationVehicleForm extends Component implements HasForms
                     ->seconds(false)
                     ->displayFormat('H:i d/m/Y')
                     ->columnSpan(2),
+                TableRepeater::make('customers')
+                    ->label('Danh sách phụ xe')
+                    ->headers([
+                        Header::make('name')->label('Tên phụ xe')->width('200px'),
+                        Header::make('papers')->label('Giấy tờ (CCCD/CMND)'),
+                    ])
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Tên phụ xe')
+                            ->required()
+                            ->validationMessages([
+                                'required' => 'Tên phụ xe không được để trống.',
+                            ])
+                            ->extraAttributes(['class' => '!bg-gray-100 dark:!bg-gray-700 dark:!text-white dark:!border-gray-600'])
+                            ->maxLength(255),
+                        TextInput::make('papers')
+                            ->label('Giấy tờ')
+                            ->required()
+                            ->validationMessages([
+                                'required' => 'Giấy tờ phụ xe không được để trống.',
+                            ])
+                            ->extraAttributes(['class' => '!bg-gray-100 dark:!bg-gray-700 dark:!text-white dark:!border-gray-600'])
+                            ->maxLength(255),
+                    ])
+                    ->reorderable(false)
+                    ->emptyLabel('Chưa có phụ xe nào')
+                    ->addAction(callback: function (Action $action) {
+                        return $action->label('Thêm phụ xe')->icon('heroicon-o-plus')->size(ActionSize::ExtraSmall)
+                            ->extraAttributes(['class' => '-mt-2']);
+                    })
+                    ->minItems(0)
+                    ->defaultItems(0)
+                    ->columnSpan(2),
 
                 Textarea::make('notes')
                     ->label('Ghi chú')
@@ -456,7 +493,7 @@ class RegistrationVehicleForm extends Component implements HasForms
 
         // Normalize license plate
         if (! empty($processedData['vehicle_number'])) {
-            $processedData['vehicle_number'] = \App\Models\Invoice::normalizeLicensePlate($processedData['vehicle_number']);
+            $processedData['vehicle_number'] = Invoice::normalizeLicensePlate($processedData['vehicle_number']);
         }
 
         $processedData['secret'] = trim((string) ($processedData['secret'] ?? ''));
@@ -492,6 +529,9 @@ class RegistrationVehicleForm extends Component implements HasForms
             $processedData['hawb_number'] = json_encode($processedData['hawbs']);
             unset($processedData['hawbs']); // Remove hawbs array
         }
+
+        // Remove customers field - saved as related records
+        unset($processedData['customers']);
 
         // Remove search_hawb field as it's not needed in database
         unset($processedData['search_hawb']);
@@ -556,6 +596,17 @@ class RegistrationVehicleForm extends Component implements HasForms
         $processedData['status'] = 'sent';
         $record = RegistrationVehicle::create($processedData);
 
+        if (! empty($data['customers'])) {
+            foreach ($data['customers'] as $customerData) {
+                if (! empty($customerData['name']) && ! empty($customerData['papers'])) {
+                    $record->customers()->create([
+                        'name' => $customerData['name'],
+                        'papers' => $customerData['papers'],
+                    ]);
+                }
+            }
+        }
+
         // Gửi email và thông báo
         // $this->sendEmailAndNotifications($record);
 
@@ -594,7 +645,7 @@ class RegistrationVehicleForm extends Component implements HasForms
             $mailSent = false;
             foreach ($approvers as $user) {
                 if ($user->email) {
-                    $mail = (new \App\Services\MailService)->sendMailWithTemplate(
+                    $mail = (new MailService)->sendMailWithTemplate(
                         $user->email,
                         'Đăng ký xe khai thác: '.$record->driver_name.' | '.$record->vehicle_number.' | '.date('Y-m-d H:i:s'),
                         'template-mail.registration-vehicle',
@@ -674,7 +725,7 @@ class RegistrationVehicleForm extends Component implements HasForms
         }
 
         if ($field === 'vehicle_number') {
-            return \App\Models\Invoice::normalizeLicensePlate($normalizedValue);
+            return Invoice::normalizeLicensePlate($normalizedValue);
         }
 
         if ($field === 'driver_phone') {
