@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('vehicle_cards', function (Blueprint $table) {
+        Schema::create('guest_cards', function (Blueprint $table) {
             $table->id();
             $table->integer('stt')->nullable();
             $table->string('full_name')->nullable();
@@ -16,11 +16,8 @@ return new class extends Migration
             $table->string('unit_abbr')->nullable();
             $table->string('title')->nullable();
             $table->string('card_number')->nullable();
-            $table->dateTime('issued_at')->nullable();
+            $table->date('issued_at')->nullable();
             $table->string('issue_area')->nullable();
-            $table->string('phone')->nullable();
-            $table->string('license_plate')->nullable();
-            $table->string('vehicle_type')->nullable();
             $table->string('source_section')->nullable();
             $table->timestamps();
         });
@@ -28,6 +25,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('vehicle_cards');
+        Schema::dropIfExists('guest_cards');
     }
 };

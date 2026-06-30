@@ -4,14 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class VehicleCard extends Model
+class GuestCard extends Model
 {
     protected $guarded = [];
 
     protected function casts(): array
     {
         return [
-            'expired_at' => 'date',
+            'issued_at' => 'date',
         ];
     }
 }

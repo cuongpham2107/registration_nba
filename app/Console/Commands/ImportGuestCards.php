@@ -2,15 +2,15 @@
 
 namespace App\Console\Commands;
 
-use App\Models\VehicleCard;
+use App\Models\GuestCard;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
-class ImportVehicleCards extends Command
+class ImportGuestCards extends Command
 {
-    protected $signature = 'app:import-vehicle-cards {file : Path to CSV file}';
+    protected $signature = 'app:import-guest-cards {file : Path to CSV file}';
 
-    protected $description = 'Import vehicle cards data from CSV (Book 1(Sheet1)-5.csv)';
+    protected $description = 'Import guest cards data from CSV (Book 1(Sheet1)-4.csv)';
 
     public function handle()
     {
@@ -27,9 +27,12 @@ class ImportVehicleCards extends Command
             return 1;
         }
 
-        // Skip first 2 rows (header + empty row)
-        fgetcsv($handle, 0, ',', '"', '');
-        fgetcsv($handle, 0, ',', '"', '');
+        $header = fgetcsv($handle, 0, ',', '"', '');
+        if (!$header) {
+            $this->error('Empty CSV file');
+            fclose($handle);
+            return 1;
+        }
 
         $bar = $this->output->createProgressBar();
         $bar->start();
@@ -41,56 +44,48 @@ class ImportVehicleCards extends Command
         while (($row = fgetcsv($handle, 0, ',', '"', '')) !== false) {
             $row = array_map(fn($v) => is_string($v) ? trim($v) : $v, $row);
 
-            if (count($row) < 4) {
+            if (count($row) < 5) {
                 $skipped++;
                 continue;
             }
 
             $stt = $row[0] ?? '';
-            $cardNumber = $row[1] ?? '';
+            $fullName = $row[1] ?? '';
             $unit = $row[2] ?? '';
-            $licensePlate = $row[3] ?? '';
-            $vehicleType = $row[4] ?? '';
-            $expiredAtStr = $row[5] ?? '';
-            $phone = $row[6] ?? '';
+            $unitAbbr = $row[3] ?? '';
+            $title = $row[4] ?? '';
+            $cardNumber = $row[5] ?? '';
+            $issuedAtStr = $row[6] ?? '';
+            $issueArea = $row[7] ?? '';
 
-            // Detect section header (non-numeric STT with text)
-            if ($stt !== '' && !is_numeric($stt) && $unit !== '') {
+            // Detect section header
+            if ($stt !== '' && $fullName === '' && $unit !== '' && !is_numeric($stt)) {
                 $currentSection = $unit;
-                $this->line("\nSection: {$unit}");
-                $skipped++;
-                continue;
-            }
-
-            if ($cardNumber === '' && $unit === '' && $licensePlate === '') {
                 $skipped++;
                 continue;
             }
 
             // Detect section from card number
-            if ($cardNumber) {
-                if (str_starts_with($cardNumber, 'HAN.ASG/')) {
-                    $prefix = substr($cardNumber, 9);
-                    if (($pos = strpos($prefix, '-XE')) !== false) {
-                        $currentSection = substr($prefix, 0, $pos);
-                    } else {
-                        $currentSection = 'Vehicle';
-                    }
-                } elseif (str_starts_with($cardNumber, 'HAN.ASG-XE')) {
-                    $currentSection = 'ASG';
-                }
+            if ($cardNumber && preg_match('#^ASG/([A-Z]+)#', $cardNumber, $m)) {
+                $currentSection = $m[1];
             }
 
-            $expiredAt = $this->parseDate($expiredAtStr);
+            if ($fullName === '' && $unit === '' && $cardNumber === '') {
+                $skipped++;
+                continue;
+            }
 
-            VehicleCard::create([
+            $issuedAt = $this->parseDate($issuedAtStr);
+
+            GuestCard::create([
                 'stt' => is_numeric($stt) ? (int)$stt : null,
-                'card_number' => $cardNumber ?: null,
+                'full_name' => $fullName ?: null,
                 'unit' => $unit ?: null,
-                'license_plate' => $licensePlate ?: null,
-                'vehicle_type' => $vehicleType ?: null,
-                'expired_at' => $expiredAt,
-                'phone' => $phone ?: null,
+                'unit_abbr' => $unitAbbr ?: null,
+                'title' => $title ?: null,
+                'card_number' => $cardNumber ?: null,
+                'issued_at' => $issuedAt,
+                'issue_area' => $issueArea ?: null,
                 'source_section' => $currentSection,
             ]);
 

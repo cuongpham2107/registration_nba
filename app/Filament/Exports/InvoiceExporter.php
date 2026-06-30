@@ -3,6 +3,7 @@
 namespace App\Filament\Exports;
 
 use App\Models\Invoice;
+use Carbon\Carbon;
 use Filament\Actions\Exports\ExportColumn;
 use Filament\Actions\Exports\Exporter;
 use Filament\Actions\Exports\Models\Export;
@@ -15,40 +16,61 @@ class InvoiceExporter extends Exporter
     {
         return [
             ExportColumn::make('id')
-                ->label('ID'),
+                ->label('STT'),
+            ExportColumn::make('registerDirectly.id')
+                ->label('Mã vé')
+                ->formatStateUsing(fn ($state) => "T" . now()->format('m') . "-" . str_pad($state ?? 0, 2, '0', STR_PAD_LEFT)),
+            ExportColumn::make('entry_date')
+                ->label('Ngày vào')
+                ->formatStateUsing(fn ($state, $record): string => $record->registerDirectly?->actual_date_in
+                    ? Carbon::parse($record->registerDirectly->actual_date_in)->format('d/m/Y')
+                    : ''),
+            ExportColumn::make('exit_date')
+                ->label('Ngày ra')
+                ->formatStateUsing(fn ($state, $record): string => $record->registerDirectly?->actual_date_out
+                    ? Carbon::parse($record->registerDirectly->actual_date_out)->format('d/m/Y')
+                    : ''),
             ExportColumn::make('invoice_code')
-                ->label('Mã hóa đơn'),
-            ExportColumn::make('registerDirectly.name')
-                ->label('Tên khách hàng'),
-            ExportColumn::make('normalized_license_plate')
-                ->label('Biển số xe'),
-            ExportColumn::make('registerDirectly.fee.ticket_code')
-                ->label('Loại vé / Trọng tải'),
-            ExportColumn::make('registerDirectly.actual_date_in')
-                ->label('Giờ vào'),
-            ExportColumn::make('registerDirectly.actual_date_out')
-                ->label('Giờ ra'),
-            ExportColumn::make('carCatalog.unit.name')
-                ->label('Đơn vị'),
+                ->label('Mã hoá đơn'),
+            ExportColumn::make('registerDirectly.bks')
+                ->label('Biển kiểm soát'),
+            ExportColumn::make('vehicle_type')
+                ->label('Loại xe/ Trọng tải')
+                ->formatStateUsing(fn ($state, $record): string => $record->registerDirectly?->fee?->ticket_code ?? ''),
+            ExportColumn::make('entry_time')
+                ->label('Giờ vào')
+                ->formatStateUsing(fn ($state, $record): string => $record->registerDirectly?->actual_date_in
+                    ? Carbon::parse($record->registerDirectly->actual_date_in)->format('H:i')
+                    : ''),
+            ExportColumn::make('exit_time')
+                ->label('Giờ ra')
+                ->formatStateUsing(fn ($state, $record): string => $record->registerDirectly?->actual_date_out
+                    ? Carbon::parse($record->registerDirectly->actual_date_out)->format('H:i')
+                    : ''),
+            ExportColumn::make('duration')
+                ->label('Thời gian khai thác')
+                ->formatStateUsing(function ($state, $record): string {
+                    $rd = $record->registerDirectly;
+                    if (!$rd) return '';
+
+                    $start = $rd->actual_date_in;
+                    $end = $rd->actual_date_out;
+
+                    if (!$start || !$end) return '';
+
+                    $start = Carbon::parse($start);
+                    $end = Carbon::parse($end);
+
+                    if ($end->lessThan($start)) return '';
+
+                    $diff = $start->diff($end);
+                    $hours = $diff->h + ($diff->d * 24);
+
+                    return sprintf('%02d:%02d', $hours, $diff->i);
+                }),
             ExportColumn::make('amount')
-                ->label('Số tiền')
+                ->label('Phí khai thác')
                 ->formatStateUsing(fn (?string $state): string => $state ? number_format((float) $state, 0, ',', '.') . ' VNĐ' : ''),
-            ExportColumn::make('is_paid')
-                ->label('Đã thanh toán')
-                ->formatStateUsing(fn (?bool $state): string => $state ? 'Đã thanh toán' : 'Chưa thanh toán'),
-            ExportColumn::make('payment_method')
-                ->label('PT thanh toán'),
-            ExportColumn::make('paid_at')
-                ->label('Thời gian thanh toán'),
-            ExportColumn::make('is_invoiced')
-                ->label('Đã xuất hóa đơn')
-                ->formatStateUsing(fn (?bool $state): string => $state ? 'Đã xuất' : 'Chưa xuất'),
-            ExportColumn::make('invoiced_at')
-                ->label('Thời gian xuất hóa đơn'),
-            ExportColumn::make('notes')
-                ->label('Ghi chú'),
-            ExportColumn::make('created_at')
-                ->label('Ngày tạo'),
         ];
     }
 

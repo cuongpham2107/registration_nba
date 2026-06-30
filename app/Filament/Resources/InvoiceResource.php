@@ -6,6 +6,7 @@ use App\Filament\Exports\InvoiceExporter;
 use App\Filament\Resources\InvoiceResource\Filters\InvoiceFilter;
 use App\Filament\Resources\InvoiceResource\Pages;
 use App\Models\Invoice;
+use Carbon\Carbon;
 use Filament\Actions\Exports\Models\Export;
 use Filament\Forms;
 use Filament\Forms\Components\Actions\Action;
@@ -151,89 +152,109 @@ class InvoiceResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label('STT')
+                    ->sortable(false)
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('registerDirectly.id')
+                    ->label('Số vé')
+                    ->formatStateUsing(fn ($state) => "T" . now()->format('m') . "-" . str_pad($state ?? 0, 2, '0', STR_PAD_LEFT))
+                    ->sortable()
+                    ->alignCenter(),
+                Tables\Columns\TextColumn::make('registerDirectly.actual_date_in')
+                    ->label('Ngày vào')
+                    ->dateTime('d/m/Y')
+                    ->sortable()
+                    ->alignCenter()
+                    ->placeholder('-')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('registerDirectly.actual_date_out')
+                    ->label('Ngày ra')
+                    ->dateTime('d/m/Y')
+                    ->sortable()
+                    ->alignCenter()
+                    ->placeholder('-')
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('invoice_code')
-                    ->label('Mã hóa đơn')
+                    ->label('Mã hoá đơn')
                     ->searchable()
                     ->sortable()
-                    ->copyable(),
+                    ->copyable()
+                    ->toggleable(),
 
-                // Tables\Columns\TextColumn::make('registerDirectly.bks')
-                //     ->label('Biển số xe')
-                //     ->searchable()
-                //     ->sortable(),
-
-                Tables\Columns\TextColumn::make('registerDirectly.name')
-                    ->label('Tên khách hàng')
+                Tables\Columns\TextColumn::make('registerDirectly.bks')
+                    ->label('Biển kiểm soát')
                     ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('normalized_license_plate')
-                    ->label('Biển số xe')
-                    ->searchable()
+                    ->sortable()
                     ->badge()
-                    ->color('gray'),
+                    ->alignCenter()
+                    ->color('gray')
+                    ->toggleable(),
 
-                Tables\Columns\TextColumn::make('carCatalog.unit.name')
-                    ->label('Đơn vị')
-                    ->searchable()
-                    ->limit(30)
-                    ->tooltip(function ($record) {
-                        return $record->carCatalog?->company_name;
-                    }),
+                Tables\Columns\TextColumn::make('vehicle_type')
+                    ->label('Loại xe/ Trọng tải')
+                    ->state(function ($record) {
+                        $fee = $record->registerDirectly?->fee;
+                        if (!$fee) return '-';
+                        return $fee->ticket_code;
+                    })
+                    ->toggleable(),
+
+                Tables\Columns\ColumnGroup::make('Thời gian', [
+                    Tables\Columns\TextColumn::make('entry_time')
+                        ->label('Giờ vào')
+                        ->getStateUsing(function ($record) {
+                            return $record->registerDirectly?->actual_date_in
+                                ? Carbon::parse($record->registerDirectly->actual_date_in)->format('H:i')
+                                : null;
+                        })
+                        ->alignCenter()
+                        ->placeholder('-')
+                        ->toggleable(),
+                    Tables\Columns\TextColumn::make('exit_time')
+                        ->label('Giờ ra')
+                        ->getStateUsing(function ($record) {
+                            return $record->registerDirectly?->actual_date_out
+                                ? Carbon::parse($record->registerDirectly->actual_date_out)->format('H:i')
+                                : null;
+                        })
+                        ->alignCenter()
+                        ->placeholder('-')
+                        ->toggleable(),
+                ])->alignCenter(),
+
+                Tables\Columns\TextColumn::make('duration')
+                    ->label('Thời gian khai thác')
+                    ->getStateUsing(function ($record) {
+                        $rd = $record->registerDirectly;
+                        if (!$rd) return null;
+
+                        $start = $rd->actual_date_in;
+                        $end = $rd->actual_date_out;
+
+                        if (!$start || !$end) return null;
+
+                        $start = Carbon::parse($start);
+                        $end = Carbon::parse($end);
+
+                        if ($end->lessThan($start)) return null;
+
+                        $diff = $start->diff($end);
+                        $hours = $diff->h + ($diff->d * 24);
+
+                        return sprintf('%02d:%02d', $hours, $diff->i);
+                    })
+                    ->placeholder('-')
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('amount')
-                    ->label('Số tiền')
+                    ->label('Phí khai thác')
                     ->money('VND')
                     ->sortable()
                     ->alignRight()
-                    ->weight('bold'),
-
-                Tables\Columns\IconColumn::make('is_paid')
-                    ->label('Đã thanh toán')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-x-circle')
-                    ->trueColor('success')
-                    ->alignCenter()
-                    ->falseColor('danger'),
-
-                Tables\Columns\TextColumn::make('payment_method')
-                    ->label('PT thanh toán')
-                    ->badge()
-                    ->alignCenter(),
-                // ->color(fn ($state) => match ($state) {
-                //     'Trả tiền cho bảo vệ' => 'success',
-                //     // 'Chuyển khoản' => 'blue',
-                //     // 'Tiền mặt' => 'green',
-                //     // 'Thẻ' => 'yellow',
-                //     default => 'gray'
-                // }),
-
-                Tables\Columns\TextColumn::make('paid_at')
-                    ->label('Thời gian thanh toán')
-                    ->dateTime('d/m/Y H:i')
-                    ->sortable()
-                    ->placeholder('Chưa thanh toán'),
-
-                Tables\Columns\IconColumn::make('is_invoiced')
-                    ->label('Đã xuất HĐ')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-x-circle')
-                    ->trueColor('success')
-                    ->alignCenter()
-                    ->falseColor('danger'),
-
-                Tables\Columns\TextColumn::make('invoiced_at')
-                    ->label('Thời gian xuất HĐ')
-                    ->dateTime('d/m/Y H:i')
-                    ->sortable()
-                    ->placeholder('Chưa xuất'),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Ngày tạo')
-                    ->dateTime('d/m/Y H:i')
-                    ->sortable()
+                    ->weight('bold')
                     ->toggleable(),
             ])
             ->filters([
@@ -353,7 +374,10 @@ class InvoiceResource extends Resource
                                 ->send();
                         }),
 
-                    Tables\Actions\ExportBulkAction::make()
+                    
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+                Tables\Actions\ExportBulkAction::make()
                         ->label('Xuất Excel')
                         ->modalHeading('Xuất Excel hóa đơn')
                         ->icon('heroicon-o-document-arrow-down')
@@ -361,8 +385,6 @@ class InvoiceResource extends Resource
                         ->fileName(fn (Export $export): string => "Danh sách hóa đơn-{$export->getKey()}.xlsx")
                         ->exporter(InvoiceExporter::class),
 
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
             ])
             ->groups([
                 Tables\Grouping\Group::make('carCatalog.unit.name')

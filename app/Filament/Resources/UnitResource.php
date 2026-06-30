@@ -87,6 +87,9 @@ class UnitResource extends Resource
                     ->modal()
                     ->modalHeading('Chỉnh sửa đơn vị')
                     ->modalDescription('Nhập thông tin đơn vị cần chỉnh sửa'),
+                Tables\Actions\DeleteAction::make()
+                    ->modalHeading('Xóa đơn vị')
+                    ->modalSubheading('Bạn có chắc chắn muốn xóa đơn vị này không?'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -33,22 +33,16 @@ class RevenueChartWidget extends ChartWidget
 
         $labels = [];
         $revenueData = [];
-        $invoiceCount = [];
 
         if ($filter === 'week') {
-            // 7 ngày gần nhất
             for ($i = 6; $i >= 0; $i--) {
                 $day = $now->copy()->subDays($i);
                 $labels[] = $day->format('d/m');
                 $revenueData[] = (float) Invoice::where('is_paid', true)
                     ->whereDate('paid_at', $day->toDateString())
                     ->sum('amount');
-                $invoiceCount[] = Invoice::where('is_paid', true)
-                    ->whereDate('paid_at', $day->toDateString())
-                    ->count();
             }
         } elseif ($filter === 'month') {
-            // Từng ngày trong tháng hiện tại
             $daysInMonth = $now->daysInMonth;
             for ($d = 1; $d <= $daysInMonth; $d++) {
                 $day = Carbon::create($now->year, $now->month, $d, 0, 0, 0, $tz);
@@ -59,12 +53,8 @@ class RevenueChartWidget extends ChartWidget
                 $revenueData[] = (float) Invoice::where('is_paid', true)
                     ->whereDate('paid_at', $day->toDateString())
                     ->sum('amount');
-                $invoiceCount[] = Invoice::where('is_paid', true)
-                    ->whereDate('paid_at', $day->toDateString())
-                    ->count();
             }
         } else {
-            // Từng tháng trong năm hiện tại
             for ($m = 1; $m <= 12; $m++) {
                 if ($m > $now->month) {
                     break;
@@ -74,10 +64,6 @@ class RevenueChartWidget extends ChartWidget
                     ->whereYear('paid_at', $now->year)
                     ->whereMonth('paid_at', $m)
                     ->sum('amount');
-                $invoiceCount[] = Invoice::where('is_paid', true)
-                    ->whereYear('paid_at', $now->year)
-                    ->whereMonth('paid_at', $m)
-                    ->count();
             }
         }
 
@@ -91,18 +77,6 @@ class RevenueChartWidget extends ChartWidget
                     'borderWidth' => 2,
                     'fill' => true,
                     'tension' => 0.4,
-                    'yAxisID' => 'y',
-                ],
-                [
-                    'label' => 'Số hóa đơn',
-                    'data' => $invoiceCount,
-                    'backgroundColor' => 'rgba(16, 185, 129, 0.15)',
-                    'borderColor' => 'rgba(16, 185, 129, 1)',
-                    'borderWidth' => 2,
-                    'fill' => false,
-                    'tension' => 0.4,
-                    'type' => 'bar',
-                    'yAxisID' => 'y1',
                 ],
             ],
             'labels' => $labels,
@@ -126,9 +100,6 @@ class RevenueChartWidget extends ChartWidget
                 'tooltip' => [
                     'mode' => 'index',
                     'intersect' => false,
-                    'callbacks' => [
-                        'label' => null,
-                    ],
                 ],
             ],
             'scales' => [
@@ -144,18 +115,7 @@ class RevenueChartWidget extends ChartWidget
                         'text' => 'Doanh thu (đ)',
                     ],
                 ],
-                'y1' => [
-                    'type' => 'linear',
-                    'display' => true,
-                    'position' => 'right',
-                    'grid' => [
-                        'drawOnChartArea' => false,
-                    ],
-                    'title' => [
-                        'display' => true,
-                        'text' => 'Số hóa đơn',
-                    ],
-                ],
+
             ],
         ];
     }

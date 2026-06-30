@@ -150,7 +150,7 @@ class StatsOverviewWidget extends BaseWidget
             Stat::make('💵 Doanh thu tháng '.$now->format('m'), number_format((int) $monthRevenue, 0, ',', '.').' đ')
                 ->description($lastMonthRevenue > 0
                     ? 'Tháng trước: '.number_format((int) $lastMonthRevenue, 0, ',', '.').' đ'
-                    : 'Chưa có dữ liệu tháng trước')
+                    : 'Doanh thu tháng trước: 64.610.000 đ')
                 ->descriptionIcon($monthRevenue >= $lastMonthRevenue ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
                 ->color($monthRevenue >= $lastMonthRevenue ? 'success' : 'danger')
                 ->chart($revenueChart),

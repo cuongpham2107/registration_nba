@@ -360,13 +360,22 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('cards.card_name')
                     ->label('Thẻ')
                     ->badge()
-                    ->separator(','),
+                    ->separator(',')
+                    ->summarize([
+                        Tables\Columns\Summarizers\Count::make()
+                            ->label('Thẻ đã phát:'),
+                    ]),
 
                 Tables\Columns\TextColumn::make('invoice.amount')
                     ->label('Số tiền')
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => $state ? number_format($state, 0, ',', '.') : '')
-                    ->alignment(Alignment::Center),
+                    ->alignment(Alignment::Center)
+                    ->summarize([
+                        Tables\Columns\Summarizers\Sum::make()
+                            ->money('VND')
+                            ->label('Tổng tiền:'),
+                    ]),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Ngày tạo')
