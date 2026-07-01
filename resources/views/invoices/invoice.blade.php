@@ -184,7 +184,7 @@
                 @else
                     <div class="logo flex items-center justify-center text-xs" style="background:#d1d5db;">LOGO</div>
                 @endif
-                <div class="org-name">CÔNG TY CỔ PHẦN ASG</div>
+                <div class="org-name">CÔNG TY CP TẬP ĐOÀN ASG</div>
             </div>
 
             <!-- Title -->
@@ -209,7 +209,7 @@
                 <div class="data-row">
                     <div class="data-label">Số vé</div>
                     <div class="data-value">
-                        T{{ now()->format('m') }}-{{ str_pad($record->id ?? 0, 2, '0', STR_PAD_LEFT) }}</div>
+                        T1-{{ str_pad($record->id ?? 0, 2, '0', STR_PAD_LEFT) }}</div>
                 </div>
                 <div class="data-row">
                     <div class="data-label">BKS xe</div>

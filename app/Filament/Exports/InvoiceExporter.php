@@ -19,7 +19,7 @@ class InvoiceExporter extends Exporter
                 ->label('STT'),
             ExportColumn::make('registerDirectly.id')
                 ->label('Mã vé')
-                ->formatStateUsing(fn ($state) => "T" . now()->format('m') . "-" . str_pad($state ?? 0, 2, '0', STR_PAD_LEFT)),
+                ->formatStateUsing(fn ($state) => "T1" . "-" . str_pad($state ?? 0, 2, '0', STR_PAD_LEFT)),
             ExportColumn::make('entry_date')
                 ->label('Ngày vào')
                 ->formatStateUsing(fn ($state, $record): string => $record->registerDirectly?->actual_date_in

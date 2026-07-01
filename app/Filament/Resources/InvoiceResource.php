@@ -158,7 +158,7 @@ class InvoiceResource extends Resource
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('registerDirectly.id')
                     ->label('Số vé')
-                    ->formatStateUsing(fn ($state) => "T" . now()->format('m') . "-" . str_pad($state ?? 0, 2, '0', STR_PAD_LEFT))
+                    ->formatStateUsing(fn ($state) => "T1" . "-" . str_pad($state ?? 0, 2, '0', STR_PAD_LEFT))
                     ->sortable()
                     ->alignCenter(),
                 Tables\Columns\TextColumn::make('registerDirectly.actual_date_in')
