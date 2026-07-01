@@ -155,7 +155,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                                             ->maxLength(255),
                                     ])
                                     ->afterStateHydrated(function (TableRepeater $component, $state, $record) {
-                                        if ($record && $record->registrationVehicle->customers->isNotEmpty()) {
+                                        if ($record && $record->registrationVehicle?->customers?->isNotEmpty()) {
                                             $component->state($record->registrationVehicle->customers->toArray());
                                         }
                                     })
