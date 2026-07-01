@@ -41,12 +41,18 @@ class RegistrationVehicle extends Model
         return $this->belongsTo(RegisterDirectly::class, 'id_registration_directly');
     }
 
-     public function blacklist()
+    public function blacklist()
     {
         return $this->hasOne(BlackList::class, 'registration_vehicle_id');
     }
-     public function fee()
+
+    public function fee()
     {
         return $this->belongsTo(Fee::class, 'fee_id');
+    }
+
+    public function customers()
+    {
+        return $this->hasMany(Customer::class, 'registration_vehicle_id');
     }
 }

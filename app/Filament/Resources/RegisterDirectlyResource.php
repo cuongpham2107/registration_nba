@@ -10,6 +10,8 @@ use App\Filament\Resources\RegisterDirectlyResource\Pages;
 use App\Models\Area;
 use App\Models\RegisterDirectly;
 use App\Models\RegistrationVehicle;
+use Awcodes\TableRepeater\Components\TableRepeater;
+use Awcodes\TableRepeater\Header;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Carbon\Carbon;
 use Closure;
@@ -107,110 +109,137 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                         Section::make('Thông tin thẻ')
                             ->schema([
                                 Forms\Components\Select::make('cards')
-                            ->label('Thẻ')
-                            ->multiple()
-                            ->columnSpanFull()
-                            ->relationship(
-                                name: 'cards',
-                                titleAttribute: 'card_name',
-                                modifyQueryUsing: function (Builder $query, Forms\Components\Component $component) {
-                                    $record = $component->getRecord();
-                                    $query->where(function ($q) use ($record) {
-                                        $q->where('status', 'inactive')
-                                            ->where(function ($q) {
-                                                $q->whereNull('expiry_date')
-                                                    ->orWhere('expiry_date', '>=', now());
+                                    ->label('Thẻ')
+                                    ->multiple()
+                                    ->columnSpanFull()
+                                    ->relationship(
+                                        name: 'cards',
+                                        titleAttribute: 'card_name',
+                                        modifyQueryUsing: function (Builder $query, Forms\Components\Component $component) {
+                                            $record = $component->getRecord();
+                                            $query->where(function ($q) use ($record) {
+                                                $q->where('status', 'inactive')
+                                                    ->where(function ($q) {
+                                                        $q->whereNull('expiry_date')
+                                                            ->orWhere('expiry_date', '>=', now());
+                                                    });
+                                                if ($record) {
+                                                    $q->orWhereHas('registerDirectlies', fn ($q) => $q->where('register_directly_id', $record->id));
+                                                }
                                             });
-                                        if ($record) {
-                                            $q->orWhereHas('registerDirectlies', fn ($q) => $q->where('register_directly_id', $record->id));
                                         }
-                                    });
-                                }
-                            )
-                            ->searchable(['card_name', 'card_number'])
-                            ->preload(),
-                        Forms\Components\Select::make('areas')
-                            ->label('Khu vực')
-                            ->multiple()
-                            ->options(Area::all()->pluck('name', 'code'))
-                            ->preload()
-                            ->required()
-                            ->columnSpanFull(),
-                        Forms\Components\DateTimePicker::make('start_date')
-                            ->displayFormat('d/m/Y h:i')
-                            ->seconds(false)
-                            ->label('Giờ vào')
-                            ->placeholder('Chọn ngày, giờ vào')
-                            ->native(true)
-                            ->prefixIcon('heroicon-o-calendar')
-                            ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
-                            ->required(),
-                        Forms\Components\DateTimePicker::make('end_date')
-                            ->displayFormat('d/m/Y h:i')
-                            ->seconds(false)
-                            ->label('Giờ ra dự kiến')
-                            ->placeholder('Chọn ngày, giờ kết thúc dự kiến')
-                            ->native(true)
-                            ->prefixIcon('heroicon-o-calendar')
-                            ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
-                            ->rules([
-                                fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
-                                    if (($record['status'] ?? null) != 'sent') {
-                                        if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->isBefore(Carbon::parse($get('start_date'), 'Asia/Ho_Chi_Minh'))) {
-                                            $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ bắt đầu.');
+                                    )
+                                    ->searchable(['card_name', 'card_number'])
+                                    ->preload(),
+                                Forms\Components\Select::make('areas')
+                                    ->label('Khu vực')
+                                    ->multiple()
+                                    ->options(Area::all()->pluck('name', 'code'))
+                                    ->preload()
+                                    ->required()
+                                    ->columnSpanFull(),
+                                TableRepeater::make('registrationVehicle.customers')
+                                    ->label('Danh sách phụ xe')
+                                    ->headers([
+                                        Header::make('name')->label('Tên phụ xe'),
+                                        Header::make('papers')->label('Giấy tờ'),
+                                    ])
+                                    ->schema([
+                                        Forms\Components\TextInput::make('name')
+                                            ->label('Tên phụ xe')
+                                            ->required()
+                                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('papers')
+                                            ->label('Giấy tờ')
+                                            ->required()
+                                            ->maxLength(255),
+                                    ])
+                                    ->afterStateHydrated(function (TableRepeater $component, $state, $record) {
+                                        if ($record && $record->registrationVehicle->customers->isNotEmpty()) {
+                                            $component->state($record->registrationVehicle->customers->toArray());
                                         }
-                                    }
+                                    })
+                                    ->dehydrated(false)
+                                    ->addActionLabel('Thêm phụ xe')
+                                    ->reorderable(false)
+                                    ->emptyLabel('Chưa có phụ xe nào')
+                                    ->minItems(0)
+                                    ->columnSpanFull(),
+                                Forms\Components\DateTimePicker::make('start_date')
+                                    ->displayFormat('d/m/Y h:i')
+                                    ->seconds(false)
+                                    ->label('Giờ vào')
+                                    ->placeholder('Chọn ngày, giờ vào')
+                                    ->native(true)
+                                    ->prefixIcon('heroicon-o-calendar')
+                                    ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
+                                    ->required(),
+                                Forms\Components\DateTimePicker::make('end_date')
+                                    ->displayFormat('d/m/Y h:i')
+                                    ->seconds(false)
+                                    ->label('Giờ ra dự kiến')
+                                    ->placeholder('Chọn ngày, giờ kết thúc dự kiến')
+                                    ->native(true)
+                                    ->prefixIcon('heroicon-o-calendar')
+                                    ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
+                                    ->rules([
+                                        fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
+                                            if (($record['status'] ?? null) != 'sent') {
+                                                if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->isBefore(Carbon::parse($get('start_date'), 'Asia/Ho_Chi_Minh'))) {
+                                                    $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ bắt đầu.');
+                                                }
+                                            }
 
-                                },
-                                fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($record) {
-                                    if (($record['status'] ?? null) != 'sent') {
-                                        if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->lessThanOrEqualTo(Carbon::now('Asia/Ho_Chi_Minh'))) {
-                                            $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ hiện tại.');
-                                        }
-                                    }
+                                        },
+                                        fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($record) {
+                                            if (($record['status'] ?? null) != 'sent') {
+                                                if (Carbon::parse($value, 'Asia/Ho_Chi_Minh')->lessThanOrEqualTo(Carbon::now('Asia/Ho_Chi_Minh'))) {
+                                                    $fail('Ngày, giờ kết thúc phải lớn hơn ngày, giờ hiện tại.');
+                                                }
+                                            }
 
-                                },
-                            ]),
-                        Forms\Components\DateTimePicker::make('actual_date_in')
-                            ->label('Giờ vào thực tế')
-                            ->displayFormat('d/m/Y H:i')
-                            ->prefixIcon('heroicon-s-calendar-days')
-                            ->seconds(false)
-                            ->readonly()
-                            ->placeholder('Chọn ngày, giờ vào thực tế')
-                            ->native(true),
-                        Forms\Components\DateTimePicker::make('actual_date_out')
-                            ->label('Giờ ra thực tế')
-                            ->displayFormat('d/m/Y H:i')
-                            ->prefixIcon('heroicon-s-calendar-days')
-                            ->seconds(false)
-                            ->readonly()
-                            ->placeholder('Chọn ngày, giờ ra thực tế')
-                            ->native(true),
-                        Forms\Components\Select::make('status')
-                            ->options([
-                                'coming_in' => 'Đang vào',
-                                'temporary_out' => 'Ra tạm thời',
-                                'came_out' => 'Đã ra',
+                                        },
+                                    ]),
+                                Forms\Components\DateTimePicker::make('actual_date_in')
+                                    ->label('Giờ vào thực tế')
+                                    ->displayFormat('d/m/Y H:i')
+                                    ->prefixIcon('heroicon-s-calendar-days')
+                                    ->seconds(false)
+                                    ->readonly()
+                                    ->placeholder('Chọn ngày, giờ vào thực tế')
+                                    ->native(true),
+                                Forms\Components\DateTimePicker::make('actual_date_out')
+                                    ->label('Giờ ra thực tế')
+                                    ->displayFormat('d/m/Y H:i')
+                                    ->prefixIcon('heroicon-s-calendar-days')
+                                    ->seconds(false)
+                                    ->readonly()
+                                    ->placeholder('Chọn ngày, giờ ra thực tế')
+                                    ->native(true),
+                                Forms\Components\Select::make('status')
+                                    ->options([
+                                        'coming_in' => 'Đang vào',
+                                        'temporary_out' => 'Ra tạm thời',
+                                        'came_out' => 'Đã ra',
+                                    ])
+                                    ->default('coming_in')
+                                    ->label('Trạng thái')
+                                    // ->readOnly()
+                                    // ->required()
+                                    ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
+                                    ->columnSpanFull(),
+                            ])->columns(2),
+                        Section::make('Thông tin phê duyệt')
+                            ->schema([
+                                Forms\Components\Placeholder::make('approved_by')
+                                    ->label('Người phê duyệt')
+                                    ->content(fn (?RegisterDirectly $record): string => self::getApproverName($record)),
+                                Forms\Components\Placeholder::make('approved_at')
+                                    ->label('Thời gian phê duyệt')
+                                    ->content(fn (?RegisterDirectly $record): string => self::getApprovedAt($record)),
                             ])
-                            ->default('coming_in')
-                            ->label('Trạng thái')
-                            // ->readOnly()
-                            // ->required()
-                            ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
-                            ->columnSpanFull(),
-                    ])->columns(2),
-                    Section::make('Thông tin phê duyệt')
-                        ->schema([
-                            Forms\Components\Placeholder::make('approved_by')
-                                ->label('Người phê duyệt')
-                                ->content(fn (?RegisterDirectly $record): string => self::getApproverName($record)),
-                            Forms\Components\Placeholder::make('approved_at')
-                                ->label('Thời gian phê duyệt')
-                                ->content(fn (?RegisterDirectly $record): string => self::getApprovedAt($record)),
-                        ])
-                        ->hidden(fn (?RegisterDirectly $record): bool => ! self::hasApproval($record))
-                        ->columns(2),
+                            ->hidden(fn (?RegisterDirectly $record): bool => ! self::hasApproval($record))
+                            ->columns(2),
                     ]),
             ])->columns(2);
     }
@@ -242,7 +271,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                         }
                     )
                     ->label('Loại'),
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->label('Họ và tên')
                     ->formatStateUsing(
                         fn (RegisterDirectly $record): string => isset(explode('|', $record->name)[0]) ? trim(explode('|', mb_convert_case($record->name, MB_CASE_TITLE, 'UTF-8'))[0]) : mb_convert_case($record->name, MB_CASE_TITLE, 'UTF-8')
@@ -250,22 +279,23 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     ->description(function (RegisterDirectly $record): string {
                         $parts = explode('|', $record->name);
                         $text = isset($parts[1]) ? trim($parts[1]) : '';
+
                         return mb_strimwidth($text, 0, 15, '...');
                     })
                     ->weight(FontWeight::Bold)
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('papers')
+                TextColumn::make('papers')
                     ->label('Số CCCD')
                     ->weight(FontWeight::Bold)
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('bks')
+                TextColumn::make('bks')
                     ->label('Biển kiểm soát')
                     ->weight(FontWeight::Bold)
                     ->formatStateUsing(fn (?string $state): string => $state ? strtoupper($state) : '')
                     ->description(fn (?Model $record) => $record?->fee ? "{$record->fee->ticket_code}" : '')
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('areas')
+                TextColumn::make('areas')
                     ->label('Khu vực')
                     ->formatStateUsing(function (string $state): string {
                         $area = Area::query()->where('code', $state)->first();
@@ -275,7 +305,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     ->badge()
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('status')
+                TextColumn::make('status')
                     ->label('Trạng thái')
                     ->sortable(
                         query: function (Builder $query, string $direction): Builder {
@@ -317,7 +347,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     ->toggleable(),
 
                 // Tables\Columns\ColumnGroup::make('Thời gian dự kiến', [
-                Tables\Columns\TextColumn::make('start_date')
+                TextColumn::make('start_date')
                     ->label('Giờ vào dự kiến')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
@@ -330,17 +360,17 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                 //         ->alignment(Alignment::Center),
                 // ])->alignment(Alignment::Center)->wrapHeader(),
                 Tables\Columns\ColumnGroup::make('Thời gian thực tế', [
-                    Tables\Columns\TextColumn::make('actual_date_in')
+                    TextColumn::make('actual_date_in')
                         ->label('Giờ vào thực tế')
                         ->dateTime('d/m/Y H:i')
                         ->toggleable(),
-                    Tables\Columns\TextColumn::make('actual_date_out')
+                    TextColumn::make('actual_date_out')
                         ->label('Giờ ra thực tế')
                         ->dateTime('d/m/Y H:i')
                         ->alignment(Alignment::Center)
                         ->toggleable(),
                 ])->alignment(Alignment::Center)->wrapHeader(),
-                Tables\Columns\TextColumn::make('job')
+                TextColumn::make('job')
                     ->label('Mục đích')
                     ->formatStateUsing(
                         fn (RegisterDirectly $record): string => isset(explode('|', $record->job)[0]) ? trim(explode('|', $record->job)[0]) : $record->job
@@ -357,7 +387,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     ->onIcon('heroicon-s-arrow-up')
                     ->offIcon('heroicon-s-arrow-down')
                     ->disabled(),
-                Tables\Columns\TextColumn::make('cards.card_name')
+                TextColumn::make('cards.card_name')
                     ->label('Thẻ')
                     ->badge()
                     ->separator(',')
@@ -366,7 +396,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->label('Thẻ đã phát:'),
                     ]),
 
-                Tables\Columns\TextColumn::make('invoice.amount')
+                TextColumn::make('invoice.amount')
                     ->label('Số tiền')
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => $state ? number_format($state, 0, ',', '.') : '')
@@ -377,7 +407,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->label('Tổng tiền:'),
                     ]),
 
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->label('Ngày tạo')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
@@ -478,7 +508,9 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
 
     private static function resolveApprovalVehicle(?RegisterDirectly $record): ?RegistrationVehicle
     {
-        if (! $record) return null;
+        if (! $record) {
+            return null;
+        }
 
         return $record->registrationVehicle
             ?? RegistrationVehicle::where('id_registration_directly', $record->id)->first();
@@ -486,16 +518,22 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
 
     public static function hasApproval(?RegisterDirectly $record): bool
     {
-        if (! $record) return false;
+        if (! $record) {
+            return false;
+        }
 
-        if ($record->registration?->type || $record->registration?->approver) return true;
+        if ($record->registration?->type || $record->registration?->approver) {
+            return true;
+        }
 
         return (bool) self::resolveApprovalVehicle($record)?->approver;
     }
 
     public static function getApproverName(?RegisterDirectly $record): string
     {
-        if (! $record) return 'Chưa phê duyệt';
+        if (! $record) {
+            return 'Chưa phê duyệt';
+        }
 
         if ($record->registration?->approver) {
             return $record->registration->approver->name;
@@ -510,7 +548,9 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
 
     public static function getApprovedAt(?RegisterDirectly $record): string
     {
-        if (! $record) return 'Chưa phê duyệt';
+        if (! $record) {
+            return 'Chưa phê duyệt';
+        }
 
         if ($record->registration?->type_date) {
             return Carbon::parse($record->registration->type_date)->format('d/m/Y H:i');

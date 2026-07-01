@@ -21,9 +21,13 @@ use Filament\Resources\Resource;
 use Filament\Support\Enums\ActionSize;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
+use Rmsramos\Activitylog\Actions\ActivityLogTimelineTableAction;
+use Rmsramos\Activitylog\RelationManagers\ActivitylogRelationManager;
 
 class RegistrationVehicleResource extends Resource
 {
@@ -46,20 +50,20 @@ class RegistrationVehicleResource extends Resource
                     'default' => 1,
                     'md' => 2,
                 ])->schema([
-                    Forms\Components\TextInput::make('driver_name')
+                    TextInput::make('driver_name')
                         ->label('Tên tài xế')
                         ->required()
                         ->maxLength(255),
-                    Forms\Components\TextInput::make('driver_phone')
+                    TextInput::make('driver_phone')
                         ->label('Số điện thoại')
                         ->required()
                         ->maxLength(20),
 
-                    Forms\Components\TextInput::make('driver_id_card')
+                    TextInput::make('driver_id_card')
                         ->label('Số CMND/CCCD')
                         ->required()
                         ->maxLength(255),
-                    Forms\Components\TextInput::make('vehicle_number')
+                    TextInput::make('vehicle_number')
                         ->label('Biển số xe')
                         ->required()
                         ->maxLength(255),
@@ -175,7 +179,34 @@ class RegistrationVehicleResource extends Resource
                             'reject' => 'Từ chối',
                         ])
                         ->default('none')
-                        ->hidden(fn () => !auth()->user()->hasRole('super_admin'))
+                        ->hidden(fn () => ! auth()->user()->hasRole('super_admin'))
+                        ->columnSpanFull(),
+                    TableRepeater::make('customers')
+                        ->label('Danh sách phụ xe')
+                        ->headers([
+                            Header::make('name')->label('Tên phụ xe'),
+                            Header::make('papers')->label('Giấy tờ'),
+                        ])
+                        ->schema([
+                            TextInput::make('name')
+                                ->label('Tên phụ xe')
+                                ->required()
+                                ->maxLength(255),
+                            TextInput::make('papers')
+                                ->label('Giấy tờ')
+                                ->required()
+                                ->maxLength(255),
+                        ])
+                        ->afterStateHydrated(function (TableRepeater $component, $state, $record) {
+                            if ($record && $record->customers->isNotEmpty()) {
+                                $component->state($record->customers->toArray());
+                            }
+                        })
+                        ->dehydrated(false)
+                        ->addActionLabel('Thêm phụ xe')
+                        ->reorderable(false)
+                        ->emptyLabel('Chưa có phụ xe nào')
+                        ->minItems(0)
                         ->columnSpanFull(),
                     Forms\Components\Textarea::make('notes')
                         ->label('Ghi chú')
@@ -204,7 +235,7 @@ class RegistrationVehicleResource extends Resource
                     $baseUrl = route('filament.admin.resources.registration-vehicles.index');
                     $filterUrl = $baseUrl.'?tableFilters[vehicle_filter][status]=sent';
 
-                    return new \Illuminate\Support\HtmlString(
+                    return new HtmlString(
                         '<a href="'.$filterUrl.'" style="display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: linear-gradient(135deg, #ff6b6b 0%, #ffa5a5 100%); color: white; border-radius: 8px; font-weight: 500; font-size: 0.875rem; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\'; this.style.boxShadow=\'0 4px 12px rgba(255, 107, 107, 0.4)\';" onmouseout="this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'none\';">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 18px; height: 18px; flex-shrink: 0;">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
@@ -238,19 +269,29 @@ class RegistrationVehicleResource extends Resource
                     ->formatStateUsing(fn (string $state): string => strtoupper(str_replace(' ', '', $state)))
                     ->description(fn (?Model $record) => $record?->fee ? "{$record->fee->ticket_code}" : '')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('customers')
+                    ->label('Phụ xe')
+                    ->formatStateUsing(function ($record) {
+                        if ($record->customers->isEmpty()) {
+                            return '—';
+                        }
+                        return $record->customers->pluck('name')->implode(', ');
+                    })
+                    ->searchable(false)
+                    ->alignment(Alignment::Center),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Tên đơn vị')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('hawb_number')
                     ->label('Số Hawb')
-                    ->formatStateUsing(function (?string $state): \Illuminate\Support\HtmlString {
+                    ->formatStateUsing(function (?string $state): HtmlString {
                         if (empty($state)) {
-                            return new \Illuminate\Support\HtmlString('');
+                            return new HtmlString('');
                         }
 
                         // If it's already a plain string (not JSON), return as is but uppercase
                         if (! str_starts_with(trim($state), '[') && ! str_starts_with(trim($state), '{')) {
-                            return new \Illuminate\Support\HtmlString('<div>'.strtoupper($state).'</div>');
+                            return new HtmlString('<div>'.strtoupper($state).'</div>');
                         }
 
                         // Try to decode JSON
@@ -258,7 +299,7 @@ class RegistrationVehicleResource extends Resource
 
                         // If JSON decode failed or result is not an array, return original value but uppercase
                         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
-                            return new \Illuminate\Support\HtmlString('<div>'.strtoupper($state).'</div>');
+                            return new HtmlString('<div>'.strtoupper($state).'</div>');
                         }
 
                         // Format the HAWB list - each item on a new line
@@ -275,10 +316,10 @@ class RegistrationVehicleResource extends Resource
                         }
 
                         if (! empty($hawbs)) {
-                            return new \Illuminate\Support\HtmlString(implode('', $hawbs));
+                            return new HtmlString(implode('', $hawbs));
                         }
 
-                        return new \Illuminate\Support\HtmlString('<div>'.strtoupper($state).'</div>');
+                        return new HtmlString('<div>'.strtoupper($state).'</div>');
                     })
                     ->html()
                     ->copyable()
@@ -383,7 +424,7 @@ class RegistrationVehicleResource extends Resource
                     Tables\Actions\EditAction::make()
                         ->label('Sửa'),
                     Tables\Actions\DeleteAction::make(),
-                    \Rmsramos\Activitylog\Actions\ActivityLogTimelineTableAction::make('Activities')
+                    ActivityLogTimelineTableAction::make('Activities')
                         ->hidden(fn () => ! auth()->user()->hasRole('super_admin'))
                         ->label('Lịch sử')
                         ->icon('heroicon-m-clock')
@@ -426,8 +467,8 @@ class RegistrationVehicleResource extends Resource
                     ->size(ActionSize::Small)
                     ->iconButton()
                     ->color('gray'),
-                    
-            ], position: \Filament\Tables\Enums\ActionsPosition::BeforeColumns)
+
+            ], position: ActionsPosition::BeforeColumns)
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
                 Tables\Actions\ExportBulkAction::make()
@@ -443,7 +484,7 @@ class RegistrationVehicleResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \Rmsramos\Activitylog\RelationManagers\ActivitylogRelationManager::class,
+            ActivitylogRelationManager::class,
         ];
     }
 
