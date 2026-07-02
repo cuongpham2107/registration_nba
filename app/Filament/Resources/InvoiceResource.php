@@ -192,7 +192,12 @@ class InvoiceResource extends Resource
                     ->alignCenter()
                     ->color('gray')
                     ->toggleable(),
-
+                Tables\Columns\TextColumn::make('registerDirectly.registrationVehicle.name')
+                    ->label('Đơn vị')
+                    ->searchable()
+                    ->sortable()
+                    ->alignCenter()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('vehicle_type')
                     ->label('Loại xe/ Trọng tải')
                     ->state(function ($record) {

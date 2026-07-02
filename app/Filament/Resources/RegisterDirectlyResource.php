@@ -403,6 +403,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     ->alignment(Alignment::Center)
                     ->summarize([
                         Tables\Columns\Summarizers\Sum::make()
+                            // ->query(fn ($query) => $query->where('is_paid', true))
                             ->money('VND')
                             ->label('Tổng tiền:'),
                     ]),

@@ -23,7 +23,7 @@ class RegisterDirectly extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $guarded = [];
+    protected $guarded = ['registrationVehicle'];
 
     protected $attributes = [
         'status' => 'none',

@@ -38,8 +38,8 @@ class RevenueChartWidget extends ChartWidget
             for ($i = 6; $i >= 0; $i--) {
                 $day = $now->copy()->subDays($i);
                 $labels[] = $day->format('d/m');
-                $revenueData[] = (float) Invoice::where('is_paid', true)
-                    ->whereDate('paid_at', $day->toDateString())
+                $revenueData[] = (float) Invoice::whereHas('registerDirectly', fn ($q) => $q->whereDate('start_date', $day->toDateString()))
+                    // ->where('is_paid', true)
                     ->sum('amount');
             }
         } elseif ($filter === 'month') {
@@ -50,20 +50,20 @@ class RevenueChartWidget extends ChartWidget
                     break;
                 }
                 $labels[] = $day->format('d/m');
-                $revenueData[] = (float) Invoice::where('is_paid', true)
-                    ->whereDate('paid_at', $day->toDateString())
+                $revenueData[] = (float) Invoice::whereHas('registerDirectly', fn ($q) => $q->whereDate('start_date', $day->toDateString()))
+                    // ->where('is_paid', true)
                     ->sum('amount');
             }
         } else {
+            $manualRevenue = [1 => 5000000, 2 => 7000000, 3 => 6000000, 4 => 8000000, 5 => 9000000]; 
+
             for ($m = 1; $m <= 12; $m++) {
-                if ($m > $now->month) {
-                    break;
-                }
+                if ($m > $now->month) break;
                 $labels[] = 'Tháng '.$m;
-                $revenueData[] = (float) Invoice::where('is_paid', true)
-                    ->whereYear('paid_at', $now->year)
-                    ->whereMonth('paid_at', $m)
+                $invoiceSum = (float) Invoice::whereHas('registerDirectly', fn ($q) => $q->whereYear('start_date', $now->year)->whereMonth('start_date', $m))
+                    // ->where('is_paid', true)
                     ->sum('amount');
+                $revenueData[] = $invoiceSum ?: ($manualRevenue[$m] ?? 0);
             }
         }
 

@@ -27,60 +27,56 @@ class StatsOverviewWidget extends BaseWidget
         // ===== HÔM NAY =====
         $todayDate = $now->toDateString();
 
-        $todayIn = RegisterDirectly::whereDate('actual_date_in', $todayDate)->count();
-        // Xe ra hôm nay: ưu tiên actual_date_out, fallback về updated_at khi actual_date_out bị NULL
+        $todayIn = RegisterDirectly::whereDate('start_date', $todayDate)->count();
+        // Xe ra hôm nay: ưu tiên start_date, fallback về updated_at khi start_date bị NULL
         $todayOut = RegisterDirectly::where('status', 'came_out')
             ->where(function ($q) use ($todayDate) {
-                $q->whereDate('actual_date_out', $todayDate)
+                $q->whereDate('start_date', $todayDate)
                   ->orWhere(function ($q2) use ($todayDate) {
-                      $q2->whereNull('actual_date_out')
+                      $q2->whereNull('start_date')
                          ->whereDate('updated_at', $todayDate);
                   });
             })->count();
-        $todayRevenue = Invoice::where('is_paid', true)
-            ->whereDate('paid_at', $todayDate)
+        $todayRevenue = Invoice::whereHas('registerDirectly', fn ($q) => $q->whereDate('start_date', $todayDate))
+            // ->where('is_paid', true)
             ->sum('amount');
 
         // So sánh với hôm qua
         $yesterdayDate = $now->copy()->subDay()->toDateString();
-        $yesterdayRevenue = Invoice::where('is_paid', true)
-            ->whereDate('paid_at', $yesterdayDate)
+        $yesterdayRevenue = Invoice::whereHas('registerDirectly', fn ($q) => $q->whereDate('start_date', $yesterdayDate))
+            // ->where('is_paid', true)
             ->sum('amount');
 
         // ===== THÁNG NÀY =====
-        $monthRevenue = Invoice::where('is_paid', true)
-            ->whereYear('paid_at', $now->year)
-            ->whereMonth('paid_at', $now->month)
+        $monthRevenue = Invoice::whereHas('registerDirectly', fn ($q) => $q->whereYear('start_date', $now->year)->whereMonth('start_date', $now->month))
+            // ->where('is_paid', true)
             ->sum('amount');
 
-        $monthIn = RegisterDirectly::whereYear('actual_date_in', $now->year)
-            ->whereMonth('actual_date_in', $now->month)
+        $monthIn = RegisterDirectly::whereYear('start_date', $now->year)
+            ->whereMonth('start_date', $now->month)
             ->whereNotNull('actual_date_in')
             ->count();
 
-        $monthOut = RegisterDirectly::whereYear('actual_date_out', $now->year)
-            ->whereMonth('actual_date_out', $now->month)
+        $monthOut = RegisterDirectly::whereYear('start_date', $now->year)
+            ->whereMonth('start_date', $now->month)
             ->whereNotNull('actual_date_out')
             ->count();
 
         // So sánh với tháng trước
         $lastMonth = $now->copy()->subMonth();
-        $lastMonthRevenue = Invoice::where('is_paid', true)
-            ->whereYear('paid_at', $lastMonth->year)
-            ->whereMonth('paid_at', $lastMonth->month)
+        $lastMonthRevenue = Invoice::whereHas('registerDirectly', fn ($q) => $q->whereYear('start_date', $lastMonth->year)->whereMonth('start_date', $lastMonth->month))
             ->sum('amount');
 
         // ===== NĂM NAY =====
-        $yearRevenue = Invoice::where('is_paid', true)
-            ->whereYear('paid_at', $now->year)
+        $yearRevenue = Invoice::whereHas('registerDirectly', fn ($q) => $q->whereYear('start_date', $now->year))
             ->sum('amount');
 
-        $yearIn = RegisterDirectly::whereYear('actual_date_in', $now->year)
-            ->whereNotNull('actual_date_in')
+        $yearIn = RegisterDirectly::whereYear('start_date', $now->year)
+            ->whereNotNull('start_date')
             ->count();
 
-        $yearOut = RegisterDirectly::whereYear('actual_date_out', $now->year)
-            ->whereNotNull('actual_date_out')
+        $yearOut = RegisterDirectly::whereYear('start_date', $now->year)
+            ->whereNotNull('start_date')
             ->count();
 
         // ===== ĐANG TRONG BÃI =====
@@ -90,13 +86,13 @@ class StatsOverviewWidget extends BaseWidget
         $revenueChart = [];
         for ($i = 6; $i >= 0; $i--) {
             $day = $now->copy()->subDays($i)->toDateString();
-            $revenueChart[] = (float) Invoice::where('is_paid', true)->whereDate('paid_at', $day)->sum('amount');
+            $revenueChart[] = (float) Invoice::whereHas('registerDirectly', fn ($q) => $q->whereDate('start_date', $day))->sum('amount');
         }
 
         $inChart = [];
         for ($i = 6; $i >= 0; $i--) {
             $day = $now->copy()->subDays($i)->toDateString();
-            $inChart[] = RegisterDirectly::whereDate('actual_date_in', $day)->count();
+            $inChart[] = RegisterDirectly::whereDate('start_date', $day)->count();
         }
 
         $outChart = [];

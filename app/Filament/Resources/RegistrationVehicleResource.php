@@ -183,6 +183,7 @@ class RegistrationVehicleResource extends Resource
                         ->columnSpanFull(),
                     TableRepeater::make('customers')
                         ->label('Danh sách phụ xe')
+                        ->relationship('customers')
                         ->headers([
                             Header::make('name')->label('Tên phụ xe'),
                             Header::make('papers')->label('Giấy tờ'),
@@ -197,12 +198,6 @@ class RegistrationVehicleResource extends Resource
                                 ->required()
                                 ->maxLength(255),
                         ])
-                        ->afterStateHydrated(function (TableRepeater $component, $state, $record) {
-                            if ($record && $record->customers->isNotEmpty()) {
-                                $component->state($record->customers->toArray());
-                            }
-                        })
-                        ->dehydrated(false)
                         ->addActionLabel('Thêm phụ xe')
                         ->reorderable(false)
                         ->emptyLabel('Chưa có phụ xe nào')
