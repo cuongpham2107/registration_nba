@@ -16,9 +16,13 @@ class ViolationReportResource extends Resource
     protected static ?string $model = ViolationReport::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
+
     protected static ?string $modelLabel = 'Biên bản vi phạm';
+
     protected static ?string $navigationLabel = 'Biên bản vi phạm';
+
     protected static ?string $navigationGroup = 'Quản lý danh mục';
+
     protected static ?int $navigationSort = 8;
 
     public static function form(Form $form): Form
@@ -104,6 +108,8 @@ class ViolationReportResource extends Resource
                         Forms\Components\FileUpload::make('image')
                             ->label('Ảnh biên bản')
                             ->image()
+                            ->disk('public')
+                            ->visibility('public')
                             ->columnSpanFull()
                             ->disabled(),
                     ]),
@@ -128,6 +134,7 @@ class ViolationReportResource extends Resource
                     ->label('Số lần'),
                 ImageColumn::make('image')
                     ->label('Ảnh biên bản')
+                    ->disk('public')
                     ->width(80)
                     ->height(60)
                     ->square(),
@@ -164,8 +171,8 @@ class ViolationReportResource extends Resource
     {
         return [
             'index' => Pages\ListViolationReports::route('/'),
-            'create' => Pages\CreateViolationReport::route('/create'),
-            'edit' => Pages\EditViolationReport::route('/{record}/edit'),
+            // 'create' => Pages\CreateViolationReport::route('/create'),
+            // 'edit' => Pages\EditViolationReport::route('/{record}/edit'),
         ];
     }
 }

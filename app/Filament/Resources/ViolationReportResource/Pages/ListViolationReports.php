@@ -30,6 +30,8 @@ class ListViolationReports extends ListRecords
                     FileUpload::make('image')
                         ->label('Chọn ảnh biên bản')
                         ->image()
+                        ->disk('public')
+                        ->visibility('public')
                         ->required()
                         ->maxSize(10240),
                 ])
