@@ -51,10 +51,23 @@ class GeminiOcrService
         $data = $response->json();
 
         Log::info('GeminiOcrService: API response nhận được', [
-            'raw_response' => json_encode($data),
+            'status' => $data['status'] ?? 'unknown',
+            'model' => $data['model'] ?? 'unknown',
+            'steps_count' => count($data['steps'] ?? []),
         ]);
 
-        $text = $data['output'][0]['text'] ?? null;
+        $text = null;
+
+        foreach ($data['steps'] ?? [] as $step) {
+            if (($step['type'] ?? '') === 'model_output') {
+                foreach ($step['content'] ?? [] as $content) {
+                    if (($content['type'] ?? '') === 'text' && ! empty($content['text'])) {
+                        $text = $content['text'];
+                        break 2;
+                    }
+                }
+            }
+        }
 
         if (empty($text)) {
             Log::warning('GeminiOcrService: Không tìm thấy text trong response', [
