@@ -8,6 +8,7 @@ use Filament\Actions;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 class ListViolationReports extends ListRecords
@@ -63,7 +64,7 @@ class ListViolationReports extends ListRecords
 
                         $recordedAt = null;
                         if (! empty($result['recorded_at'])) {
-                            $parsed = date_create_from_format('H:i d/m/Y', $result['recorded_at']);
+                            $parsed = Carbon::createFromFormat('H:i d/m/Y', $result['recorded_at']);
                             if ($parsed) {
                                 $recordedAt = $parsed;
                             }
