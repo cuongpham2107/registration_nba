@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class GeminiOcrService
 {
@@ -11,10 +12,16 @@ class GeminiOcrService
         $apiKey = config('services.gemini.api_key');
 
         if (empty($apiKey)) {
+            Log::error('GeminiOcrService: GEMINI_API_KEY chưa được cấu hình');
             throw new \RuntimeException('GEMINI_API_KEY chưa được cấu hình');
         }
 
-        $response = Http::withHeaders([
+        Log::info('GeminiOcrService: Gửi request đến Gemini API', [
+            'mime_type' => $mimeType,
+            'image_size_kb' => round(strlen($imageBase64) * 3 / 4 / 1024),
+        ]);
+
+        $response = Http::timeout(120)->withHeaders([
             'x-goog-api-key' => $apiKey,
             'Content-Type' => 'application/json',
             'Api-Revision' => '2026-05-20',
@@ -34,23 +41,42 @@ class GeminiOcrService
         ]);
 
         if ($response->failed()) {
+            Log::error('GeminiOcrService: API lỗi', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
             throw new \RuntimeException('Gemini API lỗi: ' . $response->body());
         }
 
         $data = $response->json();
 
+        Log::info('GeminiOcrService: API response nhận được', [
+            'raw_response' => json_encode($data),
+        ]);
+
         $text = $data['output'][0]['text'] ?? null;
 
         if (empty($text)) {
+            Log::warning('GeminiOcrService: Không tìm thấy text trong response', [
+                'keys' => array_keys($data),
+            ]);
             return null;
         }
+
+        Log::info('GeminiOcrService: Text trích xuất', [
+            'text_preview' => mb_substr($text, 0, 500),
+        ]);
 
         $json = $this->extractJson($text);
 
         if ($json === null) {
+            Log::warning('GeminiOcrService: Không thể parse JSON từ text', [
+                'text' => $text,
+            ]);
             return null;
         }
 
+        Log::info('GeminiOcrService: Parse JSON thành công');
         return $json;
     }
 
