@@ -18,6 +18,7 @@ class ViolationReportResource extends Resource
     protected static ?string $modelLabel = 'Biên bản vi phạm';
     protected static ?string $navigationLabel = 'Biên bản vi phạm';
     protected static ?string $navigationGroup = 'Quản lý danh mục';
+    protected static ?int $navigationSort = 8;
 
     public static function form(Form $form): Form
     {

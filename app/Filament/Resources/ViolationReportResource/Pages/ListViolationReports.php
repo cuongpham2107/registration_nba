@@ -82,6 +82,8 @@ class ListViolationReports extends ListRecords
                             'resolution_direction' => $result['resolution_direction'] ?? null,
                         ]);
 
+                        Storage::disk('public')->delete($path);
+
                         Notification::make()
                             ->title('Tạo biên bản thành công')
                             ->success()
