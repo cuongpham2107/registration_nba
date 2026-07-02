@@ -8,6 +8,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Table;
 
 class ViolationReportResource extends Resource
@@ -100,6 +101,11 @@ class ViolationReportResource extends Resource
                         Forms\Components\Textarea::make('resolution_direction')
                             ->label('Hướng xử lý')
                             ->columnSpanFull(),
+                        Forms\Components\FileUpload::make('image')
+                            ->label('Ảnh biên bản')
+                            ->image()
+                            ->columnSpanFull()
+                            ->disabled(),
                     ]),
             ]);
     }
@@ -120,6 +126,11 @@ class ViolationReportResource extends Resource
                     ->limit(50),
                 Tables\Columns\TextColumn::make('violation_count')
                     ->label('Số lần'),
+                ImageColumn::make('image')
+                    ->label('Ảnh biên bản')
+                    ->width(80)
+                    ->height(60)
+                    ->square(),
                 Tables\Columns\TextColumn::make('resolution_direction')
                     ->label('Hướng xử lý')
                     ->limit(50),

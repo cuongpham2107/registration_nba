@@ -81,9 +81,8 @@ class ListViolationReports extends ListRecords
                             'violation_count' => $result['violation_count'] ?? null,
                             'violator_attitude' => $result['violator_attitude'] ?? null,
                             'resolution_direction' => $result['resolution_direction'] ?? null,
+                            'image' => $path,
                         ]);
-
-                        Storage::disk('public')->delete($path);
 
                         Notification::make()
                             ->title('Tạo biên bản thành công')

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('violation_count')->nullable();
             $table->text('violator_attitude')->nullable();
             $table->text('resolution_direction')->nullable();
+            $table->string('image')->nullable();
             $table->timestamps();
         });
     }
