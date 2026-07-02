@@ -36,4 +36,8 @@ return [
         'webhook_url' => env('ZALO_WEBHOOK_URL', 'http://192.168.1.70:5678/webhook/send-registration'),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+    ],
+
 ];
