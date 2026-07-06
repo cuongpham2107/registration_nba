@@ -18,10 +18,10 @@ class ListViolationReports extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            // Actions\CreateAction::make(),
 
             Actions\Action::make('scanViolationReport')
-                ->label('Quét biên bản')
+                ->label('Tải ảnh biên bản')
                 ->icon('heroicon-o-document-magnifying-glass')
                 ->color('success')
                 ->modalHeading('Tải ảnh biên bản lên')

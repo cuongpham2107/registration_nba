@@ -260,7 +260,13 @@ class InvoiceResource extends Resource
                     ->sortable()
                     ->alignRight()
                     ->weight('bold')
-                    ->toggleable(),
+                    ->toggleable()
+                     ->summarize([
+                        Tables\Columns\Summarizers\Sum::make()
+                            // ->query(fn ($query) => $query->where('is_paid', true))
+                            ->money('VND')
+                            ->label('Tổng tiền:'),
+                    ]),
             ])
             ->filters([
                 InvoiceFilter::make(),
