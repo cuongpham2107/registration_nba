@@ -68,9 +68,7 @@ return [
     'exclude' => [
         'enabled' => true,
 
-        'pages' => [
-            'Dashboard',
-        ],
+        'pages' => [],
 
         'widgets' => [
             'AccountWidget', 'FilamentInfoWidget',
