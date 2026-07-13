@@ -7,6 +7,7 @@ use App\Models\CarCatalog;
 use App\Models\Invoice;
 use App\Models\RegisterDirectly;
 use App\Services\FeeCalculator;
+use App\Services\ViettelInvoiceService;
 use Carbon\Carbon;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section;
@@ -213,8 +214,9 @@ class ReturnCardAction
                     }
 
                     $shouldDownloadInvoice = true;
+                    $createdInvoice = null;
 
-                    DB::transaction(function () use ($record, $data, &$shouldDownloadInvoice) {
+                    DB::transaction(function () use ($record, $data, &$shouldDownloadInvoice, &$createdInvoice) {
                         if ($record->type === 'vehicle' && config('registration.is_price', false)) {
                             // Chuẩn hóa biển số và tìm car_catalog
                             $normalizedBks = Invoice::normalizeLicensePlate($record->bks);
@@ -270,12 +272,15 @@ class ReturnCardAction
                                 'payment_method' => $paymentMethod,
                                 'file_path' => $filePath,
                                 'notes' => 'Tạo khi xe ra khỏi bãi thành công',
+                                'is_invoiced' => false,
+                                'invoiced_at' => null,
                             ];
 
                             if ($existingInvoice) {
                                 $existingInvoice->update($invoiceData);
+                                $createdInvoice = $existingInvoice;
                             } else {
-                                Invoice::create($invoiceData);
+                                $createdInvoice = Invoice::create($invoiceData);
                             }
                         }
 
@@ -297,6 +302,32 @@ class ReturnCardAction
                             'actual_date_out' => Carbon::now('Asia/Ho_Chi_Minh'),
                         ]);
                     });
+
+                    // Gọi Viettel Invoice API để xuất hóa đơn điện tử
+                    if ($createdInvoice && $shouldDownloadInvoice) {
+                        try {
+                            $viettelResult = app(ViettelInvoiceService::class)->createInvoice($record, $createdInvoice);
+                            $codeOfTax = $viettelResult['result']['codeOfTax'] ?? null;
+
+                            Notification::make()
+                                ->title('Hóa đơn điện tử đã được tạo')
+                                ->body('Mã số thuế: '.$codeOfTax.' | Xe: '.($record->license_plate ?: $record->bks))
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            // Không block luồng trả thẻ nếu API Viettel lỗi
+                            \Illuminate\Support\Facades\Log::error('Viettel invoice creation failed', [
+                                'invoice_id' => $createdInvoice->id,
+                                'error' => $e->getMessage(),
+                            ]);
+
+                            Notification::make()
+                                ->title('Lỗi tạo hóa đơn điện tử')
+                                ->body('Không thể xuất hóa đơn Viettel: '.$e->getMessage())
+                                ->warning()
+                                ->send();
+                        }
+                    }
 
                     $notification = Notification::make()
                         ->title('Trả thẻ thành công')

@@ -23,6 +23,7 @@ class Invoice extends Model
 
     protected $fillable = [
         'invoice_code',
+        'code_of_tax',
         'register_directly_id',
         'normalized_license_plate',
         'car_catalog_id',

@@ -42,4 +42,12 @@ return [
         'api_key' => env('GEMINI_API_KEY'),
     ],
 
+    'viettel_invoice' => [
+        'username' => env('VIETTEL_INVOICE_USER_NAME'),
+        'password' => env('VIETTEL_INVOICE_PASSWORD'),
+        'base_url' => env('VIETTEL_INVOICE_BASE_URL', 'https://api-vinvoice.viettel.vn'),
+        'template_code' => env('VIETTEL_INVOICE_TEMPLATE_CODE', '5/0078'),
+        'invoice_series' => env('VIETTEL_INVOICE_SERIES', 'C25MAA'),
+    ],
+
 ];

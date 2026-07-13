@@ -32,6 +32,8 @@ class InvoiceExporter extends Exporter
                     : ''),
             ExportColumn::make('invoice_code')
                 ->label('Mã hoá đơn'),
+            ExportColumn::make('code_of_tax')
+                ->label('Mã HĐ điện tử'),
             ExportColumn::make('registerDirectly.bks')
                 ->label('Biển kiểm soát'),
             ExportColumn::make('vehicle_type')

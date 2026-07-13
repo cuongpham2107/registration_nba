@@ -6,6 +6,7 @@ use App\Filament\Exports\InvoiceExporter;
 use App\Filament\Resources\InvoiceResource\Filters\InvoiceFilter;
 use App\Filament\Resources\InvoiceResource\Pages;
 use App\Models\Invoice;
+use App\Services\ViettelInvoiceService;
 use Carbon\Carbon;
 use Filament\Actions\Exports\Models\Export;
 use Filament\Forms;
@@ -18,6 +19,7 @@ use Filament\Tables;
 use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Rmsramos\Activitylog\RelationManagers\ActivitylogRelationManager;
 
@@ -48,6 +50,13 @@ class InvoiceResource extends Resource
                             ->unique(ignoreRecord: true)
                             ->placeholder('Tự động tạo nếu để trống')
                             ->default(fn () => Invoice::generateInvoiceCode())
+                            ->columnSpan(2),
+
+                        Forms\Components\TextInput::make('code_of_tax')
+                            ->label('Mã HĐ điện tử')
+                            ->maxLength(255)
+                            ->disabled()
+                            ->placeholder('Tự động từ Viettel API')
                             ->columnSpan(2),
 
                         Forms\Components\Select::make('register_directly_id')
@@ -156,9 +165,17 @@ class InvoiceResource extends Resource
                     ->label('STT')
                     ->sortable(false)
                     ->toggleable(),
+                Tables\Columns\TextColumn::make('code_of_tax')
+                    ->label('Mã HĐ điện tử')
+                    ->searchable()
+                    ->sortable()
+                    ->copyable()
+                    ->toggleable()
+                    ->placeholder('-')
+                    ->tooltip('Mã hóa đơn điện tử từ Viettel'),
                 Tables\Columns\TextColumn::make('registerDirectly.id')
                     ->label('Số vé')
-                    ->formatStateUsing(fn ($state) => "T1" . "-" . str_pad($state ?? 0, 2, '0', STR_PAD_LEFT))
+                    ->formatStateUsing(fn ($state) => 'T1'.'-'.str_pad($state ?? 0, 2, '0', STR_PAD_LEFT))
                     ->sortable()
                     ->alignCenter(),
                 Tables\Columns\TextColumn::make('registerDirectly.actual_date_in')
@@ -202,7 +219,10 @@ class InvoiceResource extends Resource
                     ->label('Loại xe/ Trọng tải')
                     ->state(function ($record) {
                         $fee = $record->registerDirectly?->fee;
-                        if (!$fee) return '-';
+                        if (! $fee) {
+                            return '-';
+                        }
+
                         return $fee->ticket_code;
                     })
                     ->toggleable(),
@@ -234,17 +254,23 @@ class InvoiceResource extends Resource
                     ->label('Thời gian khai thác')
                     ->getStateUsing(function ($record) {
                         $rd = $record->registerDirectly;
-                        if (!$rd) return null;
+                        if (! $rd) {
+                            return null;
+                        }
 
                         $start = $rd->actual_date_in;
                         $end = $rd->actual_date_out;
 
-                        if (!$start || !$end) return null;
+                        if (! $start || ! $end) {
+                            return null;
+                        }
 
                         $start = Carbon::parse($start);
                         $end = Carbon::parse($end);
 
-                        if ($end->lessThan($start)) return null;
+                        if ($end->lessThan($start)) {
+                            return null;
+                        }
 
                         $diff = $start->diff($end);
                         $hours = $diff->h + ($diff->d * 24);
@@ -261,12 +287,30 @@ class InvoiceResource extends Resource
                     ->alignRight()
                     ->weight('bold')
                     ->toggleable()
-                     ->summarize([
+                    ->summarize([
                         Tables\Columns\Summarizers\Sum::make()
                             // ->query(fn ($query) => $query->where('is_paid', true))
                             ->money('VND')
                             ->label('Tổng tiền:'),
                     ]),
+
+                Tables\Columns\IconColumn::make('is_invoiced')
+                    ->label('Đã xuất HĐ')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('gray')
+                    ->alignCenter()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('invoiced_at')
+                    ->label('Thời gian xuất HĐ')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable()
+                    ->alignCenter()
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 InvoiceFilter::make(),
@@ -281,48 +325,48 @@ class InvoiceResource extends Resource
                     ->modalDescription('Nhập thông tin hóa đơn cần chỉnh sửa'),
 
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\Action::make('mark_invoiced')
-                        ->label('Đã xuất hóa đơn')
-                        ->icon('heroicon-o-document-check')
-                        ->color('info')
-                        ->requiresConfirmation()
-                        ->modalHeading('Xác nhận xuất hóa đơn')
-                        ->modalDescription('Bạn có chắc chắn muốn đánh dấu hóa đơn này đã được xuất?')
-                        ->modalSubmitActionLabel('Xác nhận')
-                        ->hidden(fn ($record) => $record->is_invoiced)
-                        ->action(function ($record) {
-                            $record->update([
-                                'is_invoiced' => true,
-                                'invoiced_at' => now(),
-                            ]);
+                    // Tables\Actions\Action::make('mark_invoiced')
+                    //     ->label('Đã xuất hóa đơn')
+                    //     ->icon('heroicon-o-document-check')
+                    //     ->color('info')
+                    //     ->requiresConfirmation()
+                    //     ->modalHeading('Xác nhận xuất hóa đơn')
+                    //     ->modalDescription('Bạn có chắc chắn muốn đánh dấu hóa đơn này đã được xuất?')
+                    //     ->modalSubmitActionLabel('Xác nhận')
+                    //     ->hidden(fn ($record) => $record->is_invoiced)
+                    //     ->action(function ($record) {
+                    //         $record->update([
+                    //             'is_invoiced' => true,
+                    //             'invoiced_at' => now(),
+                    //         ]);
 
-                            Notification::make()
-                                ->title('Đã xuất hóa đơn')
-                                ->success()
-                                ->send();
-                        }),
+                    //         Notification::make()
+                    //             ->title('Đã xuất hóa đơn')
+                    //             ->success()
+                    //             ->send();
+                    //     }),
 
-                    Tables\Actions\Action::make('confirm_payment')
-                        ->label('Xác nhận đã thanh toán')
-                        ->icon('heroicon-o-check-circle')
-                        ->color('success')
-                        ->requiresConfirmation()
-                        ->modalHeading('Xác nhận thanh toán')
-                        ->modalDescription('Bạn có chắc chắn muốn đánh dấu hóa đơn này đã thanh toán?')
-                        ->modalSubmitActionLabel('Xác nhận')
-                        ->hidden(fn ($record) => $record->is_paid)
-                        ->action(function ($record) {
-                            $record->update([
-                                'is_paid' => true,
-                                'paid_at' => now(),
-                                'payment_method' => 'Đơn vị trả tiền',
-                            ]);
+                    // Tables\Actions\Action::make('confirm_payment')
+                    //     ->label('Xác nhận đã thanh toán')
+                    //     ->icon('heroicon-o-check-circle')
+                    //     ->color('success')
+                    //     ->requiresConfirmation()
+                    //     ->modalHeading('Xác nhận thanh toán')
+                    //     ->modalDescription('Bạn có chắc chắn muốn đánh dấu hóa đơn này đã thanh toán?')
+                    //     ->modalSubmitActionLabel('Xác nhận')
+                    //     ->hidden(fn ($record) => $record->is_paid)
+                    //     ->action(function ($record) {
+                    //         $record->update([
+                    //             'is_paid' => true,
+                    //             'paid_at' => now(),
+                    //             'payment_method' => 'Đơn vị trả tiền',
+                    //         ]);
 
-                            Notification::make()
-                                ->title('Đã xác nhận thanh toán')
-                                ->success()
-                                ->send();
-                        }),
+                    //         Notification::make()
+                    //             ->title('Đã xác nhận thanh toán')
+                    //             ->success()
+                    //             ->send();
+                    //     }),
 
                     Tables\Actions\Action::make('download_pdf')
                         ->label('Tải hoá đơn')
@@ -338,63 +382,144 @@ class InvoiceResource extends Resource
             ], position: ActionsPosition::BeforeColumns)
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\BulkAction::make('confirm_payment')
-                        ->label('Xác nhận đã thanh toán')
-                        ->icon('heroicon-o-check-circle')
-                        ->color('success')
-                        ->requiresConfirmation()
-                        ->modalHeading('Xác nhận thanh toán')
-                        ->modalDescription('Bạn có chắc chắn muốn đánh dấu các hóa đơn đã chọn là đã thanh toán?')
-                        ->modalSubmitActionLabel('Xác nhận')
-                        ->action(function ($records) {
-                            $records->each(function ($record) {
-                                $record->update([
-                                    'is_paid' => true,
-                                    'paid_at' => now(),
-                                    'payment_method' => 'Đơn vị trả tiền',
-                                ]);
-                            });
+                    // Tables\Actions\BulkAction::make('confirm_payment')
+                    //     ->label('Xác nhận đã thanh toán')
+                    //     ->icon('heroicon-o-check-circle')
+                    //     ->color('success')
+                    //     ->requiresConfirmation()
+                    //     ->modalHeading('Xác nhận thanh toán')
+                    //     ->modalDescription('Bạn có chắc chắn muốn đánh dấu các hóa đơn đã chọn là đã thanh toán?')
+                    //     ->modalSubmitActionLabel('Xác nhận')
+                    //     ->action(function ($records) {
+                    //         $records->each(function ($record) {
+                    //             $record->update([
+                    //                 'is_paid' => true,
+                    //                 'paid_at' => now(),
+                    //                 'payment_method' => 'Đơn vị trả tiền',
+                    //             ]);
+                    //         });
 
-                            Notification::make()
-                                ->title('Đã xác nhận thanh toán')
-                                ->body('Đã cập nhật trạng thái thanh toán cho '.$records->count().' hóa đơn.')
-                                ->success()
-                                ->send();
-                        }),
+                    //         Notification::make()
+                    //             ->title('Đã xác nhận thanh toán')
+                    //             ->body('Đã cập nhật trạng thái thanh toán cho '.$records->count().' hóa đơn.')
+                    //             ->success()
+                    //             ->send();
+                    //     }),
 
-                    Tables\Actions\BulkAction::make('mark_invoiced')
-                        ->label('Đã xuất hóa đơn')
-                        ->icon('heroicon-o-document-check')
-                        ->color('info')
-                        ->requiresConfirmation()
-                        ->modalHeading('Xác nhận xuất hóa đơn')
-                        ->modalDescription('Bạn có chắc chắn muốn đánh dấu các hóa đơn đã chọn là đã xuất?')
-                        ->modalSubmitActionLabel('Xác nhận')
-                        ->action(function ($records) {
-                            $records->each(function ($record) {
-                                $record->update([
-                                    'is_invoiced' => true,
-                                    'invoiced_at' => now(),
-                                ]);
-                            });
+                    // Tables\Actions\BulkAction::make('mark_invoiced')
+                    //     ->label('Đã xuất hóa đơn')
+                    //     ->icon('heroicon-o-document-check')
+                    //     ->color('info')
+                    //     ->requiresConfirmation()
+                    //     ->modalHeading('Xác nhận xuất hóa đơn')
+                    //     ->modalDescription('Bạn có chắc chắn muốn đánh dấu các hóa đơn đã chọn là đã xuất?')
+                    //     ->modalSubmitActionLabel('Xác nhận')
+                    //     ->action(function ($records) {
+                    //         $records->each(function ($record) {
+                    //             $record->update([
+                    //                 'is_invoiced' => true,
+                    //                 'invoiced_at' => now(),
+                    //             ]);
+                    //         });
 
-                            Notification::make()
-                                ->title('Đã xuất hóa đơn')
-                                ->body('Đã cập nhật trạng thái xuất hóa đơn cho '.$records->count().' hóa đơn.')
-                                ->success()
-                                ->send();
-                        }),
+                    //         Notification::make()
+                    //             ->title('Đã xuất hóa đơn')
+                    //             ->body('Đã cập nhật trạng thái xuất hóa đơn cho '.$records->count().' hóa đơn.')
+                    //             ->success()
+                    //             ->send();
+                    //     }),
 
-                    
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+                Tables\Actions\BulkAction::make('export_invoices')
+                    ->label('Xuất hóa đơn điện tử')
+                    ->icon('heroicon-o-bolt')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalHeading('Xuất hóa đơn điện tử')
+                    ->modalDescription('Hệ thống sẽ gửi từng hóa đơn lên Viettel. Chỉ những hóa đơn chưa xuất mới được xử lý.')
+                    ->modalSubmitActionLabel('Xuất ngay')
+                    ->deselectRecordsAfterCompletion()
+                    ->action(function ($records) {
+                        $viettelService = app(ViettelInvoiceService::class);
+
+                        $successCount = 0;
+                        $failCount = 0;
+                        $skippedCount = 0;
+                        $errors = [];
+
+                        foreach ($records as $invoice) {
+                            // Bỏ qua nếu đã xuất hoặc không có registerDirectly
+                            if (! $invoice instanceof Invoice) {
+                                $skippedCount++;
+
+                                continue;
+                            }
+
+                            if ($invoice->is_invoiced) {
+                                $skippedCount++;
+
+                                continue;
+                            }
+
+                            $registerDirectly = $invoice->registerDirectly;
+                            if (! $registerDirectly) {
+                                $skippedCount++;
+
+                                continue;
+                            }
+
+                            try {
+                                $viettelService->createInvoice($registerDirectly, $invoice);
+                                $successCount++;
+                            } catch (\Exception $e) {
+                                $failCount++;
+                                $errors[] = $invoice->invoice_code.': '.$e->getMessage();
+
+                                Log::error('Bulk Viettel invoice failed', [
+                                    'invoice_id' => $invoice->id,
+                                    'invoice_code' => $invoice->invoice_code,
+                                    'error' => $e->getMessage(),
+                                ]);
+                            }
+                        }
+
+                        $body = sprintf(
+                            'Thành công: %d | Thất bại: %d | Bỏ qua: %d',
+                            $successCount,
+                            $failCount,
+                            $skippedCount
+                        );
+
+                        if ($failCount > 0) {
+                            $body .= "\n\nLỗi:\n".implode("\n", array_slice($errors, 0, 5));
+                            if (count($errors) > 5) {
+                                $body .= "\n... và ".(count($errors) - 5).' lỗi khác';
+                            }
+                        }
+
+                        $notification = Notification::make()
+                            ->title('Kết quả xuất hóa đơn')
+                            ->body($body);
+
+                        if ($failCount > 0 && $successCount === 0) {
+                            $notification->danger();
+                        } elseif ($failCount > 0) {
+                            $notification->warning();
+                        } else {
+                            $notification->success();
+                        }
+
+                        $notification->send();
+                    }),
+
                 Tables\Actions\ExportBulkAction::make()
-                        ->label('Xuất Excel')
-                        ->modalHeading('Xuất Excel hóa đơn')
-                        ->icon('heroicon-o-document-arrow-down')
-                        ->color('success')
-                        ->fileName(fn (Export $export): string => "Danh sách hóa đơn-{$export->getKey()}.xlsx")
-                        ->exporter(InvoiceExporter::class),
+                    ->label('Xuất Excel')
+                    ->modalHeading('Xuất Excel hóa đơn')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->fileName(fn (Export $export): string => "Danh sách hóa đơn-{$export->getKey()}.xlsx")
+                    ->exporter(InvoiceExporter::class),
 
             ])
             ->groups([
