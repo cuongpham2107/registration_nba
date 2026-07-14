@@ -19,7 +19,7 @@ class CleanupNoneStatusRegistrationDirectlies extends Command
      *
      * @var string
      */
-    protected $description = 'Xoá các bản ghi đăng kí có trạng thái chờ duyệt mà quá 1 tiếng mà không chuyển trạng thái';
+    protected $description = 'Xoá các bản ghi đăng kí có trạng thái chờ duyệt mà quá 12 tiếng mà không chuyển trạng thái';
 
     /**
      * Execute the console command.
@@ -29,7 +29,7 @@ class CleanupNoneStatusRegistrationDirectlies extends Command
         // lấy bản ghi có status = none,created_at trong ngày hôm nay và created_at < 1 tiếng
         $deleted = RegisterDirectly::where('status', 'none')
             ->where('type', 'vehicle')
-            ->where('created_at', '<=', now()->subHour())
+            ->where('created_at', '<=', now()->subHour(12))
             ->delete();
 
         $this->info("Đã xóa {$deleted} bản ghi có trạng thái 'Chờ duyệt'");
