@@ -23,7 +23,7 @@ class RegistrationFilter extends Filter
             ->schema([
                 TextInput::make('search')
                     ->label('Tìm kiếm')
-                    ->placeholder('Tên đơn vị, người liên hệ, mục đích...'),
+                    ->placeholder('Tên đơn vị, người liên hệ, mục đích, khách, giấy tờ...'),
                 Select::make('status')
                     ->label('Trạng thái')
                     ->options([
@@ -33,6 +33,7 @@ class RegistrationFilter extends Filter
                         'reject' => 'Đã từ chối',
                         'entering' => 'Đang vào',
                         'exited' => 'Đã ra',
+                        'expired' => 'Đã hết hạn',
                     ]),
 
                 Select::make('approval')
@@ -58,12 +59,22 @@ class RegistrationFilter extends Filter
                         $data['search'],
                         fn (Builder $query, $search): Builder => $query->where(function ($query) use ($search) {
                             return $query->where('name', 'like', "%{$search}%")
-                                ->orWhere('purpose', 'like', "%{$search}%");
+                                ->orWhere('purpose', 'like', "%{$search}%")
+                                ->orWhereHas('guests', function ($q) use ($search) {
+                                    $q->where('name', 'like', "%{$search}%")
+                                      ->orWhere('papers', 'like', "%{$search}%");
+                                });
                         }),
                     )
                     ->when(
                         $data['status'],
-                        fn (Builder $query, $status): Builder => $query->where('status', $status),
+                        function (Builder $query) use ($data): Builder {
+                            return match ($data['status']) {
+                                'expired' => $query->where('end_date', '<', now())
+                                    ->whereRaw('DATEDIFF(end_date, start_date) >= 7'),
+                                default => $query->where('status', $data['status']),
+                            };
+                        },
                     )
                     ->when(
                         isset($data['approval']),
@@ -107,6 +118,7 @@ class RegistrationFilter extends Filter
                         'reject' => 'Đã từ chối',
                         'entering' => 'Đang vào',
                         'exited' => 'Đã ra',
+                        'expired' => 'Đã hết hạn',
                         default => $data['status'],
                     };
                     $indicators[] = Indicator::make('Trạng thái: '.$statusText)

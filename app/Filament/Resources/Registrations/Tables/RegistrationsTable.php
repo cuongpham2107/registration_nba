@@ -43,9 +43,8 @@ class RegistrationsTable
             ->emptyStateDescription('Hiện tại chưa có đơn đăng ký khách nào được tạo. Vui lòng nhấn nút "Đăng ký khách mới" để tạo mới.')
             ->columns(self::getColumns())
             ->recordClasses(fn (Model $record) => match (true) {
-                $record->status === 'approve'
-                    && $record->end_date->isPast()
-                    && $record->start_date->diffInDays($record->end_date) >= 7 => '!bg-red-50 dark:!bg-red-950',
+                $record->end_date->isPast()
+                        && $record->start_date->diffInDays($record->end_date) >= 7 => '!bg-red-50 dark:!bg-red-950',
                 $record->status === 'sent' => '!bg-orange-50 dark:!bg-orange-950',
                 default => '',
             })
@@ -155,9 +154,8 @@ class RegistrationsTable
                 ->badge()
                 ->toggleable()
                 ->color(fn (?string $state, Registration $record): string => match (true) {
-                    $state === 'approve'
-                        && $record->end_date->isPast()
-                        && $record->start_date->diffInDays($record->end_date) >= 7 => 'danger',
+                    $record->end_date->isPast()
+                            && $record->start_date->diffInDays($record->end_date) >= 7 => 'danger',
                     default => match ($state) {
                         'none' => 'gray',
                         'sent' => 'success',
@@ -169,9 +167,8 @@ class RegistrationsTable
                     },
                 })
                 ->formatStateUsing(fn (?string $state, Registration $record) => match (true) {
-                    $state === 'approve'
-                        && $record->end_date->isPast()
-                        && $record->start_date->diffInDays($record->end_date) >= 7 => 'Đã hết hạn',
+                    $record->end_date->isPast()
+                            && $record->start_date->diffInDays($record->end_date) >= 7 => 'Đã hết hạn',
                     default => match ($state) {
                         'none' => 'Chưa gửi',
                         'sent' => 'Đã gửi',

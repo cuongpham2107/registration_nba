@@ -30,8 +30,7 @@ class QuickReregisterAction
                     return false;
                 }
 
-                return $record->status !== 'approve'
-                    || ! $record->end_date->isPast()
+                return ! $record->end_date->isPast()
                     || $record->start_date->diffInDays($record->end_date) < 7;
             })
             ->action(function (Registration $record) {
