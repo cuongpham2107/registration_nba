@@ -3,6 +3,7 @@ export default {
     content: [
         "./app/Filament/Clusters/Registration/**/*.php",
         "./app/Filament/Pages/**/*.php",
+        "./app/Filament/Resources/**/*.php",
         "./resources/views/filament/clusters/registration/**/*.blade.php",
         "./resources/views/filament/resources/**/*.blade.php",
         "./resources/views/filament/pages/**/*.blade.php",

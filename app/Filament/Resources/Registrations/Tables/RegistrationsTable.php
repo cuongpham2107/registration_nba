@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Registrations\Tables;
 
 use App\Filament\Exports\RegistrationExporter;
 use App\Filament\Resources\Registrations\Actions\ApproveRegistrationAction;
+use App\Filament\Resources\Registrations\Actions\QuickReregisterAction;
 use App\Filament\Resources\Registrations\Actions\RefuseRegistrationAction;
 use App\Filament\Resources\Registrations\Actions\SendMailRegistrationAction;
 use App\Filament\Resources\Registrations\Filters\RegistrationFilter;
@@ -41,8 +42,11 @@ class RegistrationsTable
             ->emptyStateIcon('heroicon-o-user')
             ->emptyStateDescription('Hiện tại chưa có đơn đăng ký khách nào được tạo. Vui lòng nhấn nút "Đăng ký khách mới" để tạo mới.')
             ->columns(self::getColumns())
-            ->recordClasses(fn (Model $record) => match ($record->status) {
-                'sent' => 'border-s-2 border-orange-600 dark:border-orange-300',
+            ->recordClasses(fn (Model $record) => match (true) {
+                $record->status === 'approve'
+                    && $record->end_date->isPast()
+                    && $record->start_date->diffInDays($record->end_date) >= 7 => '!bg-red-50 dark:!bg-red-950',
+                $record->status === 'sent' => '!bg-orange-50 dark:!bg-orange-950',
                 default => '',
             })
             ->defaultSort('created_at', 'desc')
@@ -150,23 +154,33 @@ class RegistrationsTable
                 ->weight(FontWeight::Bold)
                 ->badge()
                 ->toggleable()
-                ->color(fn (?string $state): string => match ($state) {
-                    'none' => 'gray',
-                    'sent' => 'success',
-                    'approve' => 'info',
-                    'entering' => 'warning',
-                    'exited' => 'gray',
-                    'reject' => 'danger',
-                    default => 'gray',
+                ->color(fn (?string $state, Registration $record): string => match (true) {
+                    $state === 'approve'
+                        && $record->end_date->isPast()
+                        && $record->start_date->diffInDays($record->end_date) >= 7 => 'danger',
+                    default => match ($state) {
+                        'none' => 'gray',
+                        'sent' => 'success',
+                        'approve' => 'info',
+                        'entering' => 'warning',
+                        'exited' => 'gray',
+                        'reject' => 'danger',
+                        default => 'gray',
+                    },
                 })
-                ->formatStateUsing(fn (?string $state) => match ($state) {
-                    'none' => 'Chưa gửi',
-                    'sent' => 'Đã gửi',
-                    'approve' => 'Đã phê duyệt',
-                    'entering' => 'Đang vào',
-                    'exited' => 'Đã ra',
-                    'reject' => 'Đã từ chối',
-                    default => (string) ($state ?? ''),
+                ->formatStateUsing(fn (?string $state, Registration $record) => match (true) {
+                    $state === 'approve'
+                        && $record->end_date->isPast()
+                        && $record->start_date->diffInDays($record->end_date) >= 7 => 'Đã hết hạn',
+                    default => match ($state) {
+                        'none' => 'Chưa gửi',
+                        'sent' => 'Đã gửi',
+                        'approve' => 'Đã phê duyệt',
+                        'entering' => 'Đang vào',
+                        'exited' => 'Đã ra',
+                        'reject' => 'Đã từ chối',
+                        default => (string) ($state ?? ''),
+                    },
                 }),
             TextColumn::make('approved_at')
                 ->Label('Ngày duyệt')
@@ -228,6 +242,7 @@ class RegistrationsTable
     {
         return [
             SendMailRegistrationAction::make(),
+
             ActionGroup::make([
                 EditAction::make()
                     ->modalWidth(Width::SixExtraLarge)
@@ -240,6 +255,7 @@ class RegistrationsTable
                     ->hidden(fn (Registration $record) => ! Auth::user()?->hasRole('super_admin') && (in_array($record->status, ['sent', 'approve', 'reject', 'entering', 'exited'], true) || $record->user_id !== Auth::id())),
                 ApproveRegistrationAction::make(),
                 RefuseRegistrationAction::make(),
+                QuickReregisterAction::make(),
             ])->icon('heroicon-m-adjustments-vertical')
                 ->size(Size::Small)
                 ->iconButton()

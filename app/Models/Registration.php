@@ -17,6 +17,15 @@ class Registration extends Model
      */
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'datetime',
+            'end_date' => 'datetime',
+            'approved_at' => 'datetime',
+        ];
+    }
+
     /**
      * Người phê duyệt
      */
