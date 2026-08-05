@@ -68,8 +68,7 @@ class RegistrationPeople extends Page implements HasActions, HasSchemas, HasTabl
                     created_at DESC
                 ");
             })
-            ->toolbarActions([
-            ]);
+            ->toolbarActions(RegistrationEntriesTable::toolbarActions());
     }
 
     #[On('card-scanned')]

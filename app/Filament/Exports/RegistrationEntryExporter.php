@@ -21,14 +21,10 @@ class RegistrationEntryExporter extends Exporter
                 ->label('Họ và tên'),
             ExportColumn::make('papers')
                 ->label('Số CCCD'),
-            ExportColumn::make('address')
-                ->label('Địa chỉ'),
-            ExportColumn::make('bks')
+            ExportColumn::make('license_plate')
                 ->label('Biển kiểm soát'),
             ExportColumn::make('job')
                 ->label('Mục đích công việc'),
-            ExportColumn::make('card.card_name')
-                ->label('Tên thẻ'),
             ExportColumn::make('start_date')
                 ->label('Giờ vào'),
             ExportColumn::make('end_date')
@@ -51,8 +47,8 @@ class RegistrationEntryExporter extends Exporter
             ExportColumn::make('status')
                 ->label('Trạng thái')
                 ->formatStateUsing(fn (?string $state): string => match ($state) {
-                    'coming_in' => 'Đang vào',
-                    'came_out' => 'Đã ra',
+                    'entering' => 'Đang vào',
+                    'exited' => 'Đã ra',
                     default => 'Chưa vào',
                 }),
             ExportColumn::make('created_at')

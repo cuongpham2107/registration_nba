@@ -20,7 +20,7 @@ class ReEnterCardAction
             ->button()
             ->color('warning')
             ->icon('heroicon-o-arrow-uturn-left')
-            ->hidden(fn (RegistrationEntry $record) => $record->guest->fee || $record->status !== 'exited')
+            ->hidden(fn (RegistrationEntry $record) => $record->guest?->fee || $record->status !== 'exited')
             ->modalHeading(function (RegistrationEntry $record) {
                 if ($record->type === 'inspection') {
                     return 'Xe vào lại: '.$record->license_plate;

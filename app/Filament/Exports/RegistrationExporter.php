@@ -21,7 +21,7 @@ class RegistrationExporter extends Exporter
                 ->label('Đơn vị khách'),
             ExportColumn::make('purpose')
                 ->label('Mục đích'),
-            ExportColumn::make('bks')
+            ExportColumn::make('license_plate')
                 ->label('BKS ô tô'),
             ExportColumn::make('start_date')
                 ->label('Giờ vào dự kiến'),

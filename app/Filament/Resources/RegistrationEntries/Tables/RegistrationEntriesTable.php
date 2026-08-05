@@ -77,6 +77,11 @@ class RegistrationEntriesTable
         return self::getRecordActions();
     }
 
+    public static function toolbarActions(): array
+    {
+        return self::getToolbarActions();
+    }
+
     private static function modifyQuery($query): Builder
     {
         $query
