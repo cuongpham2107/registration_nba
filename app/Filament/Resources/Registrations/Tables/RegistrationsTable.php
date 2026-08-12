@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Registrations\Tables;
 
 use App\Filament\Exports\RegistrationExporter;
 use App\Filament\Resources\Registrations\Actions\ApproveRegistrationAction;
+use App\Filament\Resources\Registrations\Actions\CloneRegistrationAction;
 use App\Filament\Resources\Registrations\Actions\QuickReregisterAction;
 use App\Filament\Resources\Registrations\Actions\RefuseRegistrationAction;
 use App\Filament\Resources\Registrations\Actions\SendMailRegistrationAction;
@@ -239,6 +240,8 @@ class RegistrationsTable
     {
         return [
             SendMailRegistrationAction::make(),
+
+            CloneRegistrationAction::make(),
 
             ActionGroup::make([
                 EditAction::make()
