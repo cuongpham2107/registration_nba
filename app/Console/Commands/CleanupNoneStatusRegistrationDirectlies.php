@@ -31,7 +31,10 @@ class CleanupNoneStatusRegistrationDirectlies extends Command
             ->where('type', 'vehicle')
             ->where('created_at', '<=', now()->subHour(12))
             ->delete();
-
-        $this->info("Đã xóa {$deleted} bản ghi có trạng thái 'Chờ duyệt'");
+        $deleted1 = RegisterDirectly::where('status', 'none')
+            ->where('type','!=', 'vehicle')
+            ->where('start_date', '<=', now()->subHour(24))
+            ->delete();
+        $this->info("Đã xóa bản ghi có trạng thái 'Chờ duyệt'");
     }
 }

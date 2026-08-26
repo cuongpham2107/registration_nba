@@ -18,7 +18,7 @@ class ListViolationReports extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            // Actions\CreateAction::make(),
+            Actions\CreateAction::make(),
 
             Actions\Action::make('scanViolationReport')
                 ->label('Tải ảnh biên bản')

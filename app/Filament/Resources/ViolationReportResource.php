@@ -110,8 +110,7 @@ class ViolationReportResource extends Resource
                             ->image()
                             ->disk('public')
                             ->visibility('public')
-                            ->columnSpanFull()
-                            ->disabled(),
+                            ->columnSpanFull(),
                     ]),
             ]);
     }

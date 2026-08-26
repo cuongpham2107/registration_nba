@@ -68,8 +68,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                             ->required(),
                         Forms\Components\TextInput::make('papers')
                             ->label('Số CCCD')
-                            ->numeric()
-                            ->required(),
+                            ->numeric(),
                         Forms\Components\TextInput::make('address')
                             ->label('Địa chỉ')
                             ->hidden(fn (?Model $record) => $record?->type === 'vehicle')
@@ -205,7 +204,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                                     ->displayFormat('d/m/Y H:i')
                                     ->prefixIcon('heroicon-s-calendar-days')
                                     ->seconds(false)
-                                    ->readonly()
+                                    ->readonly(fn() => !auth()->user()->hasRole('super_admin'))
                                     ->placeholder('Chọn ngày, giờ vào thực tế')
                                     ->native(true),
                                 Forms\Components\DateTimePicker::make('actual_date_out')
@@ -213,7 +212,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                                     ->displayFormat('d/m/Y H:i')
                                     ->prefixIcon('heroicon-s-calendar-days')
                                     ->seconds(false)
-                                    ->readonly()
+                                    ->readonly(fn() => !auth()->user()->hasRole('super_admin'))
                                     ->placeholder('Chọn ngày, giờ ra thực tế')
                                     ->native(true),
                                 Forms\Components\Select::make('status')
@@ -435,7 +434,7 @@ class RegisterDirectlyResource extends Resource implements HasShieldPermissions
                     Tables\Actions\EditAction::make()
                         ->slideOver()
                         ->modalWidth(MaxWidth::SixExtraLarge)
-                        ->hidden(fn ($record) => $record->status === 'came_out'),
+                        ->hidden(fn ($record) => $record->status === 'came_out' && !auth()->user()->hasRole('super_admin')),
                     Tables\Actions\DeleteAction::make(),
                     Tables\Actions\Action::make('view_invoice')
                         ->label('Hóa đơn')

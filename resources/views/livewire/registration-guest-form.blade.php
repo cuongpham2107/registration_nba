@@ -1,0 +1,314 @@
+<div class="min-h-screen bg-[#5287ad] dark:bg-gray-900 py-1 px-1 sm:px-3 lg:px-4 flex items-center justify-center">
+    <div class="max-w-md w-full mx-auto">
+        <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col w-full h-screen justify-between">
+            <!-- Header -->
+            <div>
+                <div class="px-1 pt-2 text-center">
+                    <div class="flex justify-center mb-3">
+                        <img src="{{ asset('images/ASG.png') }}" alt="ASG Logo" class="h-8 w-24">
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">Đăng ký thông tin khách</h1>
+                </div>
+                <div class="text-end">
+                    @if (!$isListRegistered)
+                        <a href="#" wire:click.prevent="showRegisteredList"
+                            class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline italic cursor-pointer text-xs font-semibold px-2 rounded-lg">
+                            Kiểm tra đăng ký
+                        </a>
+                    @else
+                        <a href="#" wire:click.prevent="showRegisteredList"
+                            class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline italic cursor-pointer text-xs font-semibold px-2 rounded-lg">
+                            Quay lại đăng ký
+                        </a>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="flex-1 overflow-y-auto">
+                <!-- Form Content -->
+                @if (!$isListRegistered)
+                    <div class="px-3 py-2">
+                        <form wire:submit="create">
+                            {{ $this->form }}
+                            <div class="flex gap-4" style="margin-top: 16px;">
+                                <button type="submit"
+                                    class="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                                    style="background: linear-gradient(45deg, #10b981, #059669); color: white; padding: 12px 24px; border-radius: 8px; border: none; font-weight: 600; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: all 0.2s; cursor: pointer;"
+                                    onmouseover="this.style.background='linear-gradient(45deg, #059669, #047857)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.15)'"
+                                    onmouseout="this.style.background='linear-gradient(45deg, #10b981, #059669)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)'"
+                                    wire:loading.attr="disabled">
+                                    <span wire:loading.remove>Tạo và gửi</span>
+                                    <span wire:loading>
+                                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                        Đang xử lý...
+                                    </span>
+                                </button>
+
+                                <a href="javascript:history.back()"
+                                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg shadow hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 text-center border-[1.5px] border-gray-400"
+                                    style="background: #f3f4f6; color: #374151; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;"
+                                    onmouseover="this.style.background='#e5e7eb'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.15)'"
+                                    onmouseout="this.style.background='#f3f4f6'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)'">
+                                    Hủy bỏ
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                @endif
+
+                <!-- Danh sách đăng ký -->
+                @if ($isListRegistered)
+                    <div class="px-3 py-2 flex flex-col min-h-screen">
+                        <div class="flex-shrink-0">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Danh sách đăng ký hôm nay</h2>
+                            </div>
+
+                            <!-- Search Bar -->
+                            <div class="mb-4">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="h-4 w-4 text-gray-400 dark:text-gray-500"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" wire:model.live.debounce.500ms="searchGuest"
+                                        placeholder="Tìm đơn vị, tên khách, số CCCD hoặc BKS..."
+                                        class="block w-full pl-10 pr-3 py-2 border border-blue-200 dark:border-gray-600 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400">
+                                    <div wire:loading wire:target="searchGuest"
+                                        class="absolute top-1/2 right-3 -translate-y-1/2">
+                                        <svg class="animate-spin h-4 w-4 text-blue-500"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- List/Loading/Empty Area -->
+                        <div class="flex-1 flex flex-col min-h-0">
+                            <!-- Loading indicator for the list -->
+                            <div wire:loading.flex wire:target="searchGuest"
+                                class="flex-1 items-center justify-center py-10">
+                                <div
+                                    class="inline-flex items-center px-4 py-2 leading-6 text-sm text-black dark:text-white transition ease-in-out duration-150 cursor-not-allowed">
+                                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-black dark:text-white"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10"
+                                            stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                    Đang tìm kiếm...
+                                </div>
+                            </div>
+
+                            <div wire:loading.remove wire:target="searchGuest" class="flex-1 flex flex-col">
+                                @if (empty($registrations))
+                                    <div class="flex-1 flex items-center justify-center py-10">
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 italic">Không có đơn đăng ký nào hôm nay.
+                                        </p>
+                                    </div>
+                                @else
+                                    <div class="space-y-3">
+                                        <ul class="divide-y divide-gray-100 dark:divide-gray-700">
+                                            @foreach ($registrations as $reg)
+                                                <li class="py-3">
+                                                    <div
+                                                        class="bg-white dark:bg-gray-700 shadow-sm rounded-xl p-3 hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-600">
+                                                        <div class="flex items-start justify-between gap-3">
+                                                            <div class="flex-1 min-w-0">
+                                                                <p
+                                                                    class="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                                                    {{ $reg['name'] ?? '-' }}</p>
+                                                                
+                                                                @if(!empty($reg['customers']))
+                                                                    <p class="text-xs text-gray-600 dark:text-gray-300 mt-0.5 truncate">
+                                                                        <span class="font-medium">Khách:</span> {{ implode(', ', $reg['customers']) }}
+                                                                    </p>
+                                                                @endif
+
+                                                                @if(!empty($reg['bks']))
+                                                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                                                                        <span class="font-medium">BKS:</span> {{ $reg['bks'] }}
+                                                                    </p>
+                                                                @endif
+
+                                                                @if(!empty($reg['purpose']))
+                                                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate italic">
+                                                                        {{ $reg['purpose'] }}
+                                                                    </p>
+                                                                @endif
+                                                            </div>
+
+                                                            <div class="flex-shrink-0 text-right">
+                                                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                                    {{ $reg['start_date'] ?? '' }}
+                                                                </p>
+                                                                <div class="mt-2">
+                                                                    <span
+                                                                        class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium {{ $reg['status_classes'] ?? '' }}">
+                                                                        {{ $reg['status_label'] ?? '' }}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600">
+                <p class="text-center text-sm text-gray-600 dark:text-gray-300">
+                    © {{ date('Y') }} ASG - @if(data_get($data, 'secret'))<span class="font-mono text-sm px-1">{{ data_get($data, 'secret') }}</span> @endif
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <x-filament-actions::modals />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load stored data on page load
+            loadStoredGuestData();
+
+            // Listen for Livewire initialization
+            document.addEventListener('livewire:initialized', () => {
+                // Listen for successful form submission
+                Livewire.on('registration-success', (event) => {
+                    const data = event[0] || event;
+                    saveGuestToStorage(data);
+                });
+
+                // Listen for load-stored-data event from Livewire
+                Livewire.on('load-stored-data', () => {
+                    const saved = localStorage.getItem('livewireGuestForm');
+                    if (saved) {
+                        try {
+                            const data = JSON.parse(saved);
+                            if (data.savedAt) {
+                                const component = window.Livewire.find(document.querySelector(
+                                    '[wire\\:id]').getAttribute('wire:id'));
+                                if (component) {
+                                    component.call('loadStoredDataFromJs', data);
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Error loading stored guest data:', e);
+                        }
+                    }
+                });
+            });
+        });
+
+        function generateGuestBrowserSecret(length = 12) {
+            const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+            const bytes = new Uint32Array(length);
+
+            if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+                window.crypto.getRandomValues(bytes);
+                return Array.from(bytes, (value) => alphabet[value % alphabet.length]).join('');
+            }
+
+            let secret = '';
+            for (let index = 0; index < length; index++) {
+                secret += alphabet[Math.floor(Math.random() * alphabet.length)];
+            }
+
+            return secret;
+        }
+
+        function getStoredGuestFormData() {
+            const saved = localStorage.getItem('livewireGuestForm');
+
+            if (!saved) {
+                return null;
+            }
+
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                console.error('Error parsing stored guest form data:', e);
+                return null;
+            }
+        }
+
+        function persistGuestFormData(data) {
+            localStorage.setItem('livewireGuestForm', JSON.stringify(data));
+        }
+
+        function ensureGuestFormSecret() {
+            const data = getStoredGuestFormData() || {};
+
+            if (!data.secret) {
+                data.secret = generateGuestBrowserSecret();
+            }
+
+            if (!data.savedAt) {
+                data.savedAt = new Date().toISOString();
+            }
+
+            persistGuestFormData(data);
+
+            return data.secret;
+        }
+
+        function saveGuestToStorage(data) {
+            const current = getStoredGuestFormData() || {};
+            const storageData = {
+                name: data.name || '',
+                bks: data.bks || '',
+                purpose: data.purpose || '',
+                asset: data.asset || '',
+                note: data.note || '',
+                customers: data.customers || [],
+                secret: data.secret || current.secret || generateGuestBrowserSecret(),
+                savedAt: new Date().toISOString()
+            };
+
+            persistGuestFormData(storageData);
+        }
+
+        function loadStoredGuestData() {
+            const data = getStoredGuestFormData() || {};
+
+            if (!data.secret) {
+                data.secret = generateGuestBrowserSecret();
+            }
+
+            if (!data.savedAt) {
+                data.savedAt = new Date().toISOString();
+            }
+
+            persistGuestFormData(data);
+            ensureGuestFormSecret();
+        }
+    </script>
+</div>

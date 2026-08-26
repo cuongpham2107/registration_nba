@@ -41,4 +41,10 @@ Route::get('/registration-vehicle/success', function () {
     return view('registration_vehicle.success');
 })->name('registration-vehicle.success');
 
+// Route đăng ký khách
+Route::get('/dang-ky-khach', \App\Livewire\RegistrationGuestForm::class)->name('registration-guest.index');
+Route::get('/dang-ky-khach/thanh-cong', function () {
+    return view('registration_guest.success');
+})->name('registration-guest.success');
+
 Route::get('/invoice/download/{registerDirectly}', [InvoiceFee::class, 'download'])->name('invoice.download');

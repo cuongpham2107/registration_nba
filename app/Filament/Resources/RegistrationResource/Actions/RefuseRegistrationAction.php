@@ -32,8 +32,12 @@ class RefuseRegistrationAction
                     return true;
                 }
 
-                // Ẩn nếu user không phải là người được chọn phê duyệt
-                if ($record->approver_id !== $user->id) {
+                // Ẩn nếu user không phải là người được chọn phê duyệt (hoặc không nằm trong danh sách approvers của user tạo đơn)
+                if ($record->approver_id && $record->approver_id !== $user->id) {
+                    return true;
+                }
+
+                if (! $record->approver_id && ! $record->user?->approvers?->contains('id', $user->id)) {
                     return true;
                 }
 

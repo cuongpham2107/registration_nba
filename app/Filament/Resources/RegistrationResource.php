@@ -401,9 +401,19 @@ class RegistrationResource extends Resource implements HasShieldPermissions
                 if ($user->hasRole('super_admin')) {
                     return $query;
                 }
-                // Approver chỉ thấy các bản ghi mà mình là người phê duyệt
+                // Approver thấy các bản ghi mà mình là người phê duyệt hoặc là approver của người tạo đơn
                 if ($user->hasRole('approver')) {
-                    return $query->where('approver_id', $user->id);
+                    return $query->where(function ($q) use ($user) {
+                        $q->where('approver_id', $user->id)
+                            ->orWhere(function ($subQ) use ($user) {
+                                $subQ->whereNull('approver_id')
+                                    ->whereHas('user', function ($uq) use ($user) {
+                                        $uq->whereHas('approvers', function ($aq) use ($user) {
+                                            $aq->where('users.id', $user->id);
+                                        });
+                                    });
+                            });
+                    });
                 }
 
                 // User thường chỉ thấy của mình (người tạo)

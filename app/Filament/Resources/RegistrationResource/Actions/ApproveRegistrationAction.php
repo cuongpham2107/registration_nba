@@ -24,14 +24,16 @@ class ApproveRegistrationAction
                 /** @var User $user */
                 $user = auth()->user();
 
-                // Ẩn nếu chưa gửi hoặc đã duyệt/từ chối
-                if ($record->status !== 'sent' || $record->type === 'browse' || $record->type === 'refuse') {
-                    return true;
-                }
+
 
                 // Cho phép super_admin thấy
                 if ($user && $user->hasRole('super_admin')) {
                     return false;
+                }
+
+                // Ẩn nếu chưa gửi hoặc đã duyệt/từ chối
+                if ($record->status !== 'sent' || $record->type === 'browse' || $record->type === 'refuse') {
+                    return true;
                 }
 
                 // Ẩn nếu user không phải approver
@@ -39,8 +41,12 @@ class ApproveRegistrationAction
                     return true;
                 }
 
-                // Ẩn nếu user không phải là người được chọn phê duyệt
-                if ($record->approver_id !== $user->id) {
+                // Ẩn nếu user không phải là người được chọn phê duyệt (hoặc không nằm trong danh sách approvers của user tạo đơn)
+                if ($record->approver_id && $record->approver_id !== $user->id) {
+                    return true;
+                }
+
+                if (! $record->approver_id && ! $record->user?->approvers?->contains('id', $user->id)) {
                     return true;
                 }
 
